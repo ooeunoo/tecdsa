@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package dkg;
+
+option go_package = "tecdsa/pkg/api/grpc/dkg";
+
+service DKGService {
+  rpc ProcessDKG (DKGRequest) returns (DKGResponse) {}
+}
+
+message DKGRequest {
+  string random_number = 1;
+}
+
+message DKGResponse {
+  string result = 1;
+}

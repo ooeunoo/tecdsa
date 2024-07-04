@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: cmd/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - bob
+
+  bob:
+    build:
+      context: .
+      dockerfile: cmd/bob/Dockerfile
+    depends_on:
+      - alice
+
+  alice:
+    build:
+      context: .
+      dockerfile: cmd/alice/Dockerfile
