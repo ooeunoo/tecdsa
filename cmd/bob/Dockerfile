@@ -2,12 +2,24 @@ FROM golang:latest
 
 WORKDIR /app
 
+############################### REMOVE: production #######################################
+RUN go install github.com/githubnemo/CompileDaemon@latest
+############################### REMOVE: production #######################################
+
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-EXPOSE 50051
+############################### REMOVE: production #######################################
+CMD CompileDaemon --build="go build -o main ./cmd/bob" --command="./main"
+############################### REMOVE: production #######################################
 
-# go run 명령어로 실행
-CMD ["go", "run", "./bob/main.go"]
+
+############################### REMOVE_COMMENT: production #######################################
+# RUN go build -o bob ./cmd/bob
+
+# EXPOSE 50051
+
+# CMD ["./bob"]
+############################### REMOVE_COMMENT: production #######################################

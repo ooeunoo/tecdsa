@@ -5,19 +5,35 @@ services:
     build:
       context: .
       dockerfile: cmd/gateway/Dockerfile
+    ############### REMOVE: production ######################### 
+    volumes:
+      - ./cmd/gateway:/app/cmd/gateway
+    ############### REMOVE: production ######################### 
     ports:
-      - "8000:8000"
-    depends_on:
-      - bob
-
-  bob:
-    build:
-      context: .
-      dockerfile: cmd/bob/Dockerfile
+      - "8080:8080"
     depends_on:
       - alice
+      - bob
+    
 
   alice:
     build:
       context: .
       dockerfile: cmd/alice/Dockerfile
+    ############### REMOVE: production ######################### 
+    volumes:
+      - ./cmd/alice:/app/cmd/alice
+    ############### REMOVE: production ######################### 
+    expose:
+      - "50052"
+
+  bob:
+    build:
+      context: .
+      dockerfile: cmd/bob/Dockerfile
+    ############### REMOVE: production ######################### 
+    volumes:
+      - ./cmd/bob:/app/cmd/bob
+    ############### REMOVE: production ######################### 
+    expose:
+      - "50051"
