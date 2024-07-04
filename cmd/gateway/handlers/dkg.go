@@ -20,7 +20,6 @@ func DKGHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 문자열을 정수로 변환
 	originalNumber, err := strconv.Atoi(req.RandomNumber)
 	if err != nil {
 		http.Error(w, "Invalid random number", http.StatusBadRequest)
@@ -41,26 +40,25 @@ func DKGHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Base64 디코딩
 	decodedBytes, err := base64.StdEncoding.DecodeString(resp.Result)
 	if err != nil {
 		http.Error(w, "Error decoding result", http.StatusInternalServerError)
 		return
 	}
 
-	// 디코딩된 바이트를 정수로 변환
 	decodedResult, err := strconv.Atoi(string(decodedBytes))
 	if err != nil {
 		http.Error(w, "Error converting result to integer", http.StatusInternalServerError)
 		return
 	}
 
-	// JSON 응답 생성
 	response := struct {
-		OriginalNumber int `json:"original_number"`
-		DecodedResult  int `json:"decoded_result"`
+		OriginalNumber int    `json:"original_number"`
+		EncodedResult  string `json:"encoded_result"`
+		DecodedResult  int    `json:"decoded_result"`
 	}{
 		OriginalNumber: originalNumber,
+		EncodedResult:  resp.Result,
 		DecodedResult:  decodedResult,
 	}
 

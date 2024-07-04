@@ -4,26 +4,23 @@ import (
 	"net/http"
 
 	"tecdsa/cmd/gateway/handlers"
-
-	"github.com/gorilla/mux"
+	"tecdsa/db"
 )
 
 type Server struct {
-	router *mux.Router
+	router *http.ServeMux
 }
 
 func NewServer() *Server {
 	s := &Server{
-		router: mux.NewRouter(),
+		router: http.NewServeMux(),
 	}
 	s.routes()
 	return s
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("/dkg", handlers.DKGHandler).Methods("POST")
-	s.router.HandleFunc("/refresh", handlers.RefreshHandler).Methods("POST")
-	s.router.HandleFunc("/sign", handlers.SignHandler).Methods("POST")
+	s.router.HandleFunc("/dkg", db.LogRequest(handlers.DKGHandler))
 }
 
 func (s *Server) Run() error {

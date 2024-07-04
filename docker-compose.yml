@@ -12,8 +12,17 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - alice
-      - bob
+      mysql:
+        condition: service_healthy
+      alice:
+        condition: service_started
+      bob:
+        condition: service_started
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=requestlog
     
 
   alice:
@@ -37,3 +46,20 @@ services:
     ############### REMOVE: production ######################### 
     expose:
       - "50051"
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: tecdsa
+    volumes:
+      - ./db/data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # - ./db/my.cnf:/etc/mysql/my.cnf  # 필요한 경우
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
+      interval: 10s
+      timeout: 2s
+      retries: 100
