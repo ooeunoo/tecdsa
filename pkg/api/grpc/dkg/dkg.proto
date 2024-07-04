@@ -2,16 +2,43 @@ syntax = "proto3";
 
 package dkg;
 
-option go_package = "tecdsa/pkg/api/grpc/dkg";
+option go_package = "pkg/api/grpc/dkg";
 
-service DKGService {
-  rpc ProcessDKG (DKGRequest) returns (DKGResponse) {}
+extend google.protobuf.FieldOptions {
+  string customtype = 50000;
 }
 
-message DKGRequest {
-  string random_number = 1;
+service DKG {
+  rpc RequestDKG (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound2 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound3 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound4 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound5 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound6 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound7 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound8 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound9 (DKGMessage) returns (DKGMessage) {}
+  rpc RequestRound10 (DKGMessage) returns (DKGMessage) {}
 }
 
-message DKGResponse {
-  string result = 1;
+message DKGMessage {
+  string round = 1;
+  bytes payload = 2;
 }
+
+message DKGRound1Payload {
+  bytes seed = 1;
+}
+
+message DKGRound2Payload {
+ bytes seed = 1 [(customtype) = "Seed"];
+  bytes commitment = 2 [(customtype) = "Commitment"];
+}
+
+
+message DKGRound2Payload {
+ bytes C = 1 [(customtype) = "Scalar"];
+  bytes S = 2 [(customtype) = "Scalar"];
+  bytes Statement = 2 [(customtype) = "Point"];
+}
+

@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-
 	"tecdsa/cmd/gateway/handlers"
 	"tecdsa/db"
 )

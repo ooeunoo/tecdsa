@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net"
-
 	"tecdsa/cmd/alice/handlers"
 	pb "tecdsa/pkg/api/grpc/dkg"
 
@@ -18,7 +17,7 @@ func NewServer() *Server {
 	s := &Server{
 		grpcServer: grpc.NewServer(),
 	}
-	pb.RegisterDKGServiceServer(s.grpcServer, &handlers.DKGHandler{})
+	pb.RegisterDKGServiceServer(s.grpcServer, handlers.NewDKGHandler())
 	return s
 }
 

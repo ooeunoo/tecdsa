@@ -19,90 +19,90 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	DKGService_ProcessDKG_FullMethodName = "/dkg.DKGService/ProcessDKG"
+	DKG_ProcessDKG_FullMethodName = "/dkg.DKG/ProcessDKG"
 )
 
-// DKGServiceClient is the client API for DKGService service.
+// DKGClient is the client API for DKG service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DKGServiceClient interface {
-	ProcessDKG(ctx context.Context, in *DKGRequest, opts ...grpc.CallOption) (*DKGResponse, error)
+type DKGClient interface {
+	ProcessDKG(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (*NumberResponse, error)
 }
 
-type dKGServiceClient struct {
+type dKGClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDKGServiceClient(cc grpc.ClientConnInterface) DKGServiceClient {
-	return &dKGServiceClient{cc}
+func NewDKGClient(cc grpc.ClientConnInterface) DKGClient {
+	return &dKGClient{cc}
 }
 
-func (c *dKGServiceClient) ProcessDKG(ctx context.Context, in *DKGRequest, opts ...grpc.CallOption) (*DKGResponse, error) {
+func (c *dKGClient) ProcessDKG(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (*NumberResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DKGResponse)
-	err := c.cc.Invoke(ctx, DKGService_ProcessDKG_FullMethodName, in, out, cOpts...)
+	out := new(NumberResponse)
+	err := c.cc.Invoke(ctx, DKG_ProcessDKG_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// DKGServiceServer is the server API for DKGService service.
-// All implementations must embed UnimplementedDKGServiceServer
+// DKGServer is the server API for DKG service.
+// All implementations must embed UnimplementedDKGServer
 // for forward compatibility
-type DKGServiceServer interface {
-	ProcessDKG(context.Context, *DKGRequest) (*DKGResponse, error)
-	mustEmbedUnimplementedDKGServiceServer()
+type DKGServer interface {
+	ProcessDKG(context.Context, *NumberRequest) (*NumberResponse, error)
+	mustEmbedUnimplementedDKGServer()
 }
 
-// UnimplementedDKGServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedDKGServiceServer struct {
+// UnimplementedDKGServer must be embedded to have forward compatible implementations.
+type UnimplementedDKGServer struct {
 }
 
-func (UnimplementedDKGServiceServer) ProcessDKG(context.Context, *DKGRequest) (*DKGResponse, error) {
+func (UnimplementedDKGServer) ProcessDKG(context.Context, *NumberRequest) (*NumberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessDKG not implemented")
 }
-func (UnimplementedDKGServiceServer) mustEmbedUnimplementedDKGServiceServer() {}
+func (UnimplementedDKGServer) mustEmbedUnimplementedDKGServer() {}
 
-// UnsafeDKGServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DKGServiceServer will
+// UnsafeDKGServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DKGServer will
 // result in compilation errors.
-type UnsafeDKGServiceServer interface {
-	mustEmbedUnimplementedDKGServiceServer()
+type UnsafeDKGServer interface {
+	mustEmbedUnimplementedDKGServer()
 }
 
-func RegisterDKGServiceServer(s grpc.ServiceRegistrar, srv DKGServiceServer) {
-	s.RegisterService(&DKGService_ServiceDesc, srv)
+func RegisterDKGServer(s grpc.ServiceRegistrar, srv DKGServer) {
+	s.RegisterService(&DKG_ServiceDesc, srv)
 }
 
-func _DKGService_ProcessDKG_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DKGRequest)
+func _DKG_ProcessDKG_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NumberRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DKGServiceServer).ProcessDKG(ctx, in)
+		return srv.(DKGServer).ProcessDKG(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DKGService_ProcessDKG_FullMethodName,
+		FullMethod: DKG_ProcessDKG_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DKGServiceServer).ProcessDKG(ctx, req.(*DKGRequest))
+		return srv.(DKGServer).ProcessDKG(ctx, req.(*NumberRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// DKGService_ServiceDesc is the grpc.ServiceDesc for DKGService service.
+// DKG_ServiceDesc is the grpc.ServiceDesc for DKG service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var DKGService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "dkg.DKGService",
-	HandlerType: (*DKGServiceServer)(nil),
+var DKG_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "dkg.DKG",
+	HandlerType: (*DKGServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ProcessDKG",
-			Handler:    _DKGService_ProcessDKG_Handler,
+			Handler:    _DKG_ProcessDKG_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

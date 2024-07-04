@@ -2,42 +2,69 @@ package handlers
 
 import (
 	"context"
-	"log"
-	"strconv"
 
-	"tecdsa/internal/encoding"
+	encoding "tecdsa/internal/encoding/dkg"
+
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	v1 "github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1"
+
+	dkg "github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
+
 	pb "tecdsa/pkg/api/grpc/dkg"
-
-	"google.golang.org/grpc"
 )
 
-type DKGHandler struct {
-	pb.UnimplementedDKGServiceServer
+type DkgHandler struct {
+	pb.UnimplementedDkgServiceServer
 }
 
-func (h *DKGHandler) ProcessDKG(ctx context.Context, req *pb.DKGRequest) (*pb.DKGResponse, error) {
-	// 랜덤 시드 생성
-	seed, _ := strconv.Atoi(req.RandomNumber)
-	encodedSeed := encoding.Encode(seed)
+func NewDkgHandler() *DkgHandler {
+	return &DkgHandler{}
+}
 
-	// Alice에게 gRPC 요청 보내기
-	conn, err := grpc.Dial("alice:50052", grpc.WithInsecure())
-	if err != nil {
-		log.Printf("Failed to connect to Alice: %v", err)
-		return nil, err
-	}
-	defer conn.Close()
+func (h *DkgHandler) GenerateDkg(ctx context.Context, req *pb.DkgRequest) (*pb.DkgResponse, error) {
+	curve := curves.K256()
 
-	client := pb.NewDKGServiceClient(conn)
-	resp, err := client.ProcessDKG(ctx, &pb.DKGRequest{RandomNumber: encodedSeed})
+	bob := dkg.NewBob(curve)
+
+	// Implement DKG rounds for Bob
+	seed, err := bob.Round1GenerateRandomSeed()
 	if err != nil {
-		log.Printf("Error calling Alice's ProcessDKG: %v", err)
 		return nil, err
 	}
 
-	// Alice로부터 받은 결과 처리
-	decodedResult := encoding.Decode(resp.Result)
-	log.Printf("Received from Alice: %d", decodedResult)
+	// Encode seed to send to Alice
+	encodedSeed, err := v1.EncodingDkgRound(seed)
+	if err != nil {
+		return nil, err
+	}
 
-	return &pb.DKGResponse{Result: encoding.Encode(decodedResult)}, nil
+	// Send encodedSeed to Alice and receive encodedRound2Input
+	// This step would involve actual network communication in a real implementation
+
+	// Decode Alice's response
+	round2Input, err := encoding.DecodeDkgRound2Input(encodedRound2Input)
+	if err != nil {
+		return nil, err
+	}
+
+	proof, err := bob.Round3SchnorrProve(round2Input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Continue with remaining rounds...
+
+	// After completing DKG rounds:
+	output := bob.Output()
+
+	// Encode the final output
+	encodedOutput, err := encoding.EncodeBobDkgOutput(output)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DkgResponse{
+		SessionId:     req.SessionId,
+		EncodedOutput: encodedOutput,
+	}, nil
 }

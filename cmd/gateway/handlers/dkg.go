@@ -1,67 +1,63 @@
 package handlers
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"net/http"
-	"strconv"
 
+	"tecdsa/internal/encoding/dkg"
 	pb "tecdsa/pkg/api/grpc/dkg"
 
-	"google.golang.org/grpc"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
-func DKGHandler(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		RandomNumber string `json:"random_number"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+type DkgHandler struct {
+	aliceClient pb.DkgServiceClient
+	bobClient   pb.DkgServiceClient
+}
 
-	originalNumber, err := strconv.Atoi(req.RandomNumber)
+func NewDkgHandler(aliceClient, bobClient pb.DkgServiceClient) *DkgHandler {
+	return &DkgHandler{
+		aliceClient: aliceClient,
+		bobClient:   bobClient,
+	}
+}
+
+func (h *DkgHandler) HandleDkg(c *gin.Context) {
+	sessionID := uuid.New().String()
+
+	// Start DKG process with Bob
+	bobResp, err := h.bobClient.StartDkg(c, &pb.DkgRequest{SessionId: sessionID})
 	if err != nil {
-		http.Error(w, "Invalid random number", http.StatusBadRequest)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to start DKG with Bob"})
 		return
 	}
 
-	conn, err := grpc.Dial("bob:50051", grpc.WithInsecure())
+	// Continue DKG process with Alice
+	aliceResp, err := h.aliceClient.ContinueDkg(c, &pb.DkgContinueRequest{
+		SessionId: sessionID,
+		Data:      bobResp.Data,
+	})
 	if err != nil {
-		http.Error(w, "Failed to connect to Bob", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to continue DKG with Alice"})
 		return
 	}
-	defer conn.Close()
 
-	client := pb.NewDKGServiceClient(conn)
-	resp, err := client.ProcessDKG(r.Context(), &pb.DKGRequest{RandomNumber: req.RandomNumber})
+	// Finish DKG process with Bob
+	finalResp, err := h.bobClient.FinishDkg(c, &pb.DkgFinishRequest{
+		SessionId: sessionID,
+		Data:      aliceResp.Data,
+	})
 	if err != nil {
-		http.Error(w, "Error calling Bob's ProcessDKG", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to finish DKG with Bob"})
 		return
 	}
 
-	decodedBytes, err := base64.StdEncoding.DecodeString(resp.Result)
+	// Decode and combine results
+	result, err := dkg.CombineResults(aliceResp, finalResp)
 	if err != nil {
-		http.Error(w, "Error decoding result", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to combine results"})
 		return
 	}
 
-	decodedResult, err := strconv.Atoi(string(decodedBytes))
-	if err != nil {
-		http.Error(w, "Error converting result to integer", http.StatusInternalServerError)
-		return
-	}
-
-	response := struct {
-		OriginalNumber int    `json:"original_number"`
-		EncodedResult  string `json:"encoded_result"`
-		DecodedResult  int    `json:"decoded_result"`
-	}{
-		OriginalNumber: originalNumber,
-		EncodedResult:  resp.Result,
-		DecodedResult:  decodedResult,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	c.JSON(http.StatusOK, result)
 }
