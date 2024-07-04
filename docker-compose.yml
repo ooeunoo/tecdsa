@@ -18,11 +18,13 @@ services:
         condition: service_started
       bob:
         condition: service_started
+    ############### CHANGE: production ######################### 
     environment:
       - DB_HOST=mysql
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=requestlog
+    ############### CHANGE: production ######################### 
     
 
   alice:
@@ -50,8 +52,10 @@ services:
   mysql:
     image: mysql:latest
     environment:
+    ############### CHANGE: production ######################### 
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: tecdsa
+    ############### CHANGE: production ######################### 
     volumes:
       - ./db/data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -59,7 +63,9 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
+    ############### CHANGE: production ######################### 
       test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
+    ############### CHANGE: production ######################### 
       interval: 10s
       timeout: 2s
       retries: 100
