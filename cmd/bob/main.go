@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 
+	"tecdsa/cmd/bob/database"
 	"tecdsa/cmd/bob/server"
 	pb "tecdsa/pkg/api/grpc/dkg"
 
@@ -11,6 +12,12 @@ import (
 )
 
 func main() {
+	// Initialize database connection
+	if err := database.InitDB(); err != nil {
+		log.Fatalf("failed to initialize database: %v", err)
+	}
+	defer database.CloseDB()
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

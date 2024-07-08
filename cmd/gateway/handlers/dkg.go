@@ -93,9 +93,10 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 				duration := endTime.Sub(startTime)
 				fmt.Println("생성된 주소:", keyGenResp.KeyGenResponse.Address)
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"success":  true,
-					"address":  keyGenResp.KeyGenResponse.Address,
-					"duration": duration.Seconds(),
+					"success":    keyGenResp.KeyGenResponse.Success,
+					"address":    keyGenResp.KeyGenResponse.Address,
+					"secret_key": keyGenResp.KeyGenResponse.SecretKey,
+					"duration":   duration.Seconds(),
 				})
 				return
 			}

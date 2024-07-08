@@ -1,6 +1,8 @@
 version: '3'
 
 services:
+
+
   gateway:
     build:
       context: .
@@ -12,8 +14,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      # mysql:
-      #   condition: service_healthy
+      gateway_db:
+        condition: service_healthy
       alice:
         condition: service_started
       bob:
@@ -25,8 +27,7 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=requestlog
     ############### CHANGE: production ######################### 
-    
-
+  
   alice:
     build:
       context: .
@@ -37,6 +38,15 @@ services:
     ############### REMOVE: production ######################### 
     expose:
       - "50052"
+    depends_on:
+      alice_db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=alice_db
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=alice
+
 
   bob:
     build:
@@ -48,24 +58,55 @@ services:
     ############### REMOVE: production ######################### 
     expose:
       - "50051"
+    depends_on:
+      bob_db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=bob_db
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=bob
 
-  # mysql:
-  #   image: mysql:latest
-  #   environment:
-  #   ############### CHANGE: production ######################### 
-  #     MYSQL_ROOT_PASSWORD: password
-  #     MYSQL_DATABASE: tecdsa
-  #   ############### CHANGE: production ######################### 
-  #   volumes:
-  #     - ./db/data:/var/lib/mysql
-  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-  #     # - ./db/my.cnf:/etc/mysql/my.cnf  # 필요한 경우
-  #   ports:
-  #     - "3306:3306"
-  #   healthcheck:
-  #   ############### CHANGE: production ######################### 
-  #     test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
-  #   ############### CHANGE: production ######################### 
-  #     interval: 10s
-  #     timeout: 2s
-  #     retries: 100
+  gateway_db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: gateway
+    volumes:
+      - ./cmd/gateway/database/data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
+      timeout: 20s
+      retries: 10
+    ports:
+      - "3306:3306"
+
+
+  alice_db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: alice
+    volumes:
+      - ./cmd/alice/database/data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
+      timeout: 20s
+      retries: 10
+    ports:
+      - "3307:3306"
+
+  bob_db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: bob
+    volumes:
+      - ./cmd/bob/database/data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
+      timeout: 20s
+      retries: 10
+    ports:
+      - "3308:3306"
+  

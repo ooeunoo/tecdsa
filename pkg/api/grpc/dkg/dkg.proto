@@ -30,7 +30,7 @@ message DkgMessage {
     Round9Response round9Response = 18;
     Round10Request round10Request = 19;
     Round10Response round10Response = 20;
-        KeyGenResponse keyGenResponse = 21;
+    KeyGenResponse keyGenResponse = 21;
   }
 }
 
@@ -54,5 +54,5 @@ message Round8Response { repeated bytes ot_challenge_responses = 1; }
 message Round9Request { repeated bytes ot_challenge_responses = 1; }
 message Round9Response { repeated bytes challenge_openings = 1; }
 message Round10Request { repeated bytes challenge_openings = 1; }
-message Round10Response { bool success = 1; bytes alice_secret_key_share = 2; }
-message KeyGenResponse { bool success = 1; string address=2; int32 duration=3; }
+message Round10Response { bool success = 1; bytes secret_key =2; }
+message KeyGenResponse { bool success = 1; string address=2;  bytes secret_key = 3; int32 duration=4; }
