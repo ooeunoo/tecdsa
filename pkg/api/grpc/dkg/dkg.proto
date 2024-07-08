@@ -55,4 +55,4 @@ message Round9Request { repeated bytes ot_challenge_responses = 1; }
 message Round9Response { repeated bytes challenge_openings = 1; }
 message Round10Request { repeated bytes challenge_openings = 1; }
 message Round10Response { bool success = 1; bytes alice_secret_key_share = 2; }
-message KeyGenResponse { bool success = 1; string address=2; }
+message KeyGenResponse { bool success = 1; string address=2; int32 duration=3; }

@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"io"
+	"log"
 	"tecdsa/internal/dkls/dkg"
 	pb "tecdsa/pkg/api/grpc/dkg"
 
@@ -13,17 +14,16 @@ import (
 
 type Server struct {
 	pb.UnimplementedDkgServiceServer
-	alice *dkg.Alice
 }
 
 func NewServer() *Server {
-	curve := curves.K256()
-	return &Server{
-		alice: dkg.NewAlice(curve),
-	}
+	return &Server{}
 }
 
 func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
+	curve := curves.K256()
+	alice := dkg.NewAlice(curve) // Create a new instance of Bob for each request
+
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -38,8 +38,10 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 		case *pb.DkgMessage_Round1Response:
 			fmt.Println("라운드2")
 
-			round2Output, err := s.alice.Round2CommitToProof([32]byte(msg.Round1Response.Seed))
+			round2Output, err := alice.Round2CommitToProof([32]byte(msg.Round1Response.Seed))
 			if err != nil {
+				log.Printf("Error in Round2CommitToProof: %v", err)
+
 				return err
 			}
 			if err := stream.Send(&pb.DkgMessage{
@@ -74,8 +76,9 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 				S:         S,
 				Statement: statement,
 			}
-			proof, err := s.alice.Round4VerifyAndReveal(schnorrProof)
+			proof, err := alice.Round4VerifyAndReveal(schnorrProof)
 			if err != nil {
+				log.Printf("Error in Round4VerifyAndReveal: %v", err)
 				return err
 			}
 			if err := stream.Send(&pb.DkgMessage{
@@ -111,7 +114,7 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 				S:         S,
 				Statement: statement,
 			}
-			compressedReceiversMaskedChoice, err := s.alice.Round6DkgRound2Ot(schnorrProof)
+			compressedReceiversMaskedChoice, err := alice.Round6DkgRound2Ot(schnorrProof)
 			if err != nil {
 				return err
 			}
@@ -133,7 +136,7 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 			for i, c := range msg.Round7Response.OtChallenges {
 				copy(challenges[i][:], c)
 			}
-			challengeResponse, err := s.alice.Round8DkgRound4Ot(challenges)
+			challengeResponse, err := alice.Round8DkgRound4Ot(challenges)
 			if err != nil {
 				return err
 			}
@@ -164,12 +167,12 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 				copy(challengeOpenings[i][0][:], co[:32])
 				copy(challengeOpenings[i][1][:], co[32:])
 			}
-			err := s.alice.Round10DkgRound6Ot(challengeOpenings)
+			err := alice.Round10DkgRound6Ot(challengeOpenings)
 			if err != nil {
 				return err
 			}
 
-			secretKeyShare := s.alice.Output().SecretKeyShare.Bytes()
+			secretKeyShare := alice.Output().SecretKeyShare.Bytes()
 			if err := stream.Send(&pb.DkgMessage{
 				Msg: &pb.DkgMessage_Round10Response{
 					Round10Response: &pb.Round10Response{

@@ -15,17 +15,16 @@ import (
 
 type Server struct {
 	pb.UnimplementedDkgServiceServer
-	bob *dkg.Bob
 }
 
 func NewServer() *Server {
-	curve := curves.K256()
-	return &Server{
-		bob: dkg.NewBob(curve),
-	}
+	return &Server{}
 }
 
 func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
+	curve := curves.K256()
+	bob := dkg.NewBob(curve) // Create a new instance of Bob for each request
+
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -39,7 +38,7 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 		// Round1
 		case *pb.DkgMessage_Round1Request:
 			fmt.Println("라운드1")
-			seed, err := s.bob.Round1GenerateRandomSeed()
+			seed, err := bob.Round1GenerateRandomSeed()
 			if err != nil {
 				return err
 			}
@@ -54,11 +53,13 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 		case *pb.DkgMessage_Round2Response:
 			fmt.Println("라운드3")
 
-			proof, err := s.bob.Round3SchnorrProve(&dkg.Round2Output{
+			proof, err := bob.Round3SchnorrProve(&dkg.Round2Output{
 				Seed:       [32]byte(msg.Round2Response.Seed),
 				Commitment: msg.Round2Response.Commitment,
 			})
 			if err != nil {
+				log.Printf("Error in Round3SchnorrProve: %v", err)
+
 				return err
 			}
 			if err := stream.Send(&pb.DkgMessage{
@@ -96,8 +97,10 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 				Statement: statement,
 			}
 
-			proof, err := s.bob.Round5DecommitmentAndStartOt(schnorrProof)
+			proof, err := bob.Round5DecommitmentAndStartOt(schnorrProof)
 			if err != nil {
+				log.Printf("Error in Round5DecommitmentAndStartOt: %v", err)
+
 				return err
 			}
 			if err := stream.Send(&pb.DkgMessage{
@@ -119,7 +122,7 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 			for i, choice := range msg.Round6Response.ReceiversMaskedChoices {
 				compressedReceiversMaskedChoice[i] = choice
 			}
-			challenges, err := s.bob.Round7DkgRound3Ot(compressedReceiversMaskedChoice)
+			challenges, err := bob.Round7DkgRound3Ot(compressedReceiversMaskedChoice)
 			if err != nil {
 				return err
 			}
@@ -144,8 +147,10 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 			for i, response := range msg.Round8Response.OtChallengeResponses {
 				copy(challengeResponses[i][:], response)
 			}
-			challengeOpenings, err := s.bob.Round9DkgRound5Ot(challengeResponses)
+			challengeOpenings, err := bob.Round9DkgRound5Ot(challengeResponses)
 			if err != nil {
+				log.Printf("Error in Round9DkgRound5Ot: %v", err)
+
 				return err
 			}
 
@@ -177,7 +182,7 @@ func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
 				return err
 			}
 			pkA := curve.ScalarBaseMult(aliceSecretKey)
-			computedPublicKeyA := pkA.Mul(s.bob.Output().SecretKeyShare)
+			computedPublicKeyA := pkA.Mul(bob.Output().SecretKeyShare)
 			publicKeyBytes := computedPublicKeyA.ToAffineUncompressed()
 			publicKeyUnmarshal, err := crypto.UnmarshalPubkey(publicKeyBytes)
 			if err != nil {

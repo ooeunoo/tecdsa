@@ -1,3 +1,1417 @@
+// cmd/alice/main.go
+package main
+
+import (
+	"log"
+	"net"
+
+	"tecdsa/cmd/alice/server"
+	pb "tecdsa/pkg/api/grpc/dkg"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	lis, err := net.Listen("tcp", ":50052")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	pb.RegisterDkgServiceServer(s, server.NewServer())
+	log.Println("Alice server listening at :50052")
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+
+// cmd/alice/server/server.go
+package server
+
+import (
+	"fmt"
+	"io"
+	"tecdsa/internal/dkls/dkg"
+	pb "tecdsa/pkg/api/grpc/dkg"
+
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
+	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+)
+
+type Server struct {
+	pb.UnimplementedDkgServiceServer
+	alice *dkg.Alice
+}
+
+func NewServer() *Server {
+	curve := curves.K256()
+	return &Server{
+		alice: dkg.NewAlice(curve),
+	}
+}
+
+func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
+	for {
+		in, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		switch msg := in.Msg.(type) {
+		// Round 2
+		case *pb.DkgMessage_Round1Response:
+			fmt.Println("라운드2")
+
+			round2Output, err := s.alice.Round2CommitToProof([32]byte(msg.Round1Response.Seed))
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round2Response{
+					Round2Response: &pb.Round2Response{
+						Seed:       round2Output.Seed[:],
+						Commitment: round2Output.Commitment,
+					},
+				},
+			}); err != nil {
+				return err
+			}
+			// Round 4
+		case *pb.DkgMessage_Round3Response:
+			fmt.Println("라운드4")
+
+			k256 := curves.K256()
+			c, err := k256.Scalar.SetBytes(msg.Round3Response.C)
+			if err != nil {
+				return err
+			}
+			S, err := k256.Scalar.SetBytes(msg.Round3Response.S)
+			if err != nil {
+				return err
+			}
+			statement, err := k256.Point.FromAffineCompressed(msg.Round3Response.Statement)
+			if err != nil {
+				return err
+			}
+			schnorrProof := &schnorr.Proof{
+				C:         c,
+				S:         S,
+				Statement: statement,
+			}
+			proof, err := s.alice.Round4VerifyAndReveal(schnorrProof)
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round4Response{
+					Round4Response: &pb.Round4Response{
+						C:         proof.C.Bytes(),
+						S:         proof.S.Bytes(),
+						Statement: proof.Statement.ToAffineCompressed(),
+					},
+				},
+			}); err != nil {
+				return err
+			}
+			// Round 6
+		case *pb.DkgMessage_Round5Response:
+			fmt.Println("라운드6")
+
+			k256 := curves.K256()
+			c, err := k256.Scalar.SetBytes(msg.Round5Response.C)
+			if err != nil {
+				return err
+			}
+			S, err := k256.Scalar.SetBytes(msg.Round5Response.S)
+			if err != nil {
+				return err
+			}
+			statement, err := k256.Point.FromAffineCompressed(msg.Round5Response.Statement)
+			if err != nil {
+				return err
+			}
+			schnorrProof := &schnorr.Proof{
+				C:         c,
+				S:         S,
+				Statement: statement,
+			}
+			compressedReceiversMaskedChoice, err := s.alice.Round6DkgRound2Ot(schnorrProof)
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round6Response{
+					Round6Response: &pb.Round6Response{
+						ReceiversMaskedChoices: compressedReceiversMaskedChoice,
+					},
+				},
+			}); err != nil {
+				return err
+			}
+
+			// Round8
+		case *pb.DkgMessage_Round7Response:
+			fmt.Println("라운드8")
+
+			challenges := make([]simplest.OtChallenge, len(msg.Round7Response.OtChallenges))
+			for i, c := range msg.Round7Response.OtChallenges {
+				copy(challenges[i][:], c)
+			}
+			challengeResponse, err := s.alice.Round8DkgRound4Ot(challenges)
+			if err != nil {
+				return err
+			}
+			challengeResponseBytes := make([][]byte, len(challengeResponse))
+			for i, cr := range challengeResponse {
+				challengeResponseBytes[i] = cr[:]
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round8Response{
+					Round8Response: &pb.Round8Response{
+						OtChallengeResponses: challengeResponseBytes,
+					},
+				},
+			}); err != nil {
+				return err
+			}
+
+			// Round10
+		case *pb.DkgMessage_Round9Response:
+			fmt.Println("라운드10")
+
+			challengeOpenings := make([]simplest.ChallengeOpening, len(msg.Round9Response.ChallengeOpenings))
+			for i, co := range msg.Round9Response.ChallengeOpenings {
+				// co는 []byte 타입이므로, 이를 [2][32]byte 타입으로 변환
+				if len(co) != 2*32 {
+					return fmt.Errorf("invalid challenge opening length")
+				}
+				copy(challengeOpenings[i][0][:], co[:32])
+				copy(challengeOpenings[i][1][:], co[32:])
+			}
+			err := s.alice.Round10DkgRound6Ot(challengeOpenings)
+			if err != nil {
+				return err
+			}
+
+			secretKeyShare := s.alice.Output().SecretKeyShare.Bytes()
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round10Response{
+					Round10Response: &pb.Round10Response{
+						Success:             true,
+						AliceSecretKeyShare: secretKeyShare,
+					},
+				},
+			}); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+
+// cmd/bob/main.go
+package main
+
+import (
+	"log"
+	"net"
+
+	"tecdsa/cmd/bob/server"
+	pb "tecdsa/pkg/api/grpc/dkg"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	pb.RegisterDkgServiceServer(s, server.NewServer())
+	log.Println("Bob server listening at :50051")
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+
+// cmd/bob/server/server.go
+package server
+
+import (
+	"fmt"
+	"io"
+	"log"
+	"tecdsa/internal/dkls/dkg"
+	pb "tecdsa/pkg/api/grpc/dkg"
+
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
+	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+	"github.com/ethereum/go-ethereum/crypto"
+)
+
+type Server struct {
+	pb.UnimplementedDkgServiceServer
+	bob *dkg.Bob
+}
+
+func NewServer() *Server {
+	curve := curves.K256()
+	return &Server{
+		bob: dkg.NewBob(curve),
+	}
+}
+
+func (s *Server) KeyGen(stream pb.DkgService_KeyGenServer) error {
+	for {
+		in, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		switch msg := in.Msg.(type) {
+		// Round1
+		case *pb.DkgMessage_Round1Request:
+			fmt.Println("라운드1")
+			seed, err := s.bob.Round1GenerateRandomSeed()
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round1Response{
+					Round1Response: &pb.Round1Response{Seed: seed[:]},
+				},
+			}); err != nil {
+				return err
+			}
+		// Round3
+		case *pb.DkgMessage_Round2Response:
+			fmt.Println("라운드3")
+
+			proof, err := s.bob.Round3SchnorrProve(&dkg.Round2Output{
+				Seed:       [32]byte(msg.Round2Response.Seed),
+				Commitment: msg.Round2Response.Commitment,
+			})
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round3Response{
+					Round3Response: &pb.Round3Response{
+						C:         proof.C.Bytes(),
+						S:         proof.S.Bytes(),
+						Statement: proof.Statement.ToAffineCompressed(),
+					},
+				},
+			}); err != nil {
+				return err
+			}
+			// Round 5
+		case *pb.DkgMessage_Round4Response:
+			fmt.Println("라운드5")
+
+			k256 := curves.K256()
+			c, err := k256.Scalar.SetBytes(msg.Round4Response.C)
+			if err != nil {
+				return err
+			}
+			S, err := k256.Scalar.SetBytes(msg.Round4Response.S)
+			if err != nil {
+				return err
+			}
+			statement, err := k256.Point.FromAffineCompressed(msg.Round4Response.Statement)
+			if err != nil {
+				return err
+			}
+
+			schnorrProof := &schnorr.Proof{
+				C:         c,
+				S:         S,
+				Statement: statement,
+			}
+
+			proof, err := s.bob.Round5DecommitmentAndStartOt(schnorrProof)
+			if err != nil {
+				return err
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round5Response{
+					Round5Response: &pb.Round5Response{
+						C:         proof.C.Bytes(),
+						S:         proof.S.Bytes(),
+						Statement: proof.Statement.ToAffineCompressed(),
+					}},
+			}); err != nil {
+				return err
+			}
+			// Round 7
+
+		case *pb.DkgMessage_Round6Response:
+			fmt.Println("라운드7")
+
+			compressedReceiversMaskedChoice := make([]simplest.ReceiversMaskedChoices, len(msg.Round6Response.ReceiversMaskedChoices))
+			for i, choice := range msg.Round6Response.ReceiversMaskedChoices {
+				compressedReceiversMaskedChoice[i] = choice
+			}
+			challenges, err := s.bob.Round7DkgRound3Ot(compressedReceiversMaskedChoice)
+			if err != nil {
+				return err
+			}
+			challengesBytes := make([][]byte, len(challenges))
+			for i, challenge := range challenges {
+				challengesBytes[i] = challenge[:]
+			}
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round7Response{
+					Round7Response: &pb.Round7Response{
+						OtChallenges: challengesBytes,
+					},
+				},
+			}); err != nil {
+				return err
+			}
+			// Round 9
+		case *pb.DkgMessage_Round8Response:
+			fmt.Println("라운드9")
+
+			challengeResponses := make([]simplest.OtChallengeResponse, len(msg.Round8Response.OtChallengeResponses))
+			for i, response := range msg.Round8Response.OtChallengeResponses {
+				copy(challengeResponses[i][:], response)
+			}
+			challengeOpenings, err := s.bob.Round9DkgRound5Ot(challengeResponses)
+			if err != nil {
+				log.Printf("Error in Round9DkgRound5Ot: %v", err)
+
+				return err
+			}
+
+			// 변환 작업
+			challengeOpeningsBytes := make([][]byte, len(challengeOpenings))
+			for i, opening := range challengeOpenings {
+				// opening은 [2][32]byte 타입이므로, 이를 []byte로 변환
+				challengeOpeningsBytes[i] = make([]byte, 2*32)
+				copy(challengeOpeningsBytes[i][0:32], opening[0][:])
+				copy(challengeOpeningsBytes[i][32:], opening[1][:])
+			}
+
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_Round9Response{
+					Round9Response: &pb.Round9Response{
+						ChallengeOpenings: challengeOpeningsBytes,
+					},
+				},
+			}); err != nil {
+				return err
+			}
+		case *pb.DkgMessage_Round10Response:
+			fmt.Println("라운드끝")
+
+			aliceSecretKeyShare := msg.Round10Response.AliceSecretKeyShare
+			curve := curves.K256()
+			aliceSecretKey, err := curve.Scalar.SetBytes(aliceSecretKeyShare)
+			if err != nil {
+				return err
+			}
+			pkA := curve.ScalarBaseMult(aliceSecretKey)
+			computedPublicKeyA := pkA.Mul(s.bob.Output().SecretKeyShare)
+			publicKeyBytes := computedPublicKeyA.ToAffineUncompressed()
+			publicKeyUnmarshal, err := crypto.UnmarshalPubkey(publicKeyBytes)
+			if err != nil {
+				log.Fatalf("Failed to unmarshal public key: %v", err)
+			}
+			address := crypto.PubkeyToAddress(*publicKeyUnmarshal)
+
+			// DKG 완료
+			if err := stream.Send(&pb.DkgMessage{
+				Msg: &pb.DkgMessage_KeyGenResponse{
+					KeyGenResponse: &pb.KeyGenResponse{
+						Success: true,
+						Address: address.Hex(),
+					},
+				},
+			}); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+
+// cmd/gateway/handlers/dkg.go
+package handlers
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	pb "tecdsa/pkg/api/grpc/dkg"
+
+	"google.golang.org/grpc"
+)
+
+func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now() // Start time measurement
+
+	// Bob과 연결
+	bobConn, err := grpc.Dial("bob:50051", grpc.WithInsecure())
+	if err != nil {
+		http.Error(w, "Failed to connect to Bob", http.StatusInternalServerError)
+		return
+	}
+	defer bobConn.Close()
+	bobClient := pb.NewDkgServiceClient(bobConn)
+
+	// Alice와 연결
+	aliceConn, err := grpc.Dial("alice:50052", grpc.WithInsecure())
+	if err != nil {
+		http.Error(w, "Failed to connect to Alice", http.StatusInternalServerError)
+		return
+	}
+	defer aliceConn.Close()
+	aliceClient := pb.NewDkgServiceClient(aliceConn)
+
+	// Bob의 KeyGen 스트림 시작
+	bobStream, err := bobClient.KeyGen(context.Background())
+	if err != nil {
+		http.Error(w, "Failed to create Bob stream", http.StatusInternalServerError)
+		return
+	}
+
+	// Alice의 KeyGen 스트림 시작
+	aliceStream, err := aliceClient.KeyGen(context.Background())
+	if err != nil {
+		http.Error(w, "Failed to create Alice stream", http.StatusInternalServerError)
+		return
+	}
+
+	// DKG 프로토콜 시작
+	if err := bobStream.Send(&pb.DkgMessage{Msg: &pb.DkgMessage_Round1Request{Round1Request: &pb.Round1Request{}}}); err != nil {
+		http.Error(w, "Failed to send initial request to Bob", http.StatusInternalServerError)
+		return
+	}
+
+	// Bob과 Alice 사이의 메시지 교환
+	for {
+		// Bob으로부터 응답 받기
+		bobResp, err := bobStream.Recv()
+		if err != nil {
+			http.Error(w, "Failed to receive response from Bob", http.StatusInternalServerError)
+			return
+		}
+		// DKG 프로토콜 완료 확인
+		if keyGenResp, ok := bobResp.Msg.(*pb.DkgMessage_KeyGenResponse); ok {
+			endTime := time.Now() // End time measurement
+			duration := endTime.Sub(startTime)
+
+			fmt.Println("생성된 주소:", keyGenResp.KeyGenResponse.Address)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success":  true,
+				"address":  keyGenResp.KeyGenResponse.Address,
+				"duration": duration.Seconds(),
+			})
+			return
+		}
+
+		// Bob의 응답을 Alice에게 전송
+		if err := aliceStream.Send(bobResp); err != nil {
+			http.Error(w, "Failed to send Bob's response to Alice", http.StatusInternalServerError)
+			return
+		}
+
+		// Alice로부터 응답 받기
+		aliceResp, err := aliceStream.Recv()
+		if err != nil {
+			http.Error(w, "Failed to receive response from Alice", http.StatusInternalServerError)
+			return
+		}
+
+		// Alice의 응답을 Bob에게 전송
+		if err := bobStream.Send(aliceResp); err != nil {
+			http.Error(w, "Failed to send Alice's response to Bob", http.StatusInternalServerError)
+			return
+		}
+
+	}
+}
+
+
+// cmd/gateway/main.go
+package main
+
+import (
+	"log"
+	"net/http"
+
+	"tecdsa/cmd/gateway/server"
+)
+
+func main() {
+	// db.Init()
+	srv := server.NewServer()
+	log.Fatal(http.ListenAndServe(":8080", srv))
+}
+
+
+// cmd/gateway/server/server.go
+package server
+
+import (
+	"net/http"
+
+	"tecdsa/cmd/gateway/handlers"
+)
+
+func NewServer() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/key_gen", handlers.KeyGenHandler)
+	return mux
+}
+
+
+// db/init.go
+package db
+
+import (
+	"log"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
+
+var DB *gorm.DB
+
+func Init() {
+	var err error
+	dsn := "root:password@tcp(mysql:3306)/tecdsa?charset=utf8mb4&parseTime=True&loc=Local"
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Migrate the schema
+	DB.AutoMigrate(&RequestLog{})
+
+	log.Println("Connected to database successfully")
+}
+
+
+// db/logger.go
+package db
+
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+)
+
+type ResponseWriter struct {
+	http.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w ResponseWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+
+func LogRequest(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params, _ := json.Marshal(r.URL.Query())
+		body, _ := io.ReadAll(r.Body)
+		r.Body = io.NopCloser(bytes.NewReader(body))
+		headers, _ := json.Marshal(r.Header)
+
+		responseBody := &bytes.Buffer{}
+		responseWriter := &ResponseWriter{
+			ResponseWriter: w,
+			body:           responseBody,
+		}
+
+		handler.ServeHTTP(responseWriter, r)
+
+		requestLog := RequestLog{
+			Path:      r.URL.Path,
+			Region:    r.Header.Get("X-Region"),
+			Params:    string(params),
+			Body:      string(body),
+			Method:    r.Method,
+			Headers:   string(headers),
+			IPAddress: r.RemoteAddr,
+			Response:  responseBody.String(), // 응답 결과 저장
+		}
+
+		result := DB.Create(&requestLog)
+		if result.Error != nil {
+			log.Printf("Failed to log request: %v", result.Error)
+		}
+	}
+}
+
+
+// db/model.go
+package db
+
+import (
+	"gorm.io/gorm"
+)
+
+type RequestLog struct {
+	gorm.Model
+	Path      string
+	Region    string
+	Params    string `gorm:"type:text"`
+	Body      string `gorm:"type:text"`
+	Method    string
+	Headers   string `gorm:"type:text"`
+	IPAddress string
+	Response  string `gorm:"type:text"` // 응답 결과를 저장할 필드 추가
+}
+
+
+// internal/codec/dkg/encoding.go
+package encoidng
+
+// import (
+// 	"bytes"
+// 	"encoding/gob"
+
+// 	"github.com/pkg/errors"
+
+// 	"github.com/coinbase/kryptology/pkg/core/curves"
+// 	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
+// 	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
+// 	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+// )
+
+// const payloadKey = "direct"
+
+// type DkgRoundMessage struct {
+// 	Payloads map[string][]byte
+// 	Metadata map[string]string
+// }
+
+// func newDkgRoundMessage(payload []byte, round string) *DkgRoundMessage {
+// 	return &DkgRoundMessage{
+// 		Payloads: map[string][]byte{payloadKey: payload},
+// 		Metadata: map[string]string{"round": round},
+// 	}
+// }
+
+// func registerTypes() {
+// 	gob.Register(&curves.ScalarK256{})
+// 	gob.Register(&curves.PointK256{})
+// 	gob.Register(&curves.ScalarP256{})
+// 	gob.Register(&curves.PointP256{})
+// }
+
+// func EncodeDkgRound1Output(commitment [32]byte, version uint) (*DkgRoundMessage, error) {
+// 	registerTypes()
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(&commitment); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "1"), nil
+// }
+
+// func DecodeDkgRound2Input(m *DkgRoundMessage) ([32]byte, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := [32]byte{}
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return [32]byte{}, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound2Output(output *dkg.Round2Output) (*DkgRoundMessage, error) {
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(output); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "2"), nil
+// }
+
+// func DecodeDkgRound3Input(m *DkgRoundMessage) (*dkg.Round2Output, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := new(dkg.Round2Output)
+// 	if err := dec.Decode(decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound3Output(proof *schnorr.Proof, version uint) (*DkgRoundMessage, error) {
+
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(proof); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "3"), nil
+// }
+
+// func DecodeDkgRound4Input(m *DkgRoundMessage) (*schnorr.Proof, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := new(schnorr.Proof)
+// 	if err := dec.Decode(decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound4Output(proof *schnorr.Proof) (*DkgRoundMessage, error) {
+
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(proof); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "4"), nil
+// }
+
+// func DecodeDkgRound5Input(m *DkgRoundMessage) (*schnorr.Proof, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := new(schnorr.Proof)
+// 	if err := dec.Decode(decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound5Output(proof *schnorr.Proof, version uint) (*DkgRoundMessage, error) {
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(proof); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "5"), nil
+// }
+
+// func DecodeDkgRound6Input(m *DkgRoundMessage) (*schnorr.Proof, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := new(schnorr.Proof)
+// 	if err := dec.Decode(decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound6Output(choices []simplest.ReceiversMaskedChoices) (*DkgRoundMessage, error) {
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(choices); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "6"), nil
+// }
+
+// func DecodeDkgRound7Input(m *DkgRoundMessage) ([]simplest.ReceiversMaskedChoices, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := []simplest.ReceiversMaskedChoices{}
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound7Output(challenge []simplest.OtChallenge, version uint) (*DkgRoundMessage, error) {
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(challenge); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "7"), nil
+// }
+
+// func DecodeDkgRound8Input(m *DkgRoundMessage) ([]simplest.OtChallenge, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := []simplest.OtChallenge{}
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound8Output(responses []simplest.OtChallengeResponse) (*DkgRoundMessage, error) {
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(responses); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "8"), nil
+// }
+
+// func DecodeDkgRound9Input(m *DkgRoundMessage) ([]simplest.OtChallengeResponse, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := []simplest.OtChallengeResponse{}
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// func EncodeDkgRound9Output(opening []simplest.ChallengeOpening) (*DkgRoundMessage, error) {
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(opening); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "9"), nil
+// }
+
+// func DecodeDkgRound10Input(m *DkgRoundMessage) ([]simplest.ChallengeOpening, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := []simplest.ChallengeOpening{}
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// // EncodeAliceDkgOutput serializes Alice DKG
+// func EncodeAliceDkgOutput(result *dkg.AliceOutput) (*DkgRoundMessage, error) {
+// 	registerTypes()
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(result); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "alice-output"), nil
+// }
+
+// // DecodeAliceDkgResult deserializes Alice DKG output.
+// func DecodeAliceDkgResult(m *DkgRoundMessage) (*dkg.AliceOutput, error) {
+// 	registerTypes()
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := new(dkg.AliceOutput)
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+// // EncodeBobDkgOutput serializes Bob DKG output
+// func EncodeBobDkgOutput(result *dkg.BobOutput) (*DkgRoundMessage, error) {
+// 	registerTypes()
+// 	buf := bytes.NewBuffer([]byte{})
+// 	enc := gob.NewEncoder(buf)
+// 	if err := enc.Encode(result); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return newDkgRoundMessage(buf.Bytes(), "bob-output"), nil
+// }
+
+// // DecodeBobDkgResult deserializes Bob DKG output.
+// func DecodeBobDkgResult(m *DkgRoundMessage) (*dkg.BobOutput, error) {
+// 	buf := bytes.NewBuffer(m.Payloads[payloadKey])
+// 	dec := gob.NewDecoder(buf)
+// 	decoded := new(dkg.BobOutput)
+// 	if err := dec.Decode(&decoded); err != nil {
+// 		return nil, errors.WithStack(err)
+// 	}
+// 	return decoded, nil
+// }
+
+
+// internal/codec/proto/codec.go
+package codec
+
+// import (
+// 	"fmt"
+// )
+
+// const (
+// 	DigestSize = 32
+// )
+
+// type Seed [DigestSize]byte
+// type Commitment = []byte
+
+// func MarshalProtoSeed(s Seed) ([]byte, error) {
+// 	return s[:], nil
+// }
+
+// func UnmarshalProtoSeed(data []byte) (Seed, error) {
+// 	if len(data) != DigestSize {
+// 		return Seed{}, fmt.Errorf("invalid seed length")
+// 	}
+// 	var s Seed
+// 	copy(s[:], data)
+// 	return s, nil
+// }
+
+// func MarshalProtoCommitment(c Commitment) ([]byte, error) {
+// 	return c, nil
+// }
+
+// func UnmarshalProtoCommitment(data []byte) (Commitment, error) {
+// 	c := make(Commitment, len(data))
+// 	copy(c, data)
+// 	return c, nil
+// }
+
+
+// internal/dkls/dkg/dkg.go
+package dkg
+
+import (
+	"crypto/rand"
+
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
+	"github.com/coinbase/kryptology/pkg/ot/extension/kos"
+	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+	"github.com/gtank/merlin"
+	"github.com/pkg/errors"
+)
+
+const (
+	// keyCount is the number of encryption keys created. Since this is a 1-out-of-2 OT, the key count is set to 2.
+	keyCount = 2
+
+	// DigestSize is the length of hash. Similarly, when it comes to encrypting and decryption, it is the size of the
+	// plaintext and ciphertext.
+	DigestSize = 32
+)
+
+// AliceOutput is the result of running DKG for Alice. It contains both the public and secret values that are needed
+// for signing.
+type AliceOutput struct {
+	// PublicKey is the joint public key of Alice and Bob.
+	// This value is public.
+	PublicKey curves.Point
+
+	// SecretKeyShare is Alice's secret key for the joint public key.
+	// This output must be kept secret. If it is lost, the users will lose access and cannot create signatures.
+	SecretKeyShare curves.Scalar
+
+	// SeedOtResult are the outputs that the receiver will obtain as a result of running the "random" OT protocol.
+	// This output must be kept secret. Although, if it is lost the users can run another OT protocol and obtain
+	// new values to replace it.
+	SeedOtResult *simplest.ReceiverOutput
+}
+
+// BobOutput is the result of running DKG for Bob. It contains both the public and secret values that are needed
+// for signing.
+type BobOutput struct {
+	// PublicKey is the joint public key of Alice and Bob.
+	// This value is public.
+	PublicKey curves.Point
+
+	// SecretKeyShare is Bob's secret key for the joint public key.
+	// This output must be kept secret. If it is lost, the users will lose access and cannot create signatures.
+	SecretKeyShare curves.Scalar
+
+	// SeedOtResult are the outputs that the sender will obtain as a result of running the "random" OT protocol.
+	// This output must be kept secret. Although, if it is lost the users can run another OT protocol and obtain
+	// new values to replace it.
+	SeedOtResult *simplest.SenderOutput
+}
+type Alice struct {
+	prover         *schnorr.Prover
+	proof          *schnorr.Proof
+	receiver       *simplest.Receiver
+	secretKeyShare curves.Scalar
+	publicKey      curves.Point
+	curve          *curves.Curve // Add this line
+	transcript     *merlin.Transcript
+}
+
+type Bob struct {
+	prover          *schnorr.Prover
+	sender          *simplest.Sender
+	secretKeyShare  curves.Scalar
+	publicKey       curves.Point
+	aliceCommitment schnorr.Commitment
+	aliceSalt       [simplest.DigestSize]byte
+	curve           *curves.Curve
+	transcript      *merlin.Transcript
+}
+
+type Round2Output struct {
+	// Seed is the random value used to derive the joint unique session id.
+	Seed [simplest.DigestSize]byte
+
+	// Commitment is the commitment to the ZKP to Alice's secret key share.
+	Commitment schnorr.Commitment
+}
+
+type Proof struct {
+	C         curves.Scalar
+	S         curves.Scalar
+	Statement curves.Point
+}
+
+type (
+	// OneTimePadDecryptionKey is the type of Rho^w, Rho^0, and RHo^1 in the paper.
+	OneTimePadDecryptionKey = [DigestSize]byte
+
+	// OneTimePadEncryptionKeys is the type of Rho^0, and RHo^1 in the paper.
+	OneTimePadEncryptionKeys = [keyCount][DigestSize]byte
+
+	// OtChallenge is the type of xi in the paper.
+	OtChallenge = [DigestSize]byte
+
+	// OtChallengeResponse is the type of Rho' in the paper.
+	OtChallengeResponse = [DigestSize]byte
+
+	// ChallengeOpening is the type of hashed Rho^0 and Rho^1
+	ChallengeOpening = [keyCount][DigestSize]byte
+
+	// ReceiversMaskedChoices corresponds to the "A" value in the paper in compressed format.
+	ReceiversMaskedChoices = []byte
+)
+
+func NewAlice(curve *curves.Curve) *Alice {
+	return &Alice{
+		curve:      curve,
+		transcript: merlin.NewTranscript("Coinbase_DKLs_DKG"),
+	}
+}
+
+func NewBob(curve *curves.Curve) *Bob {
+	return &Bob{
+		curve:      curve,
+		transcript: merlin.NewTranscript("Coinbase_DKLs_DKG"),
+	}
+}
+
+func (bob *Bob) Round1GenerateRandomSeed() ([simplest.DigestSize]byte, error) {
+	bobSeed := [simplest.DigestSize]byte{}
+	if _, err := rand.Read(bobSeed[:]); err != nil {
+		return [simplest.DigestSize]byte{}, errors.Wrap(err, "generating random bytes in bob DKG round 1 generate")
+	}
+	bob.transcript.AppendMessage([]byte("session_id_bob"), bobSeed[:])
+	return bobSeed, nil
+}
+
+func (alice *Alice) Round2CommitToProof(bobSeed [simplest.DigestSize]byte) (*Round2Output, error) {
+	aliceSeed := [simplest.DigestSize]byte{}
+	if _, err := rand.Read(aliceSeed[:]); err != nil {
+		return nil, errors.Wrap(err, "generating random bytes in alice DKG round 2 generate")
+	}
+	alice.transcript.AppendMessage([]byte("session_id_bob"), bobSeed[:])
+	alice.transcript.AppendMessage([]byte("session_id_alice"), aliceSeed[:])
+
+	uniqueSessionId := [simplest.DigestSize]byte{}
+	copy(uniqueSessionId[:], alice.transcript.ExtractBytes([]byte("salt for simplest OT"), simplest.DigestSize))
+	alice.receiver, _ = simplest.NewReceiver(alice.curve, kos.Kappa, uniqueSessionId)
+
+	alice.secretKeyShare = alice.curve.Scalar.Random(rand.Reader)
+	copy(uniqueSessionId[:], alice.transcript.ExtractBytes([]byte("salt for alice schnorr"), simplest.DigestSize))
+	alice.prover = schnorr.NewProver(alice.curve, nil, uniqueSessionId[:])
+	var commitment schnorr.Commitment
+	alice.proof, commitment, _ = alice.prover.ProveCommit(alice.secretKeyShare)
+
+	return &Round2Output{
+		Commitment: commitment,
+		Seed:       aliceSeed,
+	}, nil
+}
+
+// Implement other rounds similarly
+
+// Round3SchnorrProve receives Bob's Commitment and returns schnorr statment + proof.
+// Steps 1 and 3 of protocol 2 on page 7.
+func (bob *Bob) Round3SchnorrProve(round2Output *Round2Output) (*schnorr.Proof, error) {
+	bob.transcript.AppendMessage([]byte("session_id_alice"), round2Output.Seed[:])
+
+	bob.aliceCommitment = round2Output.Commitment // store it, so that we can check when alice decommits
+
+	var err error
+	uniqueSessionId := [simplest.DigestSize]byte{} // note: will use and re-use this below for sub-session IDs.
+	copy(uniqueSessionId[:], bob.transcript.ExtractBytes([]byte("salt for simplest OT"), simplest.DigestSize))
+	bob.sender, err = simplest.NewSender(bob.curve, kos.Kappa, uniqueSessionId)
+	if err != nil {
+		return nil, errors.Wrap(err, "bob constructing new OT sender in DKG round 2")
+	}
+	// extract alice's salt in the right order; we won't use this until she reveals her proof and we verify it below
+	copy(bob.aliceSalt[:], bob.transcript.ExtractBytes([]byte("salt for alice schnorr"), simplest.DigestSize))
+	bob.secretKeyShare = bob.curve.Scalar.Random(rand.Reader)
+	copy(uniqueSessionId[:], bob.transcript.ExtractBytes([]byte("salt for bob schnorr"), simplest.DigestSize))
+	bob.prover = schnorr.NewProver(bob.curve, nil, uniqueSessionId[:])
+	proof, err := bob.prover.Prove(bob.secretKeyShare)
+	if err != nil {
+		return nil, errors.Wrap(err, "bob schnorr proving in DKG round 2")
+	}
+	return proof, err
+}
+
+// Round4VerifyAndReveal step 4 of protocol 2 on page 7.
+func (alice *Alice) Round4VerifyAndReveal(proof *schnorr.Proof) (*schnorr.Proof, error) {
+	var err error
+	uniqueSessionId := [simplest.DigestSize]byte{}
+	copy(uniqueSessionId[:], alice.transcript.ExtractBytes([]byte("salt for bob schnorr"), simplest.DigestSize))
+	if err = schnorr.Verify(proof, alice.curve, nil, uniqueSessionId[:]); err != nil {
+		return nil, errors.Wrap(err, "alice's verification of Bob's schnorr proof failed in DKG round 3")
+	}
+	alice.publicKey = proof.Statement.Mul(alice.secretKeyShare)
+	return alice.proof, nil
+}
+
+// Round5DecommitmentAndStartOt step 5 of protocol 2 on page 7.
+func (bob *Bob) Round5DecommitmentAndStartOt(proof *schnorr.Proof) (*schnorr.Proof, error) {
+	var err error
+	if err = schnorr.DecommitVerify(proof, bob.aliceCommitment, bob.curve, nil, bob.aliceSalt[:]); err != nil {
+		return nil, errors.Wrap(err, "decommit + verify failed in bob's DKG round 4")
+	}
+	bob.publicKey = proof.Statement.Mul(bob.secretKeyShare)
+	seedOTRound1Output, err := bob.sender.Round1ComputeAndZkpToPublicKey()
+	if err != nil {
+		return nil, errors.Wrap(err, "bob computing round 1 of seed  OT within DKG round 4")
+	}
+	return seedOTRound1Output, nil
+}
+
+// Round6DkgRound2Ot is a thin wrapper around the 2nd round of seed OT protocol.
+func (alice *Alice) Round6DkgRound2Ot(proof *schnorr.Proof) ([]simplest.ReceiversMaskedChoices, error) {
+	return alice.receiver.Round2VerifySchnorrAndPadTransfer(proof)
+}
+
+// Round7DkgRound3Ot is a thin wrapper around the 3rd round of seed OT protocol.
+func (bob *Bob) Round7DkgRound3Ot(compressedReceiversMaskedChoice []simplest.ReceiversMaskedChoices) ([]simplest.OtChallenge, error) {
+	return bob.sender.Round3PadTransfer(compressedReceiversMaskedChoice)
+}
+
+// Round8DkgRound4Ot is a thin wrapper around the 4th round of seed OT protocol.
+func (alice *Alice) Round8DkgRound4Ot(challenge []simplest.OtChallenge) ([]simplest.OtChallengeResponse, error) {
+	return alice.receiver.Round4RespondToChallenge(challenge)
+}
+
+// Round9DkgRound5Ot is a thin wrapper around the 5th round of seed OT protocol.
+func (bob *Bob) Round9DkgRound5Ot(challengeResponses []simplest.OtChallengeResponse) ([]simplest.ChallengeOpening, error) {
+	return bob.sender.Round5Verify(challengeResponses)
+}
+
+// Round10DkgRound6Ot is a thin wrapper around the 6th round of seed OT protocol.
+func (alice *Alice) Round10DkgRound6Ot(challengeOpenings []simplest.ChallengeOpening) error {
+	return alice.receiver.Round6Verify(challengeOpenings)
+}
+
+// Output returns the output of the DKG operation. Must be called after step 9. Calling it before that step
+// has undefined behaviour.
+func (alice *Alice) Output() *AliceOutput {
+	return &AliceOutput{
+		PublicKey:      alice.publicKey,
+		SecretKeyShare: alice.secretKeyShare,
+		SeedOtResult:   alice.receiver.Output,
+	}
+}
+
+// Output returns the output of the DKG operation. Must be called after step 9. Calling it before that step
+// has undefined behaviour.
+func (bob *Bob) Output() *BobOutput {
+	return &BobOutput{
+		PublicKey:      bob.publicKey,
+		SecretKeyShare: bob.secretKeyShare,
+		SeedOtResult:   bob.sender.Output,
+	}
+}
+
+
+// internal/dkls/network/eth.go
+package eth
+
+import (
+	"bytes"
+	"context"
+	"crypto/ecdsa"
+	"fmt"
+	"math/big"
+	"time"
+
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+)
+
+// 로우 트랜잭션 생성
+func GenerateTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *types.Transaction {
+	tx := types.NewTx(&types.LegacyTx{
+		Nonce:    nonce,
+		To:       &to,
+		Value:    amount,
+		Gas:      gasLimit,
+		GasPrice: gasPrice,
+		Data:     data,
+	})
+	return tx
+}
+
+// Private Key를 사용하여 트랜잭션 생성 및 서명 -> 서명 트랜잭션
+func SignTransactionWithPrivateKey(client *ethclient.Client, privateKey *ecdsa.PrivateKey, toAddress common.Address, amount *big.Int) (*types.Transaction, error) {
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("error casting public key to ECDSA")
+	}
+
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get nonce: %v", err)
+	}
+
+	gasLimit := uint64(21000)
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get gas price: %v", err)
+	}
+	gasPrice = new(big.Int).Mul(gasPrice, big.NewInt(15))
+	gasPrice = new(big.Int).Div(gasPrice, big.NewInt(10))
+
+	fmt.Println("fromAddress: ", fromAddress.Hex())
+	fmt.Println("nonce: ", nonce)
+
+	tx := GenerateTransaction(nonce, toAddress, amount, gasLimit, gasPrice, nil)
+
+	chainID, err := client.NetworkID(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chain ID: %v", err)
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign transaction: %v", err)
+	}
+
+	return signedTx, nil
+}
+
+// 서명 트랜잭션 브로드 케스트
+func SendSignedTransaction(client *ethclient.Client, signedTx *types.Transaction, wait ...bool) error {
+	// wait의 기본값을 false로 설정
+	shouldWait := false
+	if len(wait) > 0 {
+		shouldWait = wait[0]
+	}
+
+	// 트랜잭션 전송
+	err := client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return fmt.Errorf("failed to send transaction: %v", err)
+	}
+
+	fmt.Printf("Transaction sent: %s\n", signedTx.Hash().Hex())
+
+	// 트랜잭션 완료를 기다릴지 결정
+	if shouldWait {
+		receipt, err := waitForTransaction(client, signedTx.Hash())
+		if err != nil {
+			return fmt.Errorf("error waiting for transaction: %v", err)
+		}
+		fmt.Printf("Transaction confirmed in block %d\n", receipt.BlockNumber.Uint64())
+	}
+
+	return nil
+}
+
+// 트랜잭션 완료를 기다리는 헬퍼 함수
+func waitForTransaction(client *ethclient.Client, txHash common.Hash) (*types.Receipt, error) {
+	for {
+		receipt, err := client.TransactionReceipt(context.Background(), txHash)
+		if err != nil {
+			if err == ethereum.NotFound {
+				time.Sleep(time.Second) // 1초 대기 후 다시 시도
+				continue
+			}
+			return nil, err
+		}
+		return receipt, nil
+	}
+}
+
+// 트랜잭션 RLP 인코딩
+func EncodeTransactionRLP(tx *types.Transaction) ([]byte, error) {
+	var buf bytes.Buffer
+	err := tx.EncodeRLP(&buf)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+
+// main.go
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+func main() {
+	rootDir := "." // 현재 디렉토리를 루트로 설정
+	outputFile := "one.txt"
+
+	file, err := os.Create(outputFile)
+	if err != nil {
+		fmt.Printf("파일 생성 오류: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	err = filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.HasSuffix(path, ".go") {
+			relPath, _ := filepath.Rel(rootDir, path)
+			content, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			_, err = fmt.Fprintf(file, "// %s\n%s\n\n", relPath, string(content))
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("오류 발생: %v\n", err)
+	} else {
+		fmt.Printf("%s 파일이 생성되었습니다.\n", outputFile)
+	}
+}
+
+
+// pkg/api/grpc/dkg/dkg.pb.go
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.34.2
@@ -2046,3 +3460,150 @@ func file_pkg_api_grpc_dkg_dkg_proto_init() {
 	file_pkg_api_grpc_dkg_dkg_proto_goTypes = nil
 	file_pkg_api_grpc_dkg_dkg_proto_depIdxs = nil
 }
+
+
+// pkg/api/grpc/dkg/dkg_grpc.pb.go
+// Code generated by protoc-gen-go-grpc. DO NOT EDIT.
+// versions:
+// - protoc-gen-go-grpc v1.4.0
+// - protoc             v5.27.1
+// source: pkg/api/grpc/dkg/dkg.proto
+
+package dkg
+
+import (
+	context "context"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+)
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.62.0 or later.
+const _ = grpc.SupportPackageIsVersion8
+
+const (
+	DkgService_KeyGen_FullMethodName = "/dkg.DkgService/KeyGen"
+)
+
+// DkgServiceClient is the client API for DkgService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type DkgServiceClient interface {
+	KeyGen(ctx context.Context, opts ...grpc.CallOption) (DkgService_KeyGenClient, error)
+}
+
+type dkgServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDkgServiceClient(cc grpc.ClientConnInterface) DkgServiceClient {
+	return &dkgServiceClient{cc}
+}
+
+func (c *dkgServiceClient) KeyGen(ctx context.Context, opts ...grpc.CallOption) (DkgService_KeyGenClient, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &DkgService_ServiceDesc.Streams[0], DkgService_KeyGen_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &dkgServiceKeyGenClient{ClientStream: stream}
+	return x, nil
+}
+
+type DkgService_KeyGenClient interface {
+	Send(*DkgMessage) error
+	Recv() (*DkgMessage, error)
+	grpc.ClientStream
+}
+
+type dkgServiceKeyGenClient struct {
+	grpc.ClientStream
+}
+
+func (x *dkgServiceKeyGenClient) Send(m *DkgMessage) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *dkgServiceKeyGenClient) Recv() (*DkgMessage, error) {
+	m := new(DkgMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// DkgServiceServer is the server API for DkgService service.
+// All implementations must embed UnimplementedDkgServiceServer
+// for forward compatibility
+type DkgServiceServer interface {
+	KeyGen(DkgService_KeyGenServer) error
+	mustEmbedUnimplementedDkgServiceServer()
+}
+
+// UnimplementedDkgServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedDkgServiceServer struct {
+}
+
+func (UnimplementedDkgServiceServer) KeyGen(DkgService_KeyGenServer) error {
+	return status.Errorf(codes.Unimplemented, "method KeyGen not implemented")
+}
+func (UnimplementedDkgServiceServer) mustEmbedUnimplementedDkgServiceServer() {}
+
+// UnsafeDkgServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DkgServiceServer will
+// result in compilation errors.
+type UnsafeDkgServiceServer interface {
+	mustEmbedUnimplementedDkgServiceServer()
+}
+
+func RegisterDkgServiceServer(s grpc.ServiceRegistrar, srv DkgServiceServer) {
+	s.RegisterService(&DkgService_ServiceDesc, srv)
+}
+
+func _DkgService_KeyGen_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DkgServiceServer).KeyGen(&dkgServiceKeyGenServer{ServerStream: stream})
+}
+
+type DkgService_KeyGenServer interface {
+	Send(*DkgMessage) error
+	Recv() (*DkgMessage, error)
+	grpc.ServerStream
+}
+
+type dkgServiceKeyGenServer struct {
+	grpc.ServerStream
+}
+
+func (x *dkgServiceKeyGenServer) Send(m *DkgMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *dkgServiceKeyGenServer) Recv() (*DkgMessage, error) {
+	m := new(DkgMessage)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// DkgService_ServiceDesc is the grpc.ServiceDesc for DkgService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DkgService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "dkg.DkgService",
+	HandlerType: (*DkgServiceServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "KeyGen",
+			Handler:       _DkgService_KeyGen_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "pkg/api/grpc/dkg/dkg.proto",
+}
+
+
