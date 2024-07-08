@@ -2,13 +2,13 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"tecdsa/cmd/gateway/server"
-	"tecdsa/db"
 )
 
 func main() {
-	db.Init()
+	// db.Init()
 	srv := server.NewServer()
-	log.Fatal(srv.Run())
+	log.Fatal(http.ListenAndServe(":8080", srv))
 }

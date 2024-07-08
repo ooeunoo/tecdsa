@@ -19,92 +19,124 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	DKG_ProcessDKG_FullMethodName = "/dkg.DKG/ProcessDKG"
+	DkgService_KeyGen_FullMethodName = "/dkg.DkgService/KeyGen"
 )
 
-// DKGClient is the client API for DKG service.
+// DkgServiceClient is the client API for DkgService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type DKGClient interface {
-	ProcessDKG(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (*NumberResponse, error)
+type DkgServiceClient interface {
+	KeyGen(ctx context.Context, opts ...grpc.CallOption) (DkgService_KeyGenClient, error)
 }
 
-type dKGClient struct {
+type dkgServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewDKGClient(cc grpc.ClientConnInterface) DKGClient {
-	return &dKGClient{cc}
+func NewDkgServiceClient(cc grpc.ClientConnInterface) DkgServiceClient {
+	return &dkgServiceClient{cc}
 }
 
-func (c *dKGClient) ProcessDKG(ctx context.Context, in *NumberRequest, opts ...grpc.CallOption) (*NumberResponse, error) {
+func (c *dkgServiceClient) KeyGen(ctx context.Context, opts ...grpc.CallOption) (DkgService_KeyGenClient, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(NumberResponse)
-	err := c.cc.Invoke(ctx, DKG_ProcessDKG_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &DkgService_ServiceDesc.Streams[0], DkgService_KeyGen_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &dkgServiceKeyGenClient{ClientStream: stream}
+	return x, nil
 }
 
-// DKGServer is the server API for DKG service.
-// All implementations must embed UnimplementedDKGServer
-// for forward compatibility
-type DKGServer interface {
-	ProcessDKG(context.Context, *NumberRequest) (*NumberResponse, error)
-	mustEmbedUnimplementedDKGServer()
+type DkgService_KeyGenClient interface {
+	Send(*DkgMessage) error
+	Recv() (*DkgMessage, error)
+	grpc.ClientStream
 }
 
-// UnimplementedDKGServer must be embedded to have forward compatible implementations.
-type UnimplementedDKGServer struct {
+type dkgServiceKeyGenClient struct {
+	grpc.ClientStream
 }
 
-func (UnimplementedDKGServer) ProcessDKG(context.Context, *NumberRequest) (*NumberResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProcessDKG not implemented")
-}
-func (UnimplementedDKGServer) mustEmbedUnimplementedDKGServer() {}
-
-// UnsafeDKGServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DKGServer will
-// result in compilation errors.
-type UnsafeDKGServer interface {
-	mustEmbedUnimplementedDKGServer()
+func (x *dkgServiceKeyGenClient) Send(m *DkgMessage) error {
+	return x.ClientStream.SendMsg(m)
 }
 
-func RegisterDKGServer(s grpc.ServiceRegistrar, srv DKGServer) {
-	s.RegisterService(&DKG_ServiceDesc, srv)
-}
-
-func _DKG_ProcessDKG_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NumberRequest)
-	if err := dec(in); err != nil {
+func (x *dkgServiceKeyGenClient) Recv() (*DkgMessage, error) {
+	m := new(DkgMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(DKGServer).ProcessDKG(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DKG_ProcessDKG_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DKGServer).ProcessDKG(ctx, req.(*NumberRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
-// DKG_ServiceDesc is the grpc.ServiceDesc for DKG service.
+// DkgServiceServer is the server API for DkgService service.
+// All implementations must embed UnimplementedDkgServiceServer
+// for forward compatibility
+type DkgServiceServer interface {
+	KeyGen(DkgService_KeyGenServer) error
+	mustEmbedUnimplementedDkgServiceServer()
+}
+
+// UnimplementedDkgServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedDkgServiceServer struct {
+}
+
+func (UnimplementedDkgServiceServer) KeyGen(DkgService_KeyGenServer) error {
+	return status.Errorf(codes.Unimplemented, "method KeyGen not implemented")
+}
+func (UnimplementedDkgServiceServer) mustEmbedUnimplementedDkgServiceServer() {}
+
+// UnsafeDkgServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DkgServiceServer will
+// result in compilation errors.
+type UnsafeDkgServiceServer interface {
+	mustEmbedUnimplementedDkgServiceServer()
+}
+
+func RegisterDkgServiceServer(s grpc.ServiceRegistrar, srv DkgServiceServer) {
+	s.RegisterService(&DkgService_ServiceDesc, srv)
+}
+
+func _DkgService_KeyGen_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DkgServiceServer).KeyGen(&dkgServiceKeyGenServer{ServerStream: stream})
+}
+
+type DkgService_KeyGenServer interface {
+	Send(*DkgMessage) error
+	Recv() (*DkgMessage, error)
+	grpc.ServerStream
+}
+
+type dkgServiceKeyGenServer struct {
+	grpc.ServerStream
+}
+
+func (x *dkgServiceKeyGenServer) Send(m *DkgMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *dkgServiceKeyGenServer) Recv() (*DkgMessage, error) {
+	m := new(DkgMessage)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// DkgService_ServiceDesc is the grpc.ServiceDesc for DkgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var DKG_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "dkg.DKG",
-	HandlerType: (*DKGServer)(nil),
-	Methods: []grpc.MethodDesc{
+var DkgService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "dkg.DkgService",
+	HandlerType: (*DkgServiceServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "ProcessDKG",
-			Handler:    _DKG_ProcessDKG_Handler,
+			StreamName:    "KeyGen",
+			Handler:       _DkgService_KeyGen_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "pkg/api/grpc/dkg/dkg.proto",
 }

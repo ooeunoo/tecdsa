@@ -1,70 +1,80 @@
 package handlers
 
-import (
-	"context"
+// import (
+// 	"context"
 
-	encoding "tecdsa/internal/encoding/dkg"
+// 	"tecdsa/internal/dkls/dkg"
+// 	pb "tecdsa/pkg/api/grpc/dkg"
 
-	"github.com/coinbase/kryptology/pkg/core/curves"
-	v1 "github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1"
+// 	"google.golang.org/grpc"
+// )
 
-	dkg "github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
+// func ProcessKeyGen(ctx context.Context, bob *dkg.Bob) (*pb.KeyGenResponse, error) {
+// 	conn, err := grpc.Dial("alice:50052", grpc.WithInsecure())
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
+// 	defer conn.Close()
 
-	pb "tecdsa/pkg/api/grpc/dkg"
-)
+// 	client := pb.NewDkgServiceClient(conn)
 
-type DkgHandler struct {
-	pb.UnimplementedDkgServiceServer
-}
+// 	// Round 1
+// 	bobSeed, err := bob.Round1GenerateRandomSeed()
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
+// 	round1Resp, err := client.Round1GenerateRandomSeed(ctx, &pb.Empty{})
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
 
-func NewDkgHandler() *DkgHandler {
-	return &DkgHandler{}
-}
+// 	// Round 2
+// 	round2Resp, err := client.Round2CommitToProof(ctx, &pb.Round1Response{BobSeed: bobSeed[:]})
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
 
-func (h *DkgHandler) GenerateDkg(ctx context.Context, req *pb.DkgRequest) (*pb.DkgResponse, error) {
-	curve := curves.K256()
+// 	// Round 3
+// 	round2Output := &dkg.Round2Output{
+// 		Seed:       round2Resp.Seed,
+// 		Commitment: round2Resp.Commitment,
+// 	}
+// 	proof, err := bob.Round3SchnorrProve(round2Output)
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
+// 	round3Resp, err := client.Round3SchnorrProve(ctx, &pb.Round3Request{
+// 		C:         proof.C.Bytes(),
+// 		S:         proof.S.Bytes(),
+// 		Statement: proof.Statement.ToAffineCompressed(),
+// 	})
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
 
-	bob := dkg.NewBob(curve)
+// 	// Round 4
+// 	aliceProof := &dkg.Proof{
+// 		C:         bob.curve.Scalar.FromBytes(round3Resp.C),
+// 		S:         bob.curve.Scalar.FromBytes(round3Resp.S),
+// 		Statement: bob.curve.Point.FromAffineCompressed(round3Resp.Statement),
+// 	}
+// 	bobProof, err := bob.Round5DecommitmentAndStartOt(aliceProof)
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
+// 	round5Resp, err := client.Round5DecommitmentAndStartOt(ctx, &pb.Round5Request{
+// 		C:         bobProof.C.Bytes(),
+// 		S:         bobProof.S.Bytes(),
+// 		Statement: bobProof.Statement.ToAffineCompressed(),
+// 	})
+// 	if err != nil {
+// 		return &pb.KeyGenResponse{Success: false}, err
+// 	}
 
-	// Implement DKG rounds for Bob
-	seed, err := bob.Round1GenerateRandomSeed()
-	if err != nil {
-		return nil, err
-	}
+// 	// Rounds 6-10 (OT rounds)
+// 	// Implement the OT rounds here, similar to the above rounds
 
-	// Encode seed to send to Alice
-	encodedSeed, err := v1.EncodingDkgRound(seed)
-	if err != nil {
-		return nil, err
-	}
-
-	// Send encodedSeed to Alice and receive encodedRound2Input
-	// This step would involve actual network communication in a real implementation
-
-	// Decode Alice's response
-	round2Input, err := encoding.DecodeDkgRound2Input(encodedRound2Input)
-	if err != nil {
-		return nil, err
-	}
-
-	proof, err := bob.Round3SchnorrProve(round2Input)
-	if err != nil {
-		return nil, err
-	}
-
-	// Continue with remaining rounds...
-
-	// After completing DKG rounds:
-	output := bob.Output()
-
-	// Encode the final output
-	encodedOutput, err := encoding.EncodeBobDkgOutput(output)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.DkgResponse{
-		SessionId:     req.SessionId,
-		EncodedOutput: encodedOutput,
-	}, nil
-}
+// 	// Final output
+// 	output := bob.Output()
+// 	return &pb.KeyGenResponse{Success: true}, nil
+// }

@@ -4,41 +4,55 @@ package dkg;
 
 option go_package = "pkg/api/grpc/dkg";
 
-extend google.protobuf.FieldOptions {
-  string customtype = 50000;
+service DkgService {
+  rpc KeyGen(stream DkgMessage) returns (stream DkgMessage);
 }
 
-service DKG {
-  rpc RequestDKG (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound2 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound3 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound4 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound5 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound6 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound7 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound8 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound9 (DKGMessage) returns (DKGMessage) {}
-  rpc RequestRound10 (DKGMessage) returns (DKGMessage) {}
+message DkgMessage {
+  oneof msg {
+    Round1Request round1Request = 1;
+    Round1Response round1Response = 2;
+    Round2Request round2Request = 3;
+    Round2Response round2Response = 4;
+    Round3Request round3Request = 5;
+    Round3Response round3Response = 6;
+    Round4Request round4Request = 7;
+    Round4Response round4Response = 8;
+    Round5Request round5Request = 9;
+    Round5Response round5Response = 10;
+    Round6Request round6Request = 11;
+    Round6Response round6Response = 12;
+    Round7Request round7Request = 13;
+    Round7Response round7Response = 14;
+    Round8Request round8Request = 15;
+    Round8Response round8Response = 16;
+    Round9Request round9Request = 17;
+    Round9Response round9Response = 18;
+    Round10Request round10Request = 19;
+    Round10Response round10Response = 20;
+        KeyGenResponse keyGenResponse = 21;
+  }
 }
 
-message DKGMessage {
-  string round = 1;
-  bytes payload = 2;
-}
 
-message DKGRound1Payload {
-  bytes seed = 1;
-}
-
-message DKGRound2Payload {
- bytes seed = 1 [(customtype) = "Seed"];
-  bytes commitment = 2 [(customtype) = "Commitment"];
-}
-
-
-message DKGRound2Payload {
- bytes C = 1 [(customtype) = "Scalar"];
-  bytes S = 2 [(customtype) = "Scalar"];
-  bytes Statement = 2 [(customtype) = "Point"];
-}
-
+message Round1Request {}
+message Round1Response { bytes seed = 1; }
+message Round2Request { bytes seed = 1; }
+message Round2Response { bytes seed = 1; bytes commitment = 2; }
+message Round3Request { bytes seed = 1; bytes commitment = 2; }
+message Round3Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round4Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round4Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round5Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round5Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round6Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round6Response { repeated bytes receivers_masked_choices = 1; }
+message Round7Request { repeated bytes receivers_masked_choices = 1; }
+message Round7Response { repeated bytes ot_challenges = 1; }
+message Round8Request { repeated bytes ot_challenges = 1; }
+message Round8Response { repeated bytes ot_challenge_responses = 1; }
+message Round9Request { repeated bytes ot_challenge_responses = 1; }
+message Round9Response { repeated bytes challenge_openings = 1; }
+message Round10Request { repeated bytes challenge_openings = 1; }
+message Round10Response { bool success = 1; bytes alice_secret_key_share = 2; }
+message KeyGenResponse { bool success = 1; string address=2; }

@@ -1,24 +1,23 @@
-//
-// Copyright Coinbase, Inc. All Rights Reserved.
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-
-// Package dkg implements the Distributed Key Generation (DKG) protocol of [DKLs18](https://eprint.iacr.org/2018/499.pdf).
-// The DKG protocol is defined in "Protocol 2" page 7, of the paper. The Zero Knowledge Proof ideal functionalities are
-// realized using schnorr proofs. Moreover, the seed OT is realized using the Verified Simplest OT protocol.
 package dkg
 
 import (
 	"crypto/rand"
 
-	"github.com/gtank/merlin"
-	"github.com/pkg/errors"
-
 	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
 	"github.com/coinbase/kryptology/pkg/ot/extension/kos"
 	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+	"github.com/gtank/merlin"
+	"github.com/pkg/errors"
+)
+
+const (
+	// keyCount is the number of encryption keys created. Since this is a 1-out-of-2 OT, the key count is set to 2.
+	keyCount = 2
+
+	// DigestSize is the length of hash. Similarly, when it comes to encrypting and decryption, it is the size of the
+	// plaintext and ciphertext.
+	DigestSize = 32
 )
 
 // AliceOutput is the result of running DKG for Alice. It contains both the public and secret values that are needed
@@ -54,56 +53,27 @@ type BobOutput struct {
 	// new values to replace it.
 	SeedOtResult *simplest.SenderOutput
 }
-
-// Alice struct encoding Alice's state during one execution of the overall signing algorithm.
-// At the end of the joint computation, Alice will NOT obtain the signature.
 type Alice struct {
-	// prover is a schnorr prover for Alice's portion of public key.
-	prover *schnorr.Prover
-
-	// proof is alice's proof to her portion of the public key. It is stored as an intermediate value, during commitment phase.
-	proof *schnorr.Proof
-
-	// receiver is the base OT receiver.
-	receiver *simplest.Receiver
-
-	// secretKeyShare is Alice's secret key for the joint public key.
+	prover         *schnorr.Prover
+	proof          *schnorr.Proof
+	receiver       *simplest.Receiver
 	secretKeyShare curves.Scalar
-
-	// publicKey is the joint public key of Alice and Bob.
-	publicKey curves.Point
-
-	curve *curves.Curve
-
-	transcript *merlin.Transcript
+	publicKey      curves.Point
+	curve          *curves.Curve // Add this line
+	transcript     *merlin.Transcript
 }
 
-// Bob struct encoding Bob's state during one execution of the overall signing algorithm.
-// At the end of the joint computation, Bob will obtain the signature.
 type Bob struct {
-	// prover is a schnorr prover for Bob's portion of public key.
-	prover *schnorr.Prover // this is a "schnorr statement" for pkB.
-
-	// sender is the base OT sender.
-	sender *simplest.Sender
-
-	// secretKeyShare is Bob's secret key for the joint public key.
-	secretKeyShare curves.Scalar
-
-	// publicKey is the joint public key of Alice and Bob.
-	publicKey curves.Point
-
-	// schnorr proof commitment to Alice's schnorr proof.
+	prover          *schnorr.Prover
+	sender          *simplest.Sender
+	secretKeyShare  curves.Scalar
+	publicKey       curves.Point
 	aliceCommitment schnorr.Commitment
-	// 32-byte transcript salt which will be used for Alice's schnorr proof
-	aliceSalt [simplest.DigestSize]byte
-
-	curve *curves.Curve
-
-	transcript *merlin.Transcript
+	aliceSalt       [simplest.DigestSize]byte
+	curve           *curves.Curve
+	transcript      *merlin.Transcript
 }
 
-// Round2Output contains the output of the 2nd round of DKG.
 type Round2Output struct {
 	// Seed is the random value used to derive the joint unique session id.
 	Seed [simplest.DigestSize]byte
@@ -112,7 +82,32 @@ type Round2Output struct {
 	Commitment schnorr.Commitment
 }
 
-// NewAlice creates a party that can participate in 2-of-2 DKG and threshold signature.
+type Proof struct {
+	C         curves.Scalar
+	S         curves.Scalar
+	Statement curves.Point
+}
+
+type (
+	// OneTimePadDecryptionKey is the type of Rho^w, Rho^0, and RHo^1 in the paper.
+	OneTimePadDecryptionKey = [DigestSize]byte
+
+	// OneTimePadEncryptionKeys is the type of Rho^0, and RHo^1 in the paper.
+	OneTimePadEncryptionKeys = [keyCount][DigestSize]byte
+
+	// OtChallenge is the type of xi in the paper.
+	OtChallenge = [DigestSize]byte
+
+	// OtChallengeResponse is the type of Rho' in the paper.
+	OtChallengeResponse = [DigestSize]byte
+
+	// ChallengeOpening is the type of hashed Rho^0 and Rho^1
+	ChallengeOpening = [keyCount][DigestSize]byte
+
+	// ReceiversMaskedChoices corresponds to the "A" value in the paper in compressed format.
+	ReceiversMaskedChoices = []byte
+)
+
 func NewAlice(curve *curves.Curve) *Alice {
 	return &Alice{
 		curve:      curve,
@@ -120,8 +115,6 @@ func NewAlice(curve *curves.Curve) *Alice {
 	}
 }
 
-// NewBob creates a party that can participate in 2-of-2 DKG and threshold signature. This party
-// is the receiver of the signature at the end.
 func NewBob(curve *curves.Curve) *Bob {
 	return &Bob{
 		curve:      curve,
@@ -129,50 +122,40 @@ func NewBob(curve *curves.Curve) *Bob {
 	}
 }
 
-// Round1GenerateRandomSeed Bob flips random coins, and sends these to Alice
-// in this round, Bob flips 32 random bytes and sends them to Alice.
-// note that this is not _explicitly_ given as part of the protocol in https://eprint.iacr.org/2018/499.pdf, Protocol 1).
-// rather, it is part of our generation of a unique session identifier, for use in subsequent schnorr proofs / seed OT / etc.
-// we do it by having each party sample 32 bytes, then by appending _both_ as salts. secure if either party is honest
 func (bob *Bob) Round1GenerateRandomSeed() ([simplest.DigestSize]byte, error) {
 	bobSeed := [simplest.DigestSize]byte{}
 	if _, err := rand.Read(bobSeed[:]); err != nil {
 		return [simplest.DigestSize]byte{}, errors.Wrap(err, "generating random bytes in bob DKG round 1 generate")
 	}
-	bob.transcript.AppendMessage([]byte("session_id_bob"), bobSeed[:]) // note: bob appends first here
+	bob.transcript.AppendMessage([]byte("session_id_bob"), bobSeed[:])
 	return bobSeed, nil
 }
 
-// Round2CommitToProof steps 1) and 2) of protocol 2 on page 7.
 func (alice *Alice) Round2CommitToProof(bobSeed [simplest.DigestSize]byte) (*Round2Output, error) {
 	aliceSeed := [simplest.DigestSize]byte{}
 	if _, err := rand.Read(aliceSeed[:]); err != nil {
-		return nil, errors.Wrap(err, "generating random bytes in bob DKG round 1 generate")
+		return nil, errors.Wrap(err, "generating random bytes in alice DKG round 2 generate")
 	}
 	alice.transcript.AppendMessage([]byte("session_id_bob"), bobSeed[:])
 	alice.transcript.AppendMessage([]byte("session_id_alice"), aliceSeed[:])
 
-	var err error
-	uniqueSessionId := [simplest.DigestSize]byte{} // note: will use and re-use this below for sub-session IDs.
+	uniqueSessionId := [simplest.DigestSize]byte{}
 	copy(uniqueSessionId[:], alice.transcript.ExtractBytes([]byte("salt for simplest OT"), simplest.DigestSize))
-	alice.receiver, err = simplest.NewReceiver(alice.curve, kos.Kappa, uniqueSessionId)
-	if err != nil {
-		return nil, errors.Wrap(err, "alice constructing new seed OT receiver in Alice DKG round 1")
-	}
+	alice.receiver, _ = simplest.NewReceiver(alice.curve, kos.Kappa, uniqueSessionId)
 
 	alice.secretKeyShare = alice.curve.Scalar.Random(rand.Reader)
 	copy(uniqueSessionId[:], alice.transcript.ExtractBytes([]byte("salt for alice schnorr"), simplest.DigestSize))
 	alice.prover = schnorr.NewProver(alice.curve, nil, uniqueSessionId[:])
 	var commitment schnorr.Commitment
-	alice.proof, commitment, err = alice.prover.ProveCommit(alice.secretKeyShare) // will mutate `pkA`
-	if err != nil {
-		return nil, errors.Wrap(err, "prove + commit in alice DKG Commit round 1")
-	}
+	alice.proof, commitment, _ = alice.prover.ProveCommit(alice.secretKeyShare)
+
 	return &Round2Output{
 		Commitment: commitment,
 		Seed:       aliceSeed,
 	}, nil
 }
+
+// Implement other rounds similarly
 
 // Round3SchnorrProve receives Bob's Commitment and returns schnorr statment + proof.
 // Steps 1 and 3 of protocol 2 on page 7.

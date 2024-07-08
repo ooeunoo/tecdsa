@@ -12,8 +12,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      mysql:
-        condition: service_healthy
+      # mysql:
+      #   condition: service_healthy
       alice:
         condition: service_started
       bob:
@@ -49,23 +49,23 @@ services:
     expose:
       - "50051"
 
-  mysql:
-    image: mysql:latest
-    environment:
-    ############### CHANGE: production ######################### 
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: tecdsa
-    ############### CHANGE: production ######################### 
-    volumes:
-      - ./db/data:/var/lib/mysql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      # - ./db/my.cnf:/etc/mysql/my.cnf  # 필요한 경우
-    ports:
-      - "3306:3306"
-    healthcheck:
-    ############### CHANGE: production ######################### 
-      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
-    ############### CHANGE: production ######################### 
-      interval: 10s
-      timeout: 2s
-      retries: 100
+  # mysql:
+  #   image: mysql:latest
+  #   environment:
+  #   ############### CHANGE: production ######################### 
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_DATABASE: tecdsa
+  #   ############### CHANGE: production ######################### 
+  #   volumes:
+  #     - ./db/data:/var/lib/mysql
+  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #     # - ./db/my.cnf:/etc/mysql/my.cnf  # 필요한 경우
+  #   ports:
+  #     - "3306:3306"
+  #   healthcheck:
+  #   ############### CHANGE: production ######################### 
+  #     test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
+  #   ############### CHANGE: production ######################### 
+  #     interval: 10s
+  #     timeout: 2s
+  #     retries: 100
