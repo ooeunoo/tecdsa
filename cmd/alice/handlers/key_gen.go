@@ -5,14 +5,13 @@ import (
 	"io"
 	"log"
 	"tecdsa/pkg/database/repository"
-	"tecdsa/pkg/dkls/dkg"
+	deserializer "tecdsa/pkg/deserializers"
 	"tecdsa/pkg/network"
 	"tecdsa/pkg/utils"
 	pb "tecdsa/proto/keygen"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
-	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
-	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
 	"github.com/pkg/errors"
 )
 
@@ -63,16 +62,29 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 
 func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round1Response) error {
 	fmt.Println("라운드2")
-	round2Output, err := alice.Round2CommitToProof([32]byte(msg.Seed))
+
+	// deserialize
+	round2Input, err := deserializer.DecodeDkgRound2Input(msg.Payload)
 	if err != nil {
-		log.Printf("Error in Round2CommitToProof: %v", err)
+		return errors.Wrap(err, "failed to decode in Round 2")
+	}
+
+	// round task
+	output, err := alice.Round2CommitToProof(round2Input)
+	if err != nil {
+		log.Printf("Error in Round2CommitToProof in Round 2")
 		return err
 	}
+
+	round2Output, err := deserializer.EncodeDkgRound2Output(output)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 2")
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round2Response{
 			Round2Response: &pb.Round2Response{
-				Seed:       round2Output.Seed[:],
-				Commitment: round2Output.Commitment,
+				Payload: round2Output,
 			},
 		},
 	})
@@ -80,25 +92,27 @@ func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice
 
 func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round3Response) error {
 	fmt.Println("라운드4")
-	schnorrProof, err := h.parseSchnorrProof(msg)
+	round4Input, err := deserializer.DecodeDkgRound4Input(msg.Payload)
 	if err != nil {
+		return errors.Wrap(err, "failed to decode in Round 4")
+	}
+
+	// round task
+	proof, err := alice.Round4VerifyAndReveal(round4Input)
+	if err != nil {
+		log.Printf("Error in Round4VerifyAndReveal in Round 4")
 		return err
 	}
-	proof, err := alice.Round4VerifyAndReveal(schnorrProof)
+
+	round4Output, err := deserializer.EncodeDkgRound4Output(proof)
 	if err != nil {
-		log.Printf("Error in Round4VerifyAndReveal: %v", err)
-		return err
+		return errors.Wrap(err, "failed to encode in Round 4")
 	}
-	if err != nil {
-		log.Printf("Error in Round4VerifyAndReveal: %v", err)
-		return err
-	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round4Response{
 			Round4Response: &pb.Round4Response{
-				C:         proof.C.Bytes(),
-				S:         proof.S.Bytes(),
-				Statement: proof.Statement.ToAffineCompressed(),
+				Payload: round4Output,
 			},
 		},
 	})
@@ -107,19 +121,25 @@ func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice
 func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round5Response) error {
 	fmt.Println("라운드6")
 
-	schnorrProof, err := h.parseSchnorrProof(msg)
+	round6Input, err := deserializer.DecodeDkgRound6Input(msg.Payload)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode in Round 6")
+	}
+	// round task
+	output, err := alice.Round6DkgRound2Ot(round6Input)
 	if err != nil {
 		return err
 	}
-	compressedReceiversMaskedChoice, err := alice.Round6DkgRound2Ot(schnorrProof)
+
+	round6Output, err := deserializer.EncodeDkgRound6Output(output)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to encode in Round 6")
 	}
 
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round6Response{
 			Round6Response: &pb.Round6Response{
-				ReceiversMaskedChoices: compressedReceiversMaskedChoice,
+				Payload: round6Output,
 			},
 		},
 	})
@@ -128,22 +148,26 @@ func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice
 func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round7Response) error {
 	fmt.Println("라운드8")
 
-	challenges := make([]simplest.OtChallenge, len(msg.OtChallenges))
-	for i, c := range msg.OtChallenges {
-		copy(challenges[i][:], c)
+	round8Input, err := deserializer.DecodeDkgRound8Input(msg.Payload)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode in Round 8")
 	}
-	challengeResponse, err := alice.Round8DkgRound4Ot(challenges)
+
+	// round task
+	challengeResponse, err := alice.Round8DkgRound4Ot(round8Input)
 	if err != nil {
 		return err
 	}
-	challengeResponseBytes := make([][]byte, len(challengeResponse))
-	for i, cr := range challengeResponse {
-		challengeResponseBytes[i] = cr[:]
+
+	round8Output, err := deserializer.EncodeDkgRound8Output(challengeResponse)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 8")
 	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round8Response{
 			Round8Response: &pb.Round8Response{
-				OtChallengeResponses: challengeResponseBytes,
+				Payload: round8Output,
 			},
 		},
 	})
@@ -152,20 +176,18 @@ func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice
 func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round9Response) error {
 	fmt.Println("라운드10")
 
-	challengeOpenings := make([]simplest.ChallengeOpening, len(msg.ChallengeOpenings))
-	for i, co := range msg.ChallengeOpenings {
-		// co는 []byte 타입이므로, 이를 [2][32]byte 타입으로 변환
-		if len(co) != 2*32 {
-			return fmt.Errorf("invalid challenge opening length")
-		}
-		copy(challengeOpenings[i][0][:], co[:32])
-		copy(challengeOpenings[i][1][:], co[32:])
-	}
-	err := alice.Round10DkgRound6Ot(challengeOpenings)
+	round10Input, err := deserializer.DecodeDkgRound10Input(msg.Payload)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to decode in Round 10")
 	}
 
+	// round task
+	roundErr := alice.Round10DkgRound6Ot(round10Input)
+	if roundErr != nil {
+		return roundErr
+	}
+
+	// save result
 	aliceOutput := alice.Output()
 	address, err := network.DeriveAddress(aliceOutput.PublicKey, network.Ethereum)
 	if err != nil {
@@ -175,49 +197,26 @@ func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alic
 	// ###################################
 	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
 	secretKey, _ := utils.GenerateSecretKey()
-	if err := h.repo.StoreSecretShare(address, aliceOutput, secretKey); err != nil {
-		return errors.Wrap(err, "failed to store secret share")
+	share, err := deserializer.EncodeAliceDkgOutput(aliceOutput)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode alice output")
 	}
+
+	if err := h.repo.StoreSecretShare(address, share, secretKey); err != nil {
+		return errors.Wrap(err, "failed to store secret alice share")
+	}
+
 	// ###################################
+
+	// serialize
+	round10Output := pb.Round10Response{
+		Success:   true,
+		SecretKey: secretKey,
+	}
 
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round10Response{
-			Round10Response: &pb.Round10Response{
-				Success:   true,
-				SecretKey: secretKey,
-			},
+			Round10Response: &round10Output,
 		},
 	})
-}
-
-func (h *KeygenHandler) parseSchnorrProof(msg interface{}) (*schnorr.Proof, error) {
-	var c, S []byte
-	var statement []byte
-
-	switch m := msg.(type) {
-	case *pb.Round3Response:
-		c, S, statement = m.C, m.S, m.Statement
-	case *pb.Round5Response:
-		c, S, statement = m.C, m.S, m.Statement
-	default:
-		return nil, fmt.Errorf("unexpected message type for Schnorr proof")
-	}
-
-	scalar, err := h.curve.Scalar.SetBytes(c)
-	if err != nil {
-		return nil, err
-	}
-	s, err := h.curve.Scalar.SetBytes(S)
-	if err != nil {
-		return nil, err
-	}
-	stmt, err := h.curve.Point.FromAffineCompressed(statement)
-	if err != nil {
-		return nil, err
-	}
-	return &schnorr.Proof{
-		C:         scalar,
-		S:         s,
-		Statement: stmt,
-	}, nil
 }

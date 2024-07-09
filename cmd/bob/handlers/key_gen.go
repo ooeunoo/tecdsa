@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"io"
 	"tecdsa/pkg/database/repository"
-	"tecdsa/pkg/dkls/dkg"
+	deserializer "tecdsa/pkg/deserializers"
 	"tecdsa/pkg/network"
 	pb "tecdsa/proto/keygen"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
-	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
-	"github.com/coinbase/kryptology/pkg/zkp/schnorr"
+	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
 	"github.com/pkg/errors"
 )
 
@@ -67,30 +66,47 @@ func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, bob *
 	fmt.Println("라운드1")
 	seed, err := bob.Round1GenerateRandomSeed()
 	if err != nil {
-		return errors.Wrap(err, "failed to generate random seed in Round 1")
+		return errors.Wrap(err, "failed to Round1GenerateRandomSeed in Round 1")
 	}
+
+	round1Output, err := deserializer.EncodeDkgRound1Output(seed)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 1")
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round1Response{
-			Round1Response: &pb.Round1Response{Seed: seed[:]},
+			Round1Response: &pb.Round1Response{
+				Payload: round1Output,
+			},
 		},
 	})
 }
 
 func (h *KeygenHandler) handleRound3(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round2Response) error {
 	fmt.Println("라운드3")
-	proof, err := bob.Round3SchnorrProve(&dkg.Round2Output{
-		Seed:       [32]byte(msg.Seed),
-		Commitment: msg.Commitment,
-	})
+
+	// deserialize
+	round3Input, err := deserializer.DecodeDkgRound3Input(msg.Payload)
 	if err != nil {
-		return errors.Wrap(err, "failed in Round3SchnorrProve")
+		return errors.Wrap(err, "failed to decode in Round 3")
 	}
+
+	// round task
+	proof, err := bob.Round3SchnorrProve(round3Input)
+	if err != nil {
+		return errors.Wrap(err, "failed to Round3SchnorrProve in Round3")
+	}
+
+	round3Output, err := deserializer.EncodeDkgRound3Output(proof)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 3")
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round3Response{
 			Round3Response: &pb.Round3Response{
-				C:         proof.C.Bytes(),
-				S:         proof.S.Bytes(),
-				Statement: proof.Statement.ToAffineCompressed(),
+				Payload: round3Output,
 			},
 		},
 	})
@@ -98,42 +114,54 @@ func (h *KeygenHandler) handleRound3(stream pb.KeygenService_KeyGenServer, bob *
 
 func (h *KeygenHandler) handleRound5(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round4Response) error {
 	fmt.Println("라운드5")
-	schnorrProof, err := h.parseSchnorrProof(msg)
+
+	round5Input, err := deserializer.DecodeDkgRound5Input(msg.Payload)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to decode in Round 5")
 	}
-	proof, err := bob.Round5DecommitmentAndStartOt(schnorrProof)
+
+	proof, err := bob.Round5DecommitmentAndStartOt(round5Input)
 	if err != nil {
-		return errors.Wrap(err, "failed in Round5DecommitmentAndStartOt")
+		return errors.Wrap(err, "failed in Round5DecommitmentAndStartOt in Round 5")
 	}
+
+	round5Output, err := deserializer.EncodeDkgRound5Output(proof)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 5")
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round5Response{
 			Round5Response: &pb.Round5Response{
-				C:         proof.C.Bytes(),
-				S:         proof.S.Bytes(),
-				Statement: proof.Statement.ToAffineCompressed(),
-			}},
+				Payload: round5Output,
+			},
+		},
 	})
 }
 
 func (h *KeygenHandler) handleRound7(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round6Response) error {
 	fmt.Println("라운드7")
-	compressedReceiversMaskedChoice := make([]simplest.ReceiversMaskedChoices, len(msg.ReceiversMaskedChoices))
-	for i, choice := range msg.ReceiversMaskedChoices {
-		compressedReceiversMaskedChoice[i] = choice
-	}
-	challenges, err := bob.Round7DkgRound3Ot(compressedReceiversMaskedChoice)
+
+	round7Input, err := deserializer.DecodeDkgRound7Input(msg.Payload)
 	if err != nil {
-		return errors.Wrap(err, "failed in Round7DkgRound3Ot")
+		return errors.Wrap(err, "failed to decode in Round 7")
 	}
-	challengesBytes := make([][]byte, len(challenges))
-	for i, challenge := range challenges {
-		challengesBytes[i] = challenge[:]
+
+	// round task
+	challenges, err := bob.Round7DkgRound3Ot(round7Input)
+	if err != nil {
+		return errors.Wrap(err, "failed in Round7DkgRound3Ot in Round 7")
 	}
+
+	round7Output, err := deserializer.EncodeDkgRound7Output(challenges)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 5")
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round7Response{
 			Round7Response: &pb.Round7Response{
-				OtChallenges: challengesBytes,
+				Payload: round7Output,
 			},
 		},
 	})
@@ -141,31 +169,33 @@ func (h *KeygenHandler) handleRound7(stream pb.KeygenService_KeyGenServer, bob *
 
 func (h *KeygenHandler) handleRound9(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round8Response) error {
 	fmt.Println("라운드9")
-	challengeResponses := make([]simplest.OtChallengeResponse, len(msg.OtChallengeResponses))
-	for i, response := range msg.OtChallengeResponses {
-		copy(challengeResponses[i][:], response)
-	}
-	challengeOpenings, err := bob.Round9DkgRound5Ot(challengeResponses)
+	round9Input, err := deserializer.DecodeDkgRound9Input(msg.Payload)
 	if err != nil {
-		return errors.Wrap(err, "failed in Round9DkgRound5Ot")
+		return errors.Wrap(err, "failed to decode in Round 9")
 	}
-	challengeOpeningsBytes := make([][]byte, len(challengeOpenings))
-	for i, opening := range challengeOpenings {
-		challengeOpeningsBytes[i] = make([]byte, 2*32)
-		copy(challengeOpeningsBytes[i][0:32], opening[0][:])
-		copy(challengeOpeningsBytes[i][32:], opening[1][:])
+
+	// round task
+	challengeOpenings, err := bob.Round9DkgRound5Ot(round9Input)
+	if err != nil {
+		return errors.Wrap(err, "failed in Round9DkgRound5Ot in Round 9")
 	}
+
+	round9Output, err := deserializer.EncodeDkgRound9Output(challengeOpenings)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode in Round 5")
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_Round9Response{
 			Round9Response: &pb.Round9Response{
-				ChallengeOpenings: challengeOpeningsBytes,
-			},
-		},
+				Payload: round9Output,
+			}},
 	})
 }
 
 func (h *KeygenHandler) handleFinalRound(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round10Response) error {
 	fmt.Println("라운드끝")
+
 	bobOutput := bob.Output()
 	address, err := network.DeriveAddress(bobOutput.PublicKey, network.Ethereum)
 	if err != nil {
@@ -174,39 +204,28 @@ func (h *KeygenHandler) handleFinalRound(stream pb.KeygenService_KeyGenServer, b
 
 	// ###################################
 	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
+
 	secretKey := msg.SecretKey
-	if err := h.repo.StoreSecretShare(address, bobOutput, secretKey); err != nil {
-		return errors.Wrap(err, "failed to store secret share")
+	share, err := deserializer.EncodeBobDkgOutput(bobOutput)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode bob output")
+	}
+
+	if err := h.repo.StoreSecretShare(address, share, secretKey); err != nil {
+		return errors.Wrap(err, "failed to store secret bob share")
 	}
 	// ###################################
 
+	// serialize
+	keygenResponse := pb.KeyGenResponse{
+		Success:   true,
+		Address:   address,
+		SecretKey: secretKey,
+	}
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_KeyGenResponse{
-			KeyGenResponse: &pb.KeyGenResponse{
-				Success:   true,
-				Address:   address,
-				SecretKey: secretKey,
-			},
+			KeyGenResponse: &keygenResponse,
 		},
 	})
-}
-
-func (h *KeygenHandler) parseSchnorrProof(msg *pb.Round4Response) (*schnorr.Proof, error) {
-	c, err := h.curve.Scalar.SetBytes(msg.C)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to set C bytes")
-	}
-	S, err := h.curve.Scalar.SetBytes(msg.S)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to set S bytes")
-	}
-	statement, err := h.curve.Point.FromAffineCompressed(msg.Statement)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to set Statement bytes")
-	}
-	return &schnorr.Proof{
-		C:         c,
-		S:         S,
-		Statement: statement,
-	}, nil
 }

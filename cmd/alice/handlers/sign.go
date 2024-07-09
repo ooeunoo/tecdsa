@@ -1,17 +1,14 @@
-// dkg_handler.go
+// alice handler
 package handlers
 
 import (
-	"fmt"
 	"hash"
 	"io"
 	"tecdsa/pkg/database/repository"
-	"tecdsa/pkg/dkls/dkg"
-	"tecdsa/pkg/dkls/sign"
 	pb "tecdsa/proto/sign"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
-	"github.com/pkg/errors"
+	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/sign"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -32,7 +29,7 @@ func NewSignHandler(repo repository.SecretRepository) *SignHandler {
 
 func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 	for {
-		in, err := stream.Recv()
+		_, err := stream.Recv()
 		if err == io.EOF {
 			return nil
 		}
@@ -40,70 +37,84 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 			return err
 		}
 
-		switch msg := in.Msg.(type) {
-		case *pb.SignMessage_Round1Request:
-			err = h.handleRound1(stream, msg.Round1Request)
-		case *pb.SignMessage_Round2Response:
-			// err = h.handleRound3(stream, alice, msg.Round2Response)
-		default:
-			err = fmt.Errorf("unexpected message type")
-		}
+		// switch msg := in.Msg.(type) {
+		// case *pb.SignMessage_Round1Request:
+		// 	err = h.handleRound1(stream, msg.Round1Request)
+		// case *pb.SignMessage_Round2Response:
+		// 	err = h.handleRound3(stream, msg.Round2Response)
+		// default:
+		// 	err = fmt.Errorf("unexpected message type")
+		// }
 
-		if err != nil {
-			return err
-		}
+		// if err != nil {
+		// 	return err
+		// }
 	}
 }
 
-func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, msg *pb.Round1Request) error {
-	fmt.Println("라운드1")
-	// GetSecretShare 함수를 사용하여 AliceOutput 가져오기
-	aliceOutputInterface, err := h.repo.GetSecretShare(msg.Address, msg.SecretKey)
-	if err != nil {
-		return errors.Wrap(err, "failed to get secret share")
-	}
+// func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, msg *pb.Round1Request) error {
+// 	fmt.Println("라운드1")
 
-	aliceOutput, ok := aliceOutputInterface.(*dkg.AliceOutput)
-	if !ok {
-		return errors.New("retrieved secret share is not an AliceOutput")
-	}
-
-	// Alice 인스턴스 생성
-	h.alice = sign.NewAlice(h.curve, h.hash, aliceOutput)
-
-	seed, err := h.alice.Round1GenerateRandomSeed()
-	if err != nil {
-		return errors.Wrap(err, "failed to generate random seed in Round 1")
-	}
-
-	return stream.Send(&pb.SignMessage{
-		Msg: &pb.SignMessage_Round1Response{
-			Round1Response: &pb.Round1Response{
-				Seed:      seed[:],
-				Address:   msg.Address,
-				SecretKey: msg.SecretKey,
-			},
-		},
-	})
-}
-
-// func (h *SignHandler) handleRound3(stream pb.SignService_SignServer, alice *sign.Alice, msg *pb.Round2Response) error {
-// 	fmt.Println("라운드3")
-// 	round3Output, err := alice.Round3Sign(msg.Message, &sign.SignRound2Output{
-// 		Seed: [32]byte(msg.Seed),
-// 		DB:   msg.DB,
-// 	})
+// 	output, err := h.repo.GetSecretShare(msg.Address, msg.SecretKey)
 // 	if err != nil {
-// 		return errors.Wrap(err, "failed in Round3Sign")
+// 		return errors.Wrap(err, "failed to get secret share")
 // 	}
+
+// 	aliceOutput, ok := output.(*dkg.AliceOutput)
+// 	if !ok {
+// 		return errors.New("retrieved secret share is not an AliceOutput")
+// 	}
+
+// 	h.alice = sign.NewAlice(h.curve, h.hash, aliceOutput)
+
+// 	seed, err := h.alice.Round1GenerateRandomSeed()
+// 	if err != nil {
+// 		return errors.Wrap(err, "failed to generate random seed in Round 1")
+// 	}
+
+// 	// serialize
+// 	encodedPayload, err := deserializer.EncodeSignRound1Output(seed)
+// 	if err != nil {
+// 		return errors.Wrap(err, "failed to generate random seed in Round 1")
+// 	}
+// 	round1Response := pb.Round1Response{
+// 		Payload: encodedPayload,
+// 	}
+
 // 	return stream.Send(&pb.SignMessage{
-// 		Msg: &pb.SignMessage_Round3Response{
-// 			Round3Response: &pb.Round3Response{
-// 				RSchnorrProof: round3Output.RSchnorrProof,
-// 				RPrime:        round3Output.RPrime,
-// 				EtaPhi:        round3Output.EtaPhi,
-// 				EtaSig:        round3Output.EtaSig,
-// 			},
+// 		Msg: &pb.SignMessage_Round1Response{
+// 			Round1Response: &round1Response,
 // 		},
 // 	})
+// }
+
+// func (h *SignHandler) handleRound3(stream pb.SignService_SignServer, msg *pb.Round2Response) error {
+// 	fmt.Println("라운드3")
+
+// 	// decode
+// 	round2Output, err := deserializer.DecodeSignRound3Input(msg.Payload)
+// 	if err != nil {
+// 		return errors.Wrap(err, "failed to decode in Round 3 input")
+// 	}
+
+// 	round3Output, err := h.alice.Round3Sign([32]byte("sadfsadfsa"), round2Output)
+// 	if err != nil {
+// 		return errors.Wrap(err, "failed to sign in Round 3")
+// 	}
+
+// 	// serialize
+// 	encodedPayload, err := deserializer.EncodeSignRound3Output(round3Output)
+// 	if err != nil {
+// 		return errors.Wrap(err, "failed to encode in Round 3 output")
+// 	}
+// 	round3Response := pb.Round3Response{
+// 		Payload: encodedPayload,
+// 	}
+// 	// 결과를 클라이언트에게 전송
+// 	return stream.Send(&pb.SignMessage{
+// 		Msg: &pb.SignMessage_Round3Response{
+// 			Payload: round3Response,
+// 		},
+// 	})
+
 // }

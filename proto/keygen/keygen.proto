@@ -37,23 +37,23 @@ message KeygenMessage {
 
 message KeyGenRequest{}
 message Round1Request {}
-message Round1Response { bytes seed = 1; }
-message Round2Request { bytes seed = 1; }
-message Round2Response { bytes seed = 1; bytes commitment = 2; }
-message Round3Request { bytes seed = 1; bytes commitment = 2; }
-message Round3Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
-message Round4Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
-message Round4Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
-message Round5Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
-message Round5Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
-message Round6Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
-message Round6Response { repeated bytes receivers_masked_choices = 1; }
-message Round7Request { repeated bytes receivers_masked_choices = 1; }
-message Round7Response { repeated bytes ot_challenges = 1; }
-message Round8Request { repeated bytes ot_challenges = 1; }
-message Round8Response { repeated bytes ot_challenge_responses = 1; }
-message Round9Request { repeated bytes ot_challenge_responses = 1; }
-message Round9Response { repeated bytes challenge_openings = 1; }
-message Round10Request { repeated bytes challenge_openings = 1; }
+message Round1Response { bytes payload =1; }
+message Round2Request {  bytes payload =1; }
+message Round2Response {  bytes payload =1; }
+message Round3Request {  bytes payload =1;}
+message Round3Response {  bytes payload =1; }
+message Round4Request {   bytes payload =1; }
+message Round4Response {   bytes payload =1; }
+message Round5Request {   bytes payload =1; }
+message Round5Response {   bytes payload =1; }
+message Round6Request {   bytes payload =1; }
+message Round6Response {   bytes payload =1; }
+message Round7Request {   bytes payload =1; }
+message Round7Response {   bytes payload =1; }
+message Round8Request {   bytes payload =1; }
+message Round8Response {   bytes payload =1; }
+message Round9Request {   bytes payload =1; }
+message Round9Response { bytes payload = 1; }
+message Round10Request { bytes payload = 1; }
 message Round10Response { bool success = 1; bytes secret_key =2; }
 message KeyGenResponse { bool success = 1; string address=2;  bytes secret_key = 3; int32 duration=4; }

@@ -9,7 +9,7 @@ services:
       dockerfile: cmd/gateway/Dockerfile
     ############### REMOVE: production ######################### 
     volumes:
-      - ./cmd/gateway:/app/cmd/gateway
+      - ./:/app/
     ############### REMOVE: production ######################### 
     ports:
       - "8080:8080"
@@ -34,7 +34,7 @@ services:
       dockerfile: cmd/alice/Dockerfile
     ############### REMOVE: production ######################### 
     volumes:
-      - ./cmd/alice:/app/cmd/alice
+      - ./:/app/
     ############### REMOVE: production ######################### 
     expose:
       - "50052"
@@ -54,7 +54,7 @@ services:
       dockerfile: cmd/bob/Dockerfile
     ############### REMOVE: production ######################### 
     volumes:
-      - ./cmd/bob:/app/cmd/bob
+      - ./:/app/
     ############### REMOVE: production ######################### 
     expose:
       - "50051"

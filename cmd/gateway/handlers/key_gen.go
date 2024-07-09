@@ -60,6 +60,8 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 		for {
 			bobResp, err := bobStream.Recv()
 			if err != nil {
+				fmt.Println("bob")
+
 				errorChan <- err
 				return
 			}
@@ -71,6 +73,7 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 		for {
 			aliceResp, err := aliceStream.Recv()
 			if err != nil {
+				fmt.Println("alice")
 				errorChan <- err
 				return
 			}

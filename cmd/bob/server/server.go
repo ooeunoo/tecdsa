@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	handlers "tecdsa/cmd/bob/handlers"
 	"tecdsa/pkg/database/repository"
 
@@ -24,7 +23,6 @@ func NewServer(repo repository.SecretRepository) *Server {
 }
 
 func (s *Server) KeyGen(stream pbKeygen.KeygenService_KeyGenServer) error {
-	fmt.Println("KeyGen called")
 	return s.keygenHandler.HandleKeyGen(stream)
 }
 
