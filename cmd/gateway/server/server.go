@@ -9,5 +9,7 @@ import (
 func NewServer() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/key_gen", handlers.KeyGenHandler)
+	mux.HandleFunc("/sign", handlers.SignHandler)
+
 	return mux
 }

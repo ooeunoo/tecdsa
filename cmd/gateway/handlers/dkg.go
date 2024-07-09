@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	pb "tecdsa/pkg/api/grpc/dkg"
+	pb "tecdsa/proto/dkg"
 	"time"
 
 	"google.golang.org/grpc"

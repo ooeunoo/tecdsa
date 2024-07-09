@@ -5,18 +5,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	pb "tecdsa/pkg/api/grpc/dkg"
-	"time"
+	pb "tecdsa/proto/sign"
 
 	"google.golang.org/grpc"
 )
 
 func SignHandler(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now()
+	// startTime := time.Now()
+
+	// 요청 바디
+	var req pb.Round1Request
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		fmt.Printf("Failed to parse request body: %v\n", err)
+		return
+	}
+
+	// Validate request data
+	// if req.Address == "" || len(req.SecretKey) == 0 {
+	// 	http.Error(w, "Missing required fields", http.StatusBadRequest)
+	// 	return
+	// }
 
 	// 채널 생성
-	bobChan := make(chan *pb.DkgMessage)
-	aliceChan := make(chan *pb.DkgMessage)
+	bobChan := make(chan *pb.SignMessage)
+	aliceChan := make(chan *pb.SignMessage)
 	errorChan := make(chan error)
 
 	// Bob과 연결
@@ -27,7 +41,7 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer bobConn.Close()
-	bobClient := pb.NewDkgServiceClient(bobConn)
+	bobClient := pb.NewSignServiceClient(bobConn)
 
 	// Alice와 연결
 	aliceConn, err := grpc.Dial("alice:50052", grpc.WithInsecure())
@@ -37,10 +51,10 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer aliceConn.Close()
-	aliceClient := pb.NewDkgServiceClient(aliceConn)
+	aliceClient := pb.NewSignServiceClient(aliceConn)
 
 	// Bob의 KeyGen 스트림 시작
-	bobStream, err := bobClient.KeyGen(context.Background())
+	bobStream, err := bobClient.Sign(context.Background())
 	if err != nil {
 		http.Error(w, "Failed to create Bob stream", http.StatusInternalServerError)
 		fmt.Printf("Failed to create Bob stream: %v\n", err)
@@ -48,7 +62,7 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Alice의 KeyGen 스트림 시작
-	aliceStream, err := aliceClient.KeyGen(context.Background())
+	aliceStream, err := aliceClient.Sign(context.Background())
 	if err != nil {
 		http.Error(w, "Failed to create Alice stream", http.StatusInternalServerError)
 		fmt.Printf("Failed to create Alice stream: %v\n", err)
@@ -78,8 +92,11 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// DKG 프로토콜 시작
-	if err := bobStream.Send(&pb.DkgMessage{Msg: &pb.DkgMessage_Round1Request{Round1Request: &pb.Round1Request{}}}); err != nil {
+	// DKG 프로토콜 시작 (서명은 Alice부터 라운드 시작)
+	if err := aliceStream.Send(&pb.SignMessage{Msg: &pb.SignMessage_Round1Request{Round1Request: &pb.Round1Request{
+		Address:   req.Address,
+		SecretKey: req.SecretKey,
+	}}}); err != nil {
 		http.Error(w, "Failed to send initial request to Bob", http.StatusInternalServerError)
 		fmt.Printf("Failed to send initial request to Bob: %v\n", err)
 		return
@@ -88,17 +105,17 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case bobResp := <-bobChan:
-			if keyGenResp, ok := bobResp.Msg.(*pb.DkgMessage_KeyGenResponse); ok {
-				endTime := time.Now()
-				duration := endTime.Sub(startTime)
-				fmt.Println("생성된 주소:", keyGenResp.KeyGenResponse.Address)
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"success":  true,
-					"address":  keyGenResp.KeyGenResponse.Address,
-					"duration": duration.Seconds(),
-				})
-				return
-			}
+			// if keyGenResp, ok := bobResp.Msg.(*pb.SignMessage_SignResponse); ok {
+			// 	endTime := time.Now()
+			// 	duration := endTime.Sub(startTime)
+			// 	fmt.Println("생성된 주소:", keyGenResp.SignResponse.Address)
+			// 	json.NewEncoder(w).Encode(map[string]interface{}{
+			// 		"success":  true,
+			// 		"address":  keyGenResp.KeyGenResponse.Address,
+			// 		"duration": duration.Seconds(),
+			// 	})
+			// 	return
+			// }
 			if err := aliceStream.Send(bobResp); err != nil {
 				http.Error(w, "Failed to send Bob's response to Alice", http.StatusInternalServerError)
 				fmt.Printf("Failed to send Bob's response to Alice: %v\n", err)

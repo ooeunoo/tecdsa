@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"tecdsa/cmd/alice/database"
-	"tecdsa/internal/dkls/dkg"
-	"tecdsa/internal/network"
-	"tecdsa/internal/utils"
-	pb "tecdsa/pkg/api/grpc/dkg"
+	"tecdsa/pkg/database/repository"
+	"tecdsa/pkg/dkls/dkg"
+	"tecdsa/pkg/network"
+	"tecdsa/pkg/utils"
+	pb "tecdsa/proto/dkg"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/ot/base/simplest"
@@ -18,11 +18,13 @@ import (
 
 type DkgHandler struct {
 	curve *curves.Curve
+	repo  repository.SecretRepository
 }
 
-func NewDkgHandler() *DkgHandler {
+func NewDkgHandler(repo repository.SecretRepository) *DkgHandler {
 	return &DkgHandler{
 		curve: curves.K256(),
+		repo:  repo,
 	}
 }
 
@@ -173,7 +175,7 @@ func (h *DkgHandler) handleRound10(stream pb.DkgService_KeyGenServer, alice *dkg
 	// ###################################
 	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
 	secretKey, _ := utils.GenerateSecretKey()
-	if err := database.StoreSecretShare(address, aliceOutput, secretKey); err != nil {
+	if err := h.repo.StoreSecretShare(address, aliceOutput, secretKey); err != nil {
 		return errors.Wrap(err, "failed to store secret share")
 	}
 	// ###################################

@@ -1,30 +1,68 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"os"
 
-	"tecdsa/cmd/bob/database"
-	"tecdsa/cmd/bob/server"
-	pb "tecdsa/pkg/api/grpc/dkg"
+	"tecdsa/cmd/alice/config"
+	"tecdsa/cmd/alice/server"
+	"tecdsa/pkg/database"
+	"tecdsa/pkg/database/repository"
+	pb "tecdsa/proto/dkg"
 
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
 func main() {
-	// Initialize database connection
-	if err := database.InitDB(); err != nil {
-		log.Fatalf("failed to initialize database: %v", err)
-	}
-	defer database.CloseDB()
+	// 설정 로드
+	cfg := loadConfig()
 
-	lis, err := net.Listen("tcp", ":50051")
+	// 데이터베이스 연결
+	db := connectDatabase(cfg)
+
+	// 리포지토리 생성
+	repo := repository.NewGormSecretRepository(db)
+
+	// gRPC 서버 시작
+	startGRPCServer(cfg, repo)
+}
+
+func loadConfig() *config.Config {
+	cfg := &config.Config{
+		DBHost:     os.Getenv("DB_HOST"),
+		DBUser:     os.Getenv("DB_USER"),
+		DBPassword: os.Getenv("DB_PASSWORD"),
+		DBName:     os.Getenv("DB_NAME"),
+		ServerPort: "50052",
+	}
+	return cfg
+}
+
+func connectDatabase(cfg *config.Config) *gorm.DB {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBName)
+	db, err := database.NewDatabase(dsn)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.CloseDB(db)
+
+	return db
+}
+
+func startGRPCServer(cfg *config.Config, repo repository.SecretRepository) {
+	lis, err := net.Listen("tcp", ":"+cfg.ServerPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	s := grpc.NewServer()
-	pb.RegisterDkgServiceServer(s, server.NewServer())
-	log.Println("Bob server listening at :50051")
+	pb.RegisterDkgServiceServer(s, server.NewServer(repo))
+
+	log.Printf("Alice server listening at :%s", cfg.ServerPort)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

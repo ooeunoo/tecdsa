@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package sign;
+
+
+option go_package = "proto/sign";
+
+
+import "transaction/transaction.proto";
+
+
+service SignService {
+  rpc Sign(stream SignMessage) returns (stream SignMessage);
+}
+
+message SignMessage {
+  oneof msg {
+    SignRequest signRequest =1;
+    Round1Request round1Request = 2;
+    Round1Response round1Response = 3;
+    Round2Request round2Request = 4;
+    Round2Response round2Response = 5;
+    Round3Request round3Request = 6;
+    Round3Response round3Response = 7;
+    Round4Request round4Request = 8;
+    Round4Response round4Response = 9;
+    SignResponse signResponse = 10;
+  }
+}
+
+
+message SignRequest {
+  int32 network = 1;
+  string address = 2;
+  bytes secret_key = 3;
+  transaction.Transaction transaction = 4;
+}
+
+message Round1Request {
+  string address = 1;
+  bytes secret_key = 2;
+}
+
+message Round1Response {
+  bytes seed = 1;
+  string address = 2 ;
+  bytes secret_key= 3;
+}
+
+message Round2Request {
+  bytes seed = 1;
+}
+
+message Round2Response {
+  SignRound2Output output = 1;
+}
+
+message Round3Request {
+  SignRound2Output round2_output = 1;
+  bytes message = 2;
+}
+
+message Round3Response {
+  SignRound3Output output = 1;
+}
+
+message Round4Request {
+  SignRound3Output round3_output = 1;
+  bytes message = 2;
+}
+
+message Round4Response {
+  EcdsaSignature signature = 1;
+}
+
+message SignResponse {
+  EcdsaSignature signature = 1;
+}
+
+message SignRound2Output {
+  repeated KosRound1Output kos_round1_outputs = 1;
+  bytes db = 2;
+  bytes seed = 3;
+}
+
+message SignRound3Output {
+  repeated MultiplyRound2Output multiply_round2_outputs = 1;
+  SchnorrProof r_schnorr_proof = 2;
+  bytes r_prime = 3;
+  bytes eta_phi = 4;
+  bytes eta_sig = 5;
+}
+
+message KosRound1Output {
+  repeated bytes u = 1;
+  bytes w_prime = 2;
+  bytes v_prime = 3;
+}
+
+message MultiplyRound2Output {
+  COTRound2Output cot_round2_output = 1;
+  repeated bytes r = 2;
+  bytes u = 3;
+}
+
+message COTRound2Output {
+  repeated bytes tau = 1;
+}
+
+message SchnorrProof {
+  bytes statement = 1;
+  bytes commitment = 2;
+  bytes challenge = 3;
+  bytes response = 4;
+}
+
+message EcdsaSignature {
+  bytes r = 1;
+  bytes s = 2;
+  int32 v = 3;
+}

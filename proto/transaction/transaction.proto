@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package transaction;
+
+option go_package = "proto/transaction";
+
+message Transaction {
+  oneof tx {
+    EthereumTransaction ethereum = 1;
+    BitcoinTransaction bitcoin = 2;
+  }
+}
+
+message BitcoinTransaction {
+  repeated UTXO inputs = 1;
+  repeated Output outputs = 2;
+  uint32 version = 3;
+  uint32 lock_time = 4;
+}
+
+message EthereumTransaction {
+  string to = 2;
+  bytes value = 3;
+  bytes gas_price = 4;
+  uint64 gas_limit = 5;
+  bytes data = 6;
+  uint64 nonce = 7;
+  uint64 chain_id = 8;
+}
+
+message UTXO {
+  string txid = 1;
+  uint32 vout = 2;
+  string script_pub_key = 3;
+  uint64 amount = 4;
+}
+
+message Output {
+  uint64 amount = 1;
+  string script_pub_key = 2;
+}
+
+

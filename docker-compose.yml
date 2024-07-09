@@ -67,13 +67,14 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=bob
 
+
   gateway_db:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: gateway
     volumes:
-      - ./cmd/gateway/database/data:/var/lib/mysql
+      - ./cmd/gateway/data:/var/lib/mysql
     healthcheck:
       test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
       timeout: 20s
@@ -88,7 +89,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: alice
     volumes:
-      - ./cmd/alice/database/data:/var/lib/mysql
+      - ./cmd/alice/data:/var/lib/mysql
     healthcheck:
       test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
       timeout: 20s
@@ -102,7 +103,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: bob
     volumes:
-      - ./cmd/bob/database/data:/var/lib/mysql
+      - ./cmd/bob/data:/var/lib/mysql
     healthcheck:
       test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root --password=password']
       timeout: 20s

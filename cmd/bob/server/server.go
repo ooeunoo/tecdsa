@@ -3,9 +3,10 @@ package server
 
 import (
 	handlers "tecdsa/cmd/bob/handlers"
+	"tecdsa/pkg/database/repository"
 
-	pbDkg "tecdsa/pkg/api/grpc/dkg"
-	pbSign "tecdsa/pkg/api/grpc/sign"
+	pbDkg "tecdsa/proto/dkg"
+	pbSign "tecdsa/proto/sign"
 )
 
 type Server struct {
@@ -15,10 +16,10 @@ type Server struct {
 	signHandler *handlers.SignHandler
 }
 
-func NewServer() *Server {
+func NewServer(repo repository.SecretRepository) *Server {
 	return &Server{
-		dkgHandler:  handlers.NewDkgHandler(),
-		signHandler: handlers.NewSignHandler(),
+		dkgHandler:  handlers.NewDkgHandler(repo),
+		signHandler: handlers.NewSignHandler(repo),
 	}
 }
 

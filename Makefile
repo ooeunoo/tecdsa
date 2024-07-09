@@ -1,6 +1,6 @@
 .PHONY: proto build run clean
 
-PROTO_FILES := $(shell find pkg/api/grpc -name '*.proto')
+PROTO_FILES := $(shell find /proto -name '*.proto')
 PROTO_GO_FILES := $(PROTO_FILES:.proto=.pb.go)
 
 proto: $(PROTO_GO_FILES)
