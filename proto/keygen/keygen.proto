@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package keygen;
+
+option go_package = "tecdsa/proto/keygen";
+
+service KeygenService {
+  rpc KeyGen(stream KeygenMessage) returns (stream KeygenMessage);
+}
+
+message KeygenMessage {
+  oneof msg {
+    KeyGenRequest keyGenRequest = 1;
+    Round1Request round1Request = 2;
+    Round1Response round1Response = 3;
+    Round2Request round2Request = 4;
+    Round2Response round2Response = 5;
+    Round3Request round3Request = 6;
+    Round3Response round3Response = 7;
+    Round4Request round4Request = 8;
+    Round4Response round4Response = 9;
+    Round5Request round5Request = 10;
+    Round5Response round5Response = 11;
+    Round6Request round6Request = 12;
+    Round6Response round6Response = 13;
+    Round7Request round7Request = 14;
+    Round7Response round7Response = 15;
+    Round8Request round8Request = 16;
+    Round8Response round8Response = 17;
+    Round9Request round9Request = 18;
+    Round9Response round9Response = 19;
+    Round10Request round10Request = 20;
+    Round10Response round10Response = 21;
+    KeyGenResponse keyGenResponse = 22;
+  }
+}
+
+message KeyGenRequest{}
+message Round1Request {}
+message Round1Response { bytes seed = 1; }
+message Round2Request { bytes seed = 1; }
+message Round2Response { bytes seed = 1; bytes commitment = 2; }
+message Round3Request { bytes seed = 1; bytes commitment = 2; }
+message Round3Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round4Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round4Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round5Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round5Response { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round6Request { bytes c = 1; bytes s = 2; bytes statement = 3; }
+message Round6Response { repeated bytes receivers_masked_choices = 1; }
+message Round7Request { repeated bytes receivers_masked_choices = 1; }
+message Round7Response { repeated bytes ot_challenges = 1; }
+message Round8Request { repeated bytes ot_challenges = 1; }
+message Round8Response { repeated bytes ot_challenge_responses = 1; }
+message Round9Request { repeated bytes ot_challenge_responses = 1; }
+message Round9Response { repeated bytes challenge_openings = 1; }
+message Round10Request { repeated bytes challenge_openings = 1; }
+message Round10Response { bool success = 1; bytes secret_key =2; }
+message KeyGenResponse { bool success = 1; string address=2;  bytes secret_key = 3; int32 duration=4; }

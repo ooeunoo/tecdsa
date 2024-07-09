@@ -10,7 +10,9 @@ import (
 	"tecdsa/cmd/alice/server"
 	"tecdsa/pkg/database"
 	"tecdsa/pkg/database/repository"
-	pb "tecdsa/proto/dkg"
+
+	pbKeygen "tecdsa/proto/keygen"
+	pbSign "tecdsa/proto/sign"
 
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -36,7 +38,7 @@ func loadConfig() *config.Config {
 		DBUser:     os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
-		ServerPort: "50052",
+		ServerPort: os.Getenv("SERVER_PORT"),
 	}
 	return cfg
 }
@@ -48,7 +50,7 @@ func connectDatabase(cfg *config.Config) *gorm.DB {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.CloseDB(db)
+	// defer database.CloseDB(db)
 
 	return db
 }
@@ -60,7 +62,10 @@ func startGRPCServer(cfg *config.Config, repo repository.SecretRepository) {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterDkgServiceServer(s, server.NewServer(repo))
+	srv := server.NewServer(repo)
+
+	pbKeygen.RegisterKeygenServiceServer(s, srv)
+	pbSign.RegisterSignServiceServer(s, srv)
 
 	log.Printf("Alice server listening at :%s", cfg.ServerPort)
 	if err := s.Serve(lis); err != nil {

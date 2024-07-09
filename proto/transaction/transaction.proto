@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package transaction;
 
-option go_package = "proto/transaction";
+option go_package = "tecdsa/proto/transaction";
 
 message Transaction {
   oneof tx {
@@ -19,13 +19,13 @@ message BitcoinTransaction {
 }
 
 message EthereumTransaction {
-  string to = 2;
-  bytes value = 3;
-  bytes gas_price = 4;
-  uint64 gas_limit = 5;
-  bytes data = 6;
-  uint64 nonce = 7;
-  uint64 chain_id = 8;
+  string to = 1;
+  bytes value = 2;
+  optional bytes gas_price = 3;
+  optional uint64 gas_limit = 4;
+  optional bytes data = 5;
+  optional uint64 nonce = 6;
+  optional uint64 chain_id = 7;
 }
 
 message UTXO {

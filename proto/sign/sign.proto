@@ -3,7 +3,7 @@ syntax = "proto3";
 package sign;
 
 
-option go_package = "proto/sign";
+option go_package = "tecdsa/proto/sign";
 
 
 import "transaction/transaction.proto";
@@ -37,8 +37,9 @@ message SignRequest {
 }
 
 message Round1Request {
-  string address = 1;
-  bytes secret_key = 2;
+  string msg = 1;
+  string address = 2;
+  bytes secret_key = 3;
 }
 
 message Round1Response {

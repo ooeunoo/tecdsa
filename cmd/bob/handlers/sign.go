@@ -30,8 +30,7 @@ func NewSignHandler(repo repository.SecretRepository) *SignHandler {
 }
 
 func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
-
-	var bob *sign.Bob // Bob 인스턴스를 저장할 변수
+	var _ *sign.Bob // Bob 인스턴스를 저장할 변수
 
 	for {
 		in, err := stream.Recv()
@@ -46,7 +45,7 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 		case *pb.SignMessage_Round1Response:
 			err = h.handleRound2(stream, msg.Round1Response)
 		case *pb.SignMessage_Round3Response:
-			err = h.handleRound4(stream, bob, msg.Round3Response)
+			// err = h.handleRound4(stream, bob, msg.Round3Response)
 		default:
 			err = fmt.Errorf("unexpected message type")
 		}
@@ -138,22 +137,22 @@ func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, msg *pb.Rou
 // 	})
 // }
 
-func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, bob *sign.Bob, msg *pb.Round3Response) error {
-	fmt.Println("라운드4")
-	err := bob.Round4Final(msg.Message, &sign.SignRound3Output{
-		RSchnorrProof: msg.RSchnorrProof,
-		RPrime:        msg.RPrime,
-		EtaPhi:        msg.EtaPhi,
-		EtaSig:        msg.EtaSig,
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed in Round4Final")
-	}
-	return stream.Send(&pb.SignMessage{
-		Msg: &pb.SignMessage_FinalResponse{
-			FinalResponse: &pb.FinalResponse{
-				Signature: bob.Signature,
-			},
-		},
-	})
-}
+// func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, bob *sign.Bob, msg *pb.Round3Response) error {
+// 	fmt.Println("라운드4")
+// 	err := bob.Round4Final(msg.Message, &sign.SignRound3Output{
+// 		RSchnorrProof: msg.RSchnorrProof,
+// 		RPrime:        msg.RPrime,
+// 		EtaPhi:        msg.EtaPhi,
+// 		EtaSig:        msg.EtaSig,
+// 	})
+// 	if err != nil {
+// 		return errors.Wrap(err, "failed in Round4Final")
+// 	}
+// 	return stream.Send(&pb.SignMessage{
+// 		Msg: &pb.SignMessage_FinalResponse{
+// 			FinalResponse: &pb.FinalResponse{
+// 				Signature: bob.Signature,
+// 			},
+// 		},
+// 	})
+// }

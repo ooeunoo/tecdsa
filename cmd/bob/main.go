@@ -6,11 +6,12 @@ import (
 	"net"
 	"os"
 
-	"tecdsa/cmd/alice/config"
-	"tecdsa/cmd/alice/server"
+	"tecdsa/cmd/bob/config"
+	"tecdsa/cmd/bob/server"
 	"tecdsa/pkg/database"
 	"tecdsa/pkg/database/repository"
-	pb "tecdsa/proto/dkg"
+	pbKeygen "tecdsa/proto/keygen"
+	pbSign "tecdsa/proto/sign"
 
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -36,7 +37,7 @@ func loadConfig() *config.Config {
 		DBUser:     os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
-		ServerPort: "50052",
+		ServerPort: os.Getenv("SERVER_PORT"),
 	}
 	return cfg
 }
@@ -48,7 +49,7 @@ func connectDatabase(cfg *config.Config) *gorm.DB {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.CloseDB(db)
+	// defer database.CloseDB(db)
 
 	return db
 }
@@ -60,9 +61,12 @@ func startGRPCServer(cfg *config.Config, repo repository.SecretRepository) {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterDkgServiceServer(s, server.NewServer(repo))
+	srv := server.NewServer(repo)
 
-	log.Printf("Alice server listening at :%s", cfg.ServerPort)
+	pbKeygen.RegisterKeygenServiceServer(s, srv)
+	pbSign.RegisterSignServiceServer(s, srv)
+
+	log.Printf("Server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

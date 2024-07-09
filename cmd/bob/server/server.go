@@ -1,30 +1,31 @@
-// server.go
 package server
 
 import (
+	"fmt"
 	handlers "tecdsa/cmd/bob/handlers"
 	"tecdsa/pkg/database/repository"
 
-	pbDkg "tecdsa/proto/dkg"
+	pbKeygen "tecdsa/proto/keygen"
 	pbSign "tecdsa/proto/sign"
 )
 
 type Server struct {
-	pbDkg.UnimplementedDkgServiceServer
+	pbKeygen.UnimplementedKeygenServiceServer
 	pbSign.UnimplementedSignServiceServer
-	dkgHandler  *handlers.DkgHandler
-	signHandler *handlers.SignHandler
+	keygenHandler *handlers.KeygenHandler
+	signHandler   *handlers.SignHandler
 }
 
 func NewServer(repo repository.SecretRepository) *Server {
 	return &Server{
-		dkgHandler:  handlers.NewDkgHandler(repo),
-		signHandler: handlers.NewSignHandler(repo),
+		keygenHandler: handlers.NewKeygenHandler(repo),
+		signHandler:   handlers.NewSignHandler(repo),
 	}
 }
 
-func (s *Server) KeyGen(stream pbDkg.DkgService_KeyGenServer) error {
-	return s.dkgHandler.HandleKeyGen(stream)
+func (s *Server) KeyGen(stream pbKeygen.KeygenService_KeyGenServer) error {
+	fmt.Println("KeyGen called")
+	return s.keygenHandler.HandleKeyGen(stream)
 }
 
 func (s *Server) Sign(stream pbSign.SignService_SignServer) error {
