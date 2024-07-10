@@ -40,18 +40,18 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 		}
 
 		switch msg := in.Msg.(type) {
-		case *pb.KeygenMessage_Round1Request:
-			err = h.handleRound1(stream, bob)
-		case *pb.KeygenMessage_Round2Response:
-			err = h.handleRound3(stream, bob, msg.Round2Response)
-		case *pb.KeygenMessage_Round4Response:
-			err = h.handleRound5(stream, bob, msg.Round4Response)
-		case *pb.KeygenMessage_Round6Response:
-			err = h.handleRound7(stream, bob, msg.Round6Response)
-		case *pb.KeygenMessage_Round8Response:
-			err = h.handleRound9(stream, bob, msg.Round8Response)
-		case *pb.KeygenMessage_Round10Response:
-			err = h.handleFinalRound(stream, bob, msg.Round10Response)
+		case *pb.KeygenMessage_KeyGenRequestTo1Output:
+			err = h.handleRound1(stream, bob, msg.KeyGenRequestTo1Output)
+		case *pb.KeygenMessage_KeyGenRound2To3Output:
+			err = h.handleRound3(stream, bob, msg.KeyGenRound2To3Output)
+		case *pb.KeygenMessage_KeyGenRound4To5Output:
+			err = h.handleRound5(stream, bob, msg.KeyGenRound4To5Output)
+		case *pb.KeygenMessage_KeyGenRound6To7Output:
+			err = h.handleRound7(stream, bob, msg.KeyGenRound6To7Output)
+		case *pb.KeygenMessage_KeyGenRound8To9Output:
+			err = h.handleRound9(stream, bob, msg.KeyGenRound8To9Output)
+		case *pb.KeygenMessage_KeyGenRound10To11Output:
+			err = h.handleRound11(stream, bob, msg.KeyGenRound10To11Output)
 		default:
 			err = fmt.Errorf("unexpected message type")
 		}
@@ -62,7 +62,7 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 	}
 }
 
-func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob) error {
+func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.KeyGenRequestTo1Output) error {
 	fmt.Println("라운드1")
 	seed, err := bob.Round1GenerateRandomSeed()
 	if err != nil {
@@ -75,15 +75,15 @@ func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, bob *
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round1Response{
-			Round1Response: &pb.Round1Response{
+		Msg: &pb.KeygenMessage_KeyGenRound1To2Output{
+			KeyGenRound1To2Output: &pb.KeyGenRound1To2Output{
 				Payload: round1Output,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound3(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round2Response) error {
+func (h *KeygenHandler) handleRound3(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.KeyGenRound2To3Output) error {
 	fmt.Println("라운드3")
 
 	// deserialize
@@ -104,15 +104,15 @@ func (h *KeygenHandler) handleRound3(stream pb.KeygenService_KeyGenServer, bob *
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round3Response{
-			Round3Response: &pb.Round3Response{
+		Msg: &pb.KeygenMessage_KeyGenRound3To4Output{
+			KeyGenRound3To4Output: &pb.KeyGenRound3To4Output{
 				Payload: round3Output,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound5(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round4Response) error {
+func (h *KeygenHandler) handleRound5(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.KeyGenRound4To5Output) error {
 	fmt.Println("라운드5")
 
 	round5Input, err := deserializer.DecodeDkgRound5Input(msg.Payload)
@@ -131,15 +131,15 @@ func (h *KeygenHandler) handleRound5(stream pb.KeygenService_KeyGenServer, bob *
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round5Response{
-			Round5Response: &pb.Round5Response{
+		Msg: &pb.KeygenMessage_KeyGenRound5To6Output{
+			KeyGenRound5To6Output: &pb.KeyGenRound5To6Output{
 				Payload: round5Output,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound7(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round6Response) error {
+func (h *KeygenHandler) handleRound7(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.KeyGenRound6To7Output) error {
 	fmt.Println("라운드7")
 
 	round7Input, err := deserializer.DecodeDkgRound7Input(msg.Payload)
@@ -159,15 +159,15 @@ func (h *KeygenHandler) handleRound7(stream pb.KeygenService_KeyGenServer, bob *
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round7Response{
-			Round7Response: &pb.Round7Response{
+		Msg: &pb.KeygenMessage_KeyGenRound7To8Output{
+			KeyGenRound7To8Output: &pb.KeyGenRound7To8Output{
 				Payload: round7Output,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound9(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round8Response) error {
+func (h *KeygenHandler) handleRound9(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.KeyGenRound8To9Output) error {
 	fmt.Println("라운드9")
 	round9Input, err := deserializer.DecodeDkgRound9Input(msg.Payload)
 	if err != nil {
@@ -186,14 +186,14 @@ func (h *KeygenHandler) handleRound9(stream pb.KeygenService_KeyGenServer, bob *
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round9Response{
-			Round9Response: &pb.Round9Response{
+		Msg: &pb.KeygenMessage_KeyGenRound9To10Output{
+			KeyGenRound9To10Output: &pb.KeyGenRound9To10Output{
 				Payload: round9Output,
 			}},
 	})
 }
 
-func (h *KeygenHandler) handleFinalRound(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.Round10Response) error {
+func (h *KeygenHandler) handleRound11(stream pb.KeygenService_KeyGenServer, bob *dkg.Bob, msg *pb.KeyGenRound10To11Output) error {
 	fmt.Println("라운드끝")
 
 	bobOutput := bob.Output()
@@ -216,16 +216,12 @@ func (h *KeygenHandler) handleFinalRound(stream pb.KeygenService_KeyGenServer, b
 	}
 	// ###################################
 
-	// serialize
-	keygenResponse := pb.KeyGenResponse{
-		Success:   true,
-		Address:   address,
-		SecretKey: secretKey,
-	}
-
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_KeyGenResponse{
-			KeyGenResponse: &keygenResponse,
+		Msg: &pb.KeygenMessage_KeyGenRound11ToResponseOutput{
+			KeyGenRound11ToResponseOutput: &pb.KeyGenRound11ToResponseOutput{
+				Address:   address,
+				SecretKey: secretKey,
+			},
 		},
 	})
 }

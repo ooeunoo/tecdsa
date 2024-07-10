@@ -50,12 +50,19 @@ message SignRound3To4Output {
   bytes payload = 2;
 }
 
-// 라운드 4 -> 응답
+// 라운드 4 -> 게이트웨이
 message SignRound4ToResponseOutput {
   bytes v = 1;
   bytes r = 2;
   bytes s = 3;
 }
 
+// 게이트웨이 -> 응답
+message SignResponse {
+  bool success = 1;
+  bytes v = 2;
+  bytes r = 3;
+  bytes s = 4;
+}
 
 

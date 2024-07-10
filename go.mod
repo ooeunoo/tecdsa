@@ -36,6 +36,7 @@ require (
 	github.com/consensys/gnark-crypto v0.7.0 // indirect
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
+	github.com/golang/protobuf v1.5.4
 	github.com/gtank/merlin v0.1.1
 	github.com/jinzhu/gorm v1.9.16
 	github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643 // indirect

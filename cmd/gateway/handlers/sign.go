@@ -10,6 +10,7 @@ import (
 	pb "tecdsa/proto/sign"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func SignHandler(w http.ResponseWriter, r *http.Request) {
@@ -63,12 +64,31 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		select {
 		case bobResp := <-bobChan:
 			if signResp, ok := bobResp.Msg.(*pb.SignMessage_SignRound4ToResponseOutput); ok {
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"success": true,
-					"v":       signResp.SignRound4ToResponseOutput.V,
-					"s":       signResp.SignRound4ToResponseOutput.S,
-					"r":       signResp.SignRound4ToResponseOutput.R,
-				})
+				// SignResponse 메시지 생성
+				response := &pb.SignResponse{
+					Success: true,
+					V:       signResp.SignRound4ToResponseOutput.V,
+					R:       signResp.SignRound4ToResponseOutput.R,
+					S:       signResp.SignRound4ToResponseOutput.S,
+				}
+
+				marshaler := protojson.MarshalOptions{
+					EmitUnpopulated: true,
+					UseProtoNames:   true,
+				}
+
+				// SignResponse를 JSON으로 변환
+				jsonBytes, err := marshaler.Marshal(response)
+				if err != nil {
+					http.Error(w, "Failed to marshal response to JSON", http.StatusInternalServerError)
+					return
+				}
+
+				// Content-Type 설정
+				w.Header().Set("Content-Type", "application/json")
+
+				// JSON 응답 전송
+				w.Write(jsonBytes)
 				return
 			}
 			if err := aliceStream.Send(bobResp); err != nil {

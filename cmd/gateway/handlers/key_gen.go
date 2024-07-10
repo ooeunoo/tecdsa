@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	pb "tecdsa/proto/keygen"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// DKG 프로토콜 시작
-	if err := bobStream.Send(&pb.KeygenMessage{Msg: &pb.KeygenMessage_Round1Request{Round1Request: &pb.Round1Request{}}}); err != nil {
+	if err := bobStream.Send(&pb.KeygenMessage{Msg: &pb.KeygenMessage_KeyGenRequestTo1Output{KeyGenRequestTo1Output: &pb.KeyGenRequestTo1Output{}}}); err != nil {
 		http.Error(w, "Failed to send initial request to Bob", http.StatusInternalServerError)
 		fmt.Printf("Failed to send initial request to Bob: %v\n", err)
 		return
@@ -91,17 +91,40 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case bobResp := <-bobChan:
-			if keyGenResp, ok := bobResp.Msg.(*pb.KeygenMessage_KeyGenResponse); ok {
+			if res, ok := bobResp.Msg.(*pb.KeygenMessage_KeyGenRound11ToResponseOutput); ok {
 				endTime := time.Now()
 				duration := endTime.Sub(startTime)
-				fmt.Println("생성된 주소:", keyGenResp.KeyGenResponse.Address)
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"success":    keyGenResp.KeyGenResponse.Success,
-					"address":    keyGenResp.KeyGenResponse.Address,
-					"secret_key": keyGenResp.KeyGenResponse.SecretKey,
-					"duration":   duration.Seconds(),
-				})
+				fmt.Printf("Start time: %v\n", startTime)
+				fmt.Printf("End time: %v\n", endTime)
+				fmt.Printf("Duration: %v\n", duration)
+
+				// SignResponse 메시지 생성
+				response := &pb.KeyGenResponse{
+					Success:   true,
+					Address:   res.KeyGenRound11ToResponseOutput.Address,
+					SecretKey: res.KeyGenRound11ToResponseOutput.SecretKey,
+					Duration:  int32(duration.Milliseconds()),
+				}
+
+				marshaler := protojson.MarshalOptions{
+					EmitUnpopulated: true,
+					UseProtoNames:   true,
+				}
+
+				// SignResponse를 JSON으로 변환
+				jsonBytes, err := marshaler.Marshal(response)
+				if err != nil {
+					http.Error(w, "Failed to marshal response to JSON", http.StatusInternalServerError)
+					return
+				}
+
+				// Content-Type 설정
+				w.Header().Set("Content-Type", "application/json")
+
+				// JSON 응답 전송
+				w.Write(jsonBytes)
 				return
+
 			}
 			if err := aliceStream.Send(bobResp); err != nil {
 				http.Error(w, "Failed to send Bob's response to Alice", http.StatusInternalServerError)

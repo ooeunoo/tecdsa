@@ -10,50 +10,90 @@ service KeygenService {
 
 message KeygenMessage {
   oneof msg {
-    KeyGenRequest keyGenRequest = 1;
-    Round1Request round1Request = 2;
-    Round1Response round1Response = 3;
-    Round2Request round2Request = 4;
-    Round2Response round2Response = 5;
-    Round3Request round3Request = 6;
-    Round3Response round3Response = 7;
-    Round4Request round4Request = 8;
-    Round4Response round4Response = 9;
-    Round5Request round5Request = 10;
-    Round5Response round5Response = 11;
-    Round6Request round6Request = 12;
-    Round6Response round6Response = 13;
-    Round7Request round7Request = 14;
-    Round7Response round7Response = 15;
-    Round8Request round8Request = 16;
-    Round8Response round8Response = 17;
-    Round9Request round9Request = 18;
-    Round9Response round9Response = 19;
-    Round10Request round10Request = 20;
-    Round10Response round10Response = 21;
-    KeyGenResponse keyGenResponse = 22;
+    KeyGenRequestTo1Output keyGenRequestTo1Output = 1;
+    KeyGenRound1To2Output  keyGenRound1To2Output = 2;
+    KeyGenRound2To3Output  keyGenRound2To3Output = 3;
+    KeyGenRound3To4Output  keyGenRound3To4Output = 4;
+    KeyGenRound4To5Output  keyGenRound4To5Output = 5;
+    KeyGenRound5To6Output  keyGenRound5To6Output = 6;
+    KeyGenRound6To7Output  keyGenRound6To7Output = 7;
+    KeyGenRound7To8Output  keyGenRound7To8Output = 8;
+    KeyGenRound8To9Output  keyGenRound8To9Output = 9;
+    KeyGenRound9To10Output keyGenRound9To10Output = 10;
+    KeyGenRound10To11Output keyGenRound10To11Output = 11;
+    KeyGenRound11ToResponseOutput keyGenRound11ToResponseOutput = 12;
   }
 }
+// 요청 메시지 DTO
+message KeyGenRequestMessage{}
 
-message KeyGenRequest{}
-message Round1Request {}
-message Round1Response { bytes payload =1; }
-message Round2Request {  bytes payload =1; }
-message Round2Response {  bytes payload =1; }
-message Round3Request {  bytes payload =1;}
-message Round3Response {  bytes payload =1; }
-message Round4Request {   bytes payload =1; }
-message Round4Response {   bytes payload =1; }
-message Round5Request {   bytes payload =1; }
-message Round5Response {   bytes payload =1; }
-message Round6Request {   bytes payload =1; }
-message Round6Response {   bytes payload =1; }
-message Round7Request {   bytes payload =1; }
-message Round7Response {   bytes payload =1; }
-message Round8Request {   bytes payload =1; }
-message Round8Response {   bytes payload =1; }
-message Round9Request {   bytes payload =1; }
-message Round9Response { bytes payload = 1; }
-message Round10Request { bytes payload = 1; }
-message Round10Response { bool success = 1; bytes secret_key =2; }
-message KeyGenResponse { bool success = 1; string address=2;  bytes secret_key = 3; int32 duration=4; }
+// 요청 -> 라운드 1 
+message KeyGenRequestTo1Output {}
+
+// 라운드 1 -> 라운드 2
+message KeyGenRound1To2Output {
+  bytes payload = 1;
+}
+
+// 라운드 2 -> 라운드 3
+message KeyGenRound2To3Output {
+  bytes payload = 1;
+}
+
+// 라운드 3 -> 라운드 4
+message KeyGenRound3To4Output {
+  bytes payload = 1;
+}
+
+// 라운드 4 -> 라운드 5
+message KeyGenRound4To5Output {
+  bytes payload = 1;
+}
+
+// 라운드 5 -> 라운드 6
+message KeyGenRound5To6Output {
+  bytes payload = 1;
+}
+
+// 라운드 6 -> 라운드 7
+message KeyGenRound6To7Output {
+  bytes payload = 1;
+}
+
+// 라운드 7 -> 라운드 8
+message KeyGenRound7To8Output {
+  bytes payload = 1;
+}
+
+// 라운드 8 -> 라운드 9
+message KeyGenRound8To9Output {
+  bytes payload = 1;
+}
+
+// 라운드 9 -> 라운드 10
+message KeyGenRound9To10Output {
+  bytes payload = 1;
+}
+
+// 라운드 10 -> 라운드 11(시크릿키 공유를 위함)
+message KeyGenRound10To11Output {
+  bytes secret_key =3;
+}
+
+// 라운드 11 -> 게이트 웨이
+message KeyGenRound11ToResponseOutput {
+  string address = 2;
+  bytes secret_key =3;
+}
+
+// 게이트 웨이 -> 응답
+message KeyGenResponse { 
+  bool success = 1; 
+  string address=2;  
+  bytes secret_key = 3; 
+  int32 duration=4; 
+}
+
+
+
+

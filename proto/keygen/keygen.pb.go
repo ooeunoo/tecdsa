@@ -27,28 +27,18 @@ type KeygenMessage struct {
 
 	// Types that are assignable to Msg:
 	//
-	//	*KeygenMessage_KeyGenRequest
-	//	*KeygenMessage_Round1Request
-	//	*KeygenMessage_Round1Response
-	//	*KeygenMessage_Round2Request
-	//	*KeygenMessage_Round2Response
-	//	*KeygenMessage_Round3Request
-	//	*KeygenMessage_Round3Response
-	//	*KeygenMessage_Round4Request
-	//	*KeygenMessage_Round4Response
-	//	*KeygenMessage_Round5Request
-	//	*KeygenMessage_Round5Response
-	//	*KeygenMessage_Round6Request
-	//	*KeygenMessage_Round6Response
-	//	*KeygenMessage_Round7Request
-	//	*KeygenMessage_Round7Response
-	//	*KeygenMessage_Round8Request
-	//	*KeygenMessage_Round8Response
-	//	*KeygenMessage_Round9Request
-	//	*KeygenMessage_Round9Response
-	//	*KeygenMessage_Round10Request
-	//	*KeygenMessage_Round10Response
-	//	*KeygenMessage_KeyGenResponse
+	//	*KeygenMessage_KeyGenRequestTo1Output
+	//	*KeygenMessage_KeyGenRound1To2Output
+	//	*KeygenMessage_KeyGenRound2To3Output
+	//	*KeygenMessage_KeyGenRound3To4Output
+	//	*KeygenMessage_KeyGenRound4To5Output
+	//	*KeygenMessage_KeyGenRound5To6Output
+	//	*KeygenMessage_KeyGenRound6To7Output
+	//	*KeygenMessage_KeyGenRound7To8Output
+	//	*KeygenMessage_KeyGenRound8To9Output
+	//	*KeygenMessage_KeyGenRound9To10Output
+	//	*KeygenMessage_KeyGenRound10To11Output
+	//	*KeygenMessage_KeyGenRound11ToResponseOutput
 	Msg isKeygenMessage_Msg `protobuf_oneof:"msg"`
 }
 
@@ -91,156 +81,86 @@ func (m *KeygenMessage) GetMsg() isKeygenMessage_Msg {
 	return nil
 }
 
-func (x *KeygenMessage) GetKeyGenRequest() *KeyGenRequest {
-	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRequest); ok {
-		return x.KeyGenRequest
+func (x *KeygenMessage) GetKeyGenRequestTo1Output() *KeyGenRequestTo1Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRequestTo1Output); ok {
+		return x.KeyGenRequestTo1Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound1Request() *Round1Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round1Request); ok {
-		return x.Round1Request
+func (x *KeygenMessage) GetKeyGenRound1To2Output() *KeyGenRound1To2Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound1To2Output); ok {
+		return x.KeyGenRound1To2Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound1Response() *Round1Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round1Response); ok {
-		return x.Round1Response
+func (x *KeygenMessage) GetKeyGenRound2To3Output() *KeyGenRound2To3Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound2To3Output); ok {
+		return x.KeyGenRound2To3Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound2Request() *Round2Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round2Request); ok {
-		return x.Round2Request
+func (x *KeygenMessage) GetKeyGenRound3To4Output() *KeyGenRound3To4Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound3To4Output); ok {
+		return x.KeyGenRound3To4Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound2Response() *Round2Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round2Response); ok {
-		return x.Round2Response
+func (x *KeygenMessage) GetKeyGenRound4To5Output() *KeyGenRound4To5Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound4To5Output); ok {
+		return x.KeyGenRound4To5Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound3Request() *Round3Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round3Request); ok {
-		return x.Round3Request
+func (x *KeygenMessage) GetKeyGenRound5To6Output() *KeyGenRound5To6Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound5To6Output); ok {
+		return x.KeyGenRound5To6Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound3Response() *Round3Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round3Response); ok {
-		return x.Round3Response
+func (x *KeygenMessage) GetKeyGenRound6To7Output() *KeyGenRound6To7Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound6To7Output); ok {
+		return x.KeyGenRound6To7Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound4Request() *Round4Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round4Request); ok {
-		return x.Round4Request
+func (x *KeygenMessage) GetKeyGenRound7To8Output() *KeyGenRound7To8Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound7To8Output); ok {
+		return x.KeyGenRound7To8Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound4Response() *Round4Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round4Response); ok {
-		return x.Round4Response
+func (x *KeygenMessage) GetKeyGenRound8To9Output() *KeyGenRound8To9Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound8To9Output); ok {
+		return x.KeyGenRound8To9Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound5Request() *Round5Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round5Request); ok {
-		return x.Round5Request
+func (x *KeygenMessage) GetKeyGenRound9To10Output() *KeyGenRound9To10Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound9To10Output); ok {
+		return x.KeyGenRound9To10Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound5Response() *Round5Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round5Response); ok {
-		return x.Round5Response
+func (x *KeygenMessage) GetKeyGenRound10To11Output() *KeyGenRound10To11Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound10To11Output); ok {
+		return x.KeyGenRound10To11Output
 	}
 	return nil
 }
 
-func (x *KeygenMessage) GetRound6Request() *Round6Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round6Request); ok {
-		return x.Round6Request
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound6Response() *Round6Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round6Response); ok {
-		return x.Round6Response
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound7Request() *Round7Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round7Request); ok {
-		return x.Round7Request
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound7Response() *Round7Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round7Response); ok {
-		return x.Round7Response
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound8Request() *Round8Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round8Request); ok {
-		return x.Round8Request
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound8Response() *Round8Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round8Response); ok {
-		return x.Round8Response
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound9Request() *Round9Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round9Request); ok {
-		return x.Round9Request
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound9Response() *Round9Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round9Response); ok {
-		return x.Round9Response
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound10Request() *Round10Request {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round10Request); ok {
-		return x.Round10Request
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetRound10Response() *Round10Response {
-	if x, ok := x.GetMsg().(*KeygenMessage_Round10Response); ok {
-		return x.Round10Response
-	}
-	return nil
-}
-
-func (x *KeygenMessage) GetKeyGenResponse() *KeyGenResponse {
-	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenResponse); ok {
-		return x.KeyGenResponse
+func (x *KeygenMessage) GetKeyGenRound11ToResponseOutput() *KeyGenRound11ToResponseOutput {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound11ToResponseOutput); ok {
+		return x.KeyGenRound11ToResponseOutput
 	}
 	return nil
 }
@@ -249,146 +169,87 @@ type isKeygenMessage_Msg interface {
 	isKeygenMessage_Msg()
 }
 
-type KeygenMessage_KeyGenRequest struct {
-	KeyGenRequest *KeyGenRequest `protobuf:"bytes,1,opt,name=keyGenRequest,proto3,oneof"`
+type KeygenMessage_KeyGenRequestTo1Output struct {
+	KeyGenRequestTo1Output *KeyGenRequestTo1Output `protobuf:"bytes,1,opt,name=keyGenRequestTo1Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round1Request struct {
-	Round1Request *Round1Request `protobuf:"bytes,2,opt,name=round1Request,proto3,oneof"`
+type KeygenMessage_KeyGenRound1To2Output struct {
+	KeyGenRound1To2Output *KeyGenRound1To2Output `protobuf:"bytes,2,opt,name=keyGenRound1To2Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round1Response struct {
-	Round1Response *Round1Response `protobuf:"bytes,3,opt,name=round1Response,proto3,oneof"`
+type KeygenMessage_KeyGenRound2To3Output struct {
+	KeyGenRound2To3Output *KeyGenRound2To3Output `protobuf:"bytes,3,opt,name=keyGenRound2To3Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round2Request struct {
-	Round2Request *Round2Request `protobuf:"bytes,4,opt,name=round2Request,proto3,oneof"`
+type KeygenMessage_KeyGenRound3To4Output struct {
+	KeyGenRound3To4Output *KeyGenRound3To4Output `protobuf:"bytes,4,opt,name=keyGenRound3To4Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round2Response struct {
-	Round2Response *Round2Response `protobuf:"bytes,5,opt,name=round2Response,proto3,oneof"`
+type KeygenMessage_KeyGenRound4To5Output struct {
+	KeyGenRound4To5Output *KeyGenRound4To5Output `protobuf:"bytes,5,opt,name=keyGenRound4To5Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round3Request struct {
-	Round3Request *Round3Request `protobuf:"bytes,6,opt,name=round3Request,proto3,oneof"`
+type KeygenMessage_KeyGenRound5To6Output struct {
+	KeyGenRound5To6Output *KeyGenRound5To6Output `protobuf:"bytes,6,opt,name=keyGenRound5To6Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round3Response struct {
-	Round3Response *Round3Response `protobuf:"bytes,7,opt,name=round3Response,proto3,oneof"`
+type KeygenMessage_KeyGenRound6To7Output struct {
+	KeyGenRound6To7Output *KeyGenRound6To7Output `protobuf:"bytes,7,opt,name=keyGenRound6To7Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round4Request struct {
-	Round4Request *Round4Request `protobuf:"bytes,8,opt,name=round4Request,proto3,oneof"`
+type KeygenMessage_KeyGenRound7To8Output struct {
+	KeyGenRound7To8Output *KeyGenRound7To8Output `protobuf:"bytes,8,opt,name=keyGenRound7To8Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round4Response struct {
-	Round4Response *Round4Response `protobuf:"bytes,9,opt,name=round4Response,proto3,oneof"`
+type KeygenMessage_KeyGenRound8To9Output struct {
+	KeyGenRound8To9Output *KeyGenRound8To9Output `protobuf:"bytes,9,opt,name=keyGenRound8To9Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round5Request struct {
-	Round5Request *Round5Request `protobuf:"bytes,10,opt,name=round5Request,proto3,oneof"`
+type KeygenMessage_KeyGenRound9To10Output struct {
+	KeyGenRound9To10Output *KeyGenRound9To10Output `protobuf:"bytes,10,opt,name=keyGenRound9To10Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round5Response struct {
-	Round5Response *Round5Response `protobuf:"bytes,11,opt,name=round5Response,proto3,oneof"`
+type KeygenMessage_KeyGenRound10To11Output struct {
+	KeyGenRound10To11Output *KeyGenRound10To11Output `protobuf:"bytes,11,opt,name=keyGenRound10To11Output,proto3,oneof"`
 }
 
-type KeygenMessage_Round6Request struct {
-	Round6Request *Round6Request `protobuf:"bytes,12,opt,name=round6Request,proto3,oneof"`
+type KeygenMessage_KeyGenRound11ToResponseOutput struct {
+	KeyGenRound11ToResponseOutput *KeyGenRound11ToResponseOutput `protobuf:"bytes,12,opt,name=keyGenRound11ToResponseOutput,proto3,oneof"`
 }
 
-type KeygenMessage_Round6Response struct {
-	Round6Response *Round6Response `protobuf:"bytes,13,opt,name=round6Response,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRequestTo1Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round7Request struct {
-	Round7Request *Round7Request `protobuf:"bytes,14,opt,name=round7Request,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound1To2Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round7Response struct {
-	Round7Response *Round7Response `protobuf:"bytes,15,opt,name=round7Response,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound2To3Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round8Request struct {
-	Round8Request *Round8Request `protobuf:"bytes,16,opt,name=round8Request,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound3To4Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round8Response struct {
-	Round8Response *Round8Response `protobuf:"bytes,17,opt,name=round8Response,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound4To5Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round9Request struct {
-	Round9Request *Round9Request `protobuf:"bytes,18,opt,name=round9Request,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound5To6Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round9Response struct {
-	Round9Response *Round9Response `protobuf:"bytes,19,opt,name=round9Response,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound6To7Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round10Request struct {
-	Round10Request *Round10Request `protobuf:"bytes,20,opt,name=round10Request,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound7To8Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_Round10Response struct {
-	Round10Response *Round10Response `protobuf:"bytes,21,opt,name=round10Response,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound8To9Output) isKeygenMessage_Msg() {}
 
-type KeygenMessage_KeyGenResponse struct {
-	KeyGenResponse *KeyGenResponse `protobuf:"bytes,22,opt,name=keyGenResponse,proto3,oneof"`
-}
+func (*KeygenMessage_KeyGenRound9To10Output) isKeygenMessage_Msg() {}
 
-func (*KeygenMessage_KeyGenRequest) isKeygenMessage_Msg() {}
+func (*KeygenMessage_KeyGenRound10To11Output) isKeygenMessage_Msg() {}
 
-func (*KeygenMessage_Round1Request) isKeygenMessage_Msg() {}
+func (*KeygenMessage_KeyGenRound11ToResponseOutput) isKeygenMessage_Msg() {}
 
-func (*KeygenMessage_Round1Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round2Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round2Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round3Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round3Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round4Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round4Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round5Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round5Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round6Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round6Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round7Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round7Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round8Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round8Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round9Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round9Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round10Request) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_Round10Response) isKeygenMessage_Msg() {}
-
-func (*KeygenMessage_KeyGenResponse) isKeygenMessage_Msg() {}
-
-type KeyGenRequest struct {
+// 요청 메시지 DTO
+type KeyGenRequestMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *KeyGenRequest) Reset() {
-	*x = KeyGenRequest{}
+func (x *KeyGenRequestMessage) Reset() {
+	*x = KeyGenRequestMessage{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -396,13 +257,13 @@ func (x *KeyGenRequest) Reset() {
 	}
 }
 
-func (x *KeyGenRequest) String() string {
+func (x *KeyGenRequestMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KeyGenRequest) ProtoMessage() {}
+func (*KeyGenRequestMessage) ProtoMessage() {}
 
-func (x *KeyGenRequest) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRequestMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -414,19 +275,20 @@ func (x *KeyGenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KeyGenRequest.ProtoReflect.Descriptor instead.
-func (*KeyGenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRequestMessage.ProtoReflect.Descriptor instead.
+func (*KeyGenRequestMessage) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{1}
 }
 
-type Round1Request struct {
+// 요청 -> 라운드 1
+type KeyGenRequestTo1Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *Round1Request) Reset() {
-	*x = Round1Request{}
+func (x *KeyGenRequestTo1Output) Reset() {
+	*x = KeyGenRequestTo1Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -434,13 +296,13 @@ func (x *Round1Request) Reset() {
 	}
 }
 
-func (x *Round1Request) String() string {
+func (x *KeyGenRequestTo1Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round1Request) ProtoMessage() {}
+func (*KeyGenRequestTo1Output) ProtoMessage() {}
 
-func (x *Round1Request) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRequestTo1Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -452,12 +314,13 @@ func (x *Round1Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round1Request.ProtoReflect.Descriptor instead.
-func (*Round1Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRequestTo1Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRequestTo1Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{2}
 }
 
-type Round1Response struct {
+// 라운드 1 -> 라운드 2
+type KeyGenRound1To2Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -465,8 +328,8 @@ type Round1Response struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round1Response) Reset() {
-	*x = Round1Response{}
+func (x *KeyGenRound1To2Output) Reset() {
+	*x = KeyGenRound1To2Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -474,13 +337,13 @@ func (x *Round1Response) Reset() {
 	}
 }
 
-func (x *Round1Response) String() string {
+func (x *KeyGenRound1To2Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round1Response) ProtoMessage() {}
+func (*KeyGenRound1To2Output) ProtoMessage() {}
 
-func (x *Round1Response) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound1To2Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -492,19 +355,20 @@ func (x *Round1Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round1Response.ProtoReflect.Descriptor instead.
-func (*Round1Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound1To2Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound1To2Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Round1Response) GetPayload() []byte {
+func (x *KeyGenRound1To2Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round2Request struct {
+// 라운드 2 -> 라운드 3
+type KeyGenRound2To3Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -512,8 +376,8 @@ type Round2Request struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round2Request) Reset() {
-	*x = Round2Request{}
+func (x *KeyGenRound2To3Output) Reset() {
+	*x = KeyGenRound2To3Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -521,13 +385,13 @@ func (x *Round2Request) Reset() {
 	}
 }
 
-func (x *Round2Request) String() string {
+func (x *KeyGenRound2To3Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round2Request) ProtoMessage() {}
+func (*KeyGenRound2To3Output) ProtoMessage() {}
 
-func (x *Round2Request) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound2To3Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -539,19 +403,20 @@ func (x *Round2Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round2Request.ProtoReflect.Descriptor instead.
-func (*Round2Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound2To3Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound2To3Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *Round2Request) GetPayload() []byte {
+func (x *KeyGenRound2To3Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round2Response struct {
+// 라운드 3 -> 라운드 4
+type KeyGenRound3To4Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -559,8 +424,8 @@ type Round2Response struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round2Response) Reset() {
-	*x = Round2Response{}
+func (x *KeyGenRound3To4Output) Reset() {
+	*x = KeyGenRound3To4Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -568,13 +433,13 @@ func (x *Round2Response) Reset() {
 	}
 }
 
-func (x *Round2Response) String() string {
+func (x *KeyGenRound3To4Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round2Response) ProtoMessage() {}
+func (*KeyGenRound3To4Output) ProtoMessage() {}
 
-func (x *Round2Response) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound3To4Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -586,19 +451,20 @@ func (x *Round2Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round2Response.ProtoReflect.Descriptor instead.
-func (*Round2Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound3To4Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound3To4Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *Round2Response) GetPayload() []byte {
+func (x *KeyGenRound3To4Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round3Request struct {
+// 라운드 4 -> 라운드 5
+type KeyGenRound4To5Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -606,8 +472,8 @@ type Round3Request struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round3Request) Reset() {
-	*x = Round3Request{}
+func (x *KeyGenRound4To5Output) Reset() {
+	*x = KeyGenRound4To5Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -615,13 +481,13 @@ func (x *Round3Request) Reset() {
 	}
 }
 
-func (x *Round3Request) String() string {
+func (x *KeyGenRound4To5Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round3Request) ProtoMessage() {}
+func (*KeyGenRound4To5Output) ProtoMessage() {}
 
-func (x *Round3Request) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound4To5Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -633,19 +499,20 @@ func (x *Round3Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round3Request.ProtoReflect.Descriptor instead.
-func (*Round3Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound4To5Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound4To5Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *Round3Request) GetPayload() []byte {
+func (x *KeyGenRound4To5Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round3Response struct {
+// 라운드 5 -> 라운드 6
+type KeyGenRound5To6Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -653,8 +520,8 @@ type Round3Response struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round3Response) Reset() {
-	*x = Round3Response{}
+func (x *KeyGenRound5To6Output) Reset() {
+	*x = KeyGenRound5To6Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -662,13 +529,13 @@ func (x *Round3Response) Reset() {
 	}
 }
 
-func (x *Round3Response) String() string {
+func (x *KeyGenRound5To6Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round3Response) ProtoMessage() {}
+func (*KeyGenRound5To6Output) ProtoMessage() {}
 
-func (x *Round3Response) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound5To6Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -680,19 +547,20 @@ func (x *Round3Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round3Response.ProtoReflect.Descriptor instead.
-func (*Round3Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound5To6Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound5To6Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *Round3Response) GetPayload() []byte {
+func (x *KeyGenRound5To6Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round4Request struct {
+// 라운드 6 -> 라운드 7
+type KeyGenRound6To7Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -700,8 +568,8 @@ type Round4Request struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round4Request) Reset() {
-	*x = Round4Request{}
+func (x *KeyGenRound6To7Output) Reset() {
+	*x = KeyGenRound6To7Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -709,13 +577,13 @@ func (x *Round4Request) Reset() {
 	}
 }
 
-func (x *Round4Request) String() string {
+func (x *KeyGenRound6To7Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round4Request) ProtoMessage() {}
+func (*KeyGenRound6To7Output) ProtoMessage() {}
 
-func (x *Round4Request) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound6To7Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -727,19 +595,20 @@ func (x *Round4Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round4Request.ProtoReflect.Descriptor instead.
-func (*Round4Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound6To7Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound6To7Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *Round4Request) GetPayload() []byte {
+func (x *KeyGenRound6To7Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round4Response struct {
+// 라운드 7 -> 라운드 8
+type KeyGenRound7To8Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -747,8 +616,8 @@ type Round4Response struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round4Response) Reset() {
-	*x = Round4Response{}
+func (x *KeyGenRound7To8Output) Reset() {
+	*x = KeyGenRound7To8Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -756,13 +625,13 @@ func (x *Round4Response) Reset() {
 	}
 }
 
-func (x *Round4Response) String() string {
+func (x *KeyGenRound7To8Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round4Response) ProtoMessage() {}
+func (*KeyGenRound7To8Output) ProtoMessage() {}
 
-func (x *Round4Response) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound7To8Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -774,19 +643,20 @@ func (x *Round4Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round4Response.ProtoReflect.Descriptor instead.
-func (*Round4Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound7To8Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound7To8Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *Round4Response) GetPayload() []byte {
+func (x *KeyGenRound7To8Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round5Request struct {
+// 라운드 8 -> 라운드 9
+type KeyGenRound8To9Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -794,8 +664,8 @@ type Round5Request struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round5Request) Reset() {
-	*x = Round5Request{}
+func (x *KeyGenRound8To9Output) Reset() {
+	*x = KeyGenRound8To9Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -803,13 +673,13 @@ func (x *Round5Request) Reset() {
 	}
 }
 
-func (x *Round5Request) String() string {
+func (x *KeyGenRound8To9Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round5Request) ProtoMessage() {}
+func (*KeyGenRound8To9Output) ProtoMessage() {}
 
-func (x *Round5Request) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound8To9Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -821,19 +691,20 @@ func (x *Round5Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round5Request.ProtoReflect.Descriptor instead.
-func (*Round5Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound8To9Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound8To9Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *Round5Request) GetPayload() []byte {
+func (x *KeyGenRound8To9Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round5Response struct {
+// 라운드 9 -> 라운드 10
+type KeyGenRound9To10Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -841,8 +712,8 @@ type Round5Response struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round5Response) Reset() {
-	*x = Round5Response{}
+func (x *KeyGenRound9To10Output) Reset() {
+	*x = KeyGenRound9To10Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -850,13 +721,13 @@ func (x *Round5Response) Reset() {
 	}
 }
 
-func (x *Round5Response) String() string {
+func (x *KeyGenRound9To10Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round5Response) ProtoMessage() {}
+func (*KeyGenRound9To10Output) ProtoMessage() {}
 
-func (x *Round5Response) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound9To10Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -868,28 +739,30 @@ func (x *Round5Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round5Response.ProtoReflect.Descriptor instead.
-func (*Round5Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound9To10Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound9To10Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *Round5Response) GetPayload() []byte {
+func (x *KeyGenRound9To10Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round6Request struct {
+// 라운드 10 -> 라운드 11(시크릿키 공유를 위함)
+type KeyGenRound10To11Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	Address   string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	SecretKey []byte `protobuf:"bytes,3,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
 }
 
-func (x *Round6Request) Reset() {
-	*x = Round6Request{}
+func (x *KeyGenRound10To11Output) Reset() {
+	*x = KeyGenRound10To11Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -897,13 +770,13 @@ func (x *Round6Request) Reset() {
 	}
 }
 
-func (x *Round6Request) String() string {
+func (x *KeyGenRound10To11Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round6Request) ProtoMessage() {}
+func (*KeyGenRound10To11Output) ProtoMessage() {}
 
-func (x *Round6Request) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound10To11Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -915,28 +788,37 @@ func (x *Round6Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round6Request.ProtoReflect.Descriptor instead.
-func (*Round6Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound10To11Output.ProtoReflect.Descriptor instead.
+func (*KeyGenRound10To11Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *Round6Request) GetPayload() []byte {
+func (x *KeyGenRound10To11Output) GetAddress() string {
 	if x != nil {
-		return x.Payload
+		return x.Address
+	}
+	return ""
+}
+
+func (x *KeyGenRound10To11Output) GetSecretKey() []byte {
+	if x != nil {
+		return x.SecretKey
 	}
 	return nil
 }
 
-type Round6Response struct {
+// 라운드 11 -> 게이트 웨이
+type KeyGenRound11ToResponseOutput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	Address   string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	SecretKey []byte `protobuf:"bytes,3,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
 }
 
-func (x *Round6Response) Reset() {
-	*x = Round6Response{}
+func (x *KeyGenRound11ToResponseOutput) Reset() {
+	*x = KeyGenRound11ToResponseOutput{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -944,13 +826,13 @@ func (x *Round6Response) Reset() {
 	}
 }
 
-func (x *Round6Response) String() string {
+func (x *KeyGenRound11ToResponseOutput) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round6Response) ProtoMessage() {}
+func (*KeyGenRound11ToResponseOutput) ProtoMessage() {}
 
-func (x *Round6Response) ProtoReflect() protoreflect.Message {
+func (x *KeyGenRound11ToResponseOutput) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -962,402 +844,26 @@ func (x *Round6Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round6Response.ProtoReflect.Descriptor instead.
-func (*Round6Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenRound11ToResponseOutput.ProtoReflect.Descriptor instead.
+func (*KeyGenRound11ToResponseOutput) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *Round6Response) GetPayload() []byte {
+func (x *KeyGenRound11ToResponseOutput) GetAddress() string {
 	if x != nil {
-		return x.Payload
+		return x.Address
 	}
-	return nil
+	return ""
 }
 
-type Round7Request struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round7Request) Reset() {
-	*x = Round7Request{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[14]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round7Request) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round7Request) ProtoMessage() {}
-
-func (x *Round7Request) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[14]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round7Request.ProtoReflect.Descriptor instead.
-func (*Round7Request) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *Round7Request) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round7Response struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round7Response) Reset() {
-	*x = Round7Response{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[15]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round7Response) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round7Response) ProtoMessage() {}
-
-func (x *Round7Response) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[15]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round7Response.ProtoReflect.Descriptor instead.
-func (*Round7Response) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *Round7Response) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round8Request struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round8Request) Reset() {
-	*x = Round8Request{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[16]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round8Request) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round8Request) ProtoMessage() {}
-
-func (x *Round8Request) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[16]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round8Request.ProtoReflect.Descriptor instead.
-func (*Round8Request) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *Round8Request) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round8Response struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round8Response) Reset() {
-	*x = Round8Response{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[17]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round8Response) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round8Response) ProtoMessage() {}
-
-func (x *Round8Response) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[17]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round8Response.ProtoReflect.Descriptor instead.
-func (*Round8Response) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *Round8Response) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round9Request struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round9Request) Reset() {
-	*x = Round9Request{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[18]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round9Request) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round9Request) ProtoMessage() {}
-
-func (x *Round9Request) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[18]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round9Request.ProtoReflect.Descriptor instead.
-func (*Round9Request) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{18}
-}
-
-func (x *Round9Request) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round9Response struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round9Response) Reset() {
-	*x = Round9Response{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[19]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round9Response) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round9Response) ProtoMessage() {}
-
-func (x *Round9Response) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[19]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round9Response.ProtoReflect.Descriptor instead.
-func (*Round9Response) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *Round9Response) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round10Request struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round10Request) Reset() {
-	*x = Round10Request{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[20]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round10Request) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round10Request) ProtoMessage() {}
-
-func (x *Round10Request) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[20]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round10Request.ProtoReflect.Descriptor instead.
-func (*Round10Request) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{20}
-}
-
-func (x *Round10Request) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round10Response struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Success   bool   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	SecretKey []byte `protobuf:"bytes,2,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
-}
-
-func (x *Round10Response) Reset() {
-	*x = Round10Response{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[21]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round10Response) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round10Response) ProtoMessage() {}
-
-func (x *Round10Response) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[21]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round10Response.ProtoReflect.Descriptor instead.
-func (*Round10Response) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *Round10Response) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *Round10Response) GetSecretKey() []byte {
+func (x *KeyGenRound11ToResponseOutput) GetSecretKey() []byte {
 	if x != nil {
 		return x.SecretKey
 	}
 	return nil
 }
 
+// 게이트 웨이 -> 응답
 type KeyGenResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1372,7 +878,7 @@ type KeyGenResponse struct {
 func (x *KeyGenResponse) Reset() {
 	*x = KeyGenResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[22]
+		mi := &file_keygen_keygen_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1385,7 +891,7 @@ func (x *KeyGenResponse) String() string {
 func (*KeyGenResponse) ProtoMessage() {}
 
 func (x *KeyGenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[22]
+	mi := &file_keygen_keygen_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1398,7 +904,7 @@ func (x *KeyGenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenResponse.ProtoReflect.Descriptor instead.
 func (*KeyGenResponse) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{22}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *KeyGenResponse) GetSuccess() bool {
@@ -1433,169 +939,134 @@ var File_keygen_keygen_proto protoreflect.FileDescriptor
 
 var file_keygen_keygen_proto_rawDesc = []byte{
 	0x0a, 0x13, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2f, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x22, 0xa7, 0x0b,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x22, 0xce, 0x08,
 	0x0a, 0x0d, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
-	0x3d, 0x0a, 0x0d, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
-	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52,
-	0x0d, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3d,
-	0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52,
-	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0d,
-	0x72, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x40, 0x0a,
-	0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52,
-	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52,
-	0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52,
-	0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x40,
-	0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00,
-	0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e,
-	0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00,
-	0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e,
-	0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48,
-	0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65,
-	0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48,
-	0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65,
-	0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67,
-	0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67,
-	0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65, 0x79,
-	0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79,
-	0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b, 0x65,
-	0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65,
-	0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x6b,
-	0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x11, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b,
-	0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x39,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x12, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e,
-	0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x13, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e,
-	0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x40, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64,
-	0x31, 0x30, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x14, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64,
-	0x31, 0x30, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x43, 0x0a, 0x0f, 0x72, 0x6f, 0x75,
-	0x6e, 0x64, 0x31, 0x30, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x15, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e,
-	0x64, 0x31, 0x30, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0f, 0x72,
-	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x40,
-	0x0a, 0x0e, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x18, 0x16, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
-	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00,
-	0x52, 0x0e, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x0f, 0x0a, 0x0d, 0x4b, 0x65, 0x79, 0x47, 0x65,
-	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x0f, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e,
-	0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75,
-	0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70,
-	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61,
-	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
-	0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a,
-	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07,
-	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
-	0x33, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79,
+	0x58, 0x0a, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1e, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48,
+	0x00, 0x52, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65, 0x79,
+	0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70,
+	0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65,
+	0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f,
+	0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65,
+	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32,
+	0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00,
+	0x52, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f,
+	0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65,
+	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
+	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55,
+	0x0a, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f,
+	0x35, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
+	0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75,
+	0x6e, 0x64, 0x34, 0x54, 0x6f, 0x35, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x15,
+	0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f, 0x35, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x35, 0x54, 0x6f, 0x36, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65,
+	0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x54, 0x6f, 0x36, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75,
+	0x6e, 0x64, 0x35, 0x54, 0x6f, 0x36, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15,
+	0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x54, 0x6f, 0x37, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65,
+	0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
+	0x36, 0x54, 0x6f, 0x37, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x15, 0x6b, 0x65,
+	0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x54, 0x6f, 0x37, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75,
+	0x6e, 0x64, 0x37, 0x54, 0x6f, 0x38, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x08, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47,
+	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x54, 0x6f, 0x38, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x48, 0x00, 0x52, 0x15, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
+	0x37, 0x54, 0x6f, 0x38, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65,
+	0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x54, 0x6f, 0x39, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67,
+	0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x54,
+	0x6f, 0x39, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x15, 0x6b, 0x65, 0x79, 0x47,
+	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x54, 0x6f, 0x39, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x12, 0x58, 0x0a, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
+	0x39, 0x54, 0x6f, 0x31, 0x30, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1e, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65,
+	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x54, 0x6f, 0x31, 0x30, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x48, 0x00, 0x52, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
+	0x39, 0x54, 0x6f, 0x31, 0x30, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x5b, 0x0a, 0x17, 0x6b,
+	0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x54, 0x6f, 0x31, 0x31,
+	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6b,
+	0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e,
+	0x64, 0x31, 0x30, 0x54, 0x6f, 0x31, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52,
+	0x17, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x54, 0x6f,
+	0x31, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x6d, 0x0a, 0x1d, 0x6b, 0x65, 0x79, 0x47,
+	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x25, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x1d, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e,
+	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x16,
+	0x0a, 0x14, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x18, 0x0a, 0x16, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31,
+	0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79,
 	0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c,
-	0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a,
-	0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f,
-	0x75, 0x6e, 0x64, 0x35, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70,
-	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61,
-	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
-	0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
-	0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18,
-	0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e,
-	0x64, 0x37, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79,
-	0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c,
-	0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22,
-	0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f,
-	0x75, 0x6e, 0x64, 0x38, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07,
+	0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75,
+	0x6e, 0x64, 0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07,
 	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70,
-	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
-	0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
-	0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a,
-	0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e,
+	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12,
 	0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x4a, 0x0a, 0x0f, 0x52, 0x6f, 0x75,
-	0x6e, 0x64, 0x31, 0x30, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07,
-	0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x73,
-	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74,
-	0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72,
-	0x65, 0x74, 0x4b, 0x65, 0x79, 0x22, 0x7f, 0x0a, 0x0e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x63, 0x63, 0x65,
-	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73,
-	0x73, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01,
+	0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79,
+	0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f, 0x35, 0x4f, 0x75, 0x74, 0x70,
+	0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15,
+	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x54, 0x6f, 0x36, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22,
+	0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x54,
+	0x6f, 0x37, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c,
+	0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
+	0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e,
+	0x64, 0x37, 0x54, 0x6f, 0x38, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70,
+	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61,
+	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x38, 0x54, 0x6f, 0x39, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18,
+	0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x32, 0x0a, 0x16, 0x4b, 0x65, 0x79, 0x47,
+	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x54, 0x6f, 0x31, 0x30, 0x4f, 0x75, 0x74, 0x70,
+	0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x52, 0x0a, 0x17,
+	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x54, 0x6f, 0x31,
+	0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79,
+	0x22, 0x58, 0x0a, 0x1d, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31,
+	0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73,
 	0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x64, 0x75,
-	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x64, 0x75,
-	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0x4b, 0x0a, 0x0d, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e,
-	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x4b, 0x65, 0x79, 0x47, 0x65,
-	0x6e, 0x12, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x67, 0x65,
-	0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65,
-	0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x28,
-	0x01, 0x30, 0x01, 0x42, 0x15, 0x5a, 0x13, 0x74, 0x65, 0x63, 0x64, 0x73, 0x61, 0x2f, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2f, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x22, 0x7f, 0x0a, 0x0e, 0x4b, 0x65,
+	0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07,
+	0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x73,
+	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x12,
+	0x1a, 0x0a, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0x4b, 0x0a, 0x0d, 0x4b,
+	0x65, 0x79, 0x67, 0x65, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06,
+	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x12, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
+	0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x15, 0x2e,
+	0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x4d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x28, 0x01, 0x30, 0x01, 0x42, 0x15, 0x5a, 0x13, 0x74, 0x65, 0x63, 0x64,
+	0x73, 0x61, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1610,62 +1081,44 @@ func file_keygen_keygen_proto_rawDescGZIP() []byte {
 	return file_keygen_keygen_proto_rawDescData
 }
 
-var file_keygen_keygen_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_keygen_keygen_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_keygen_keygen_proto_goTypes = []any{
-	(*KeygenMessage)(nil),   // 0: keygen.KeygenMessage
-	(*KeyGenRequest)(nil),   // 1: keygen.KeyGenRequest
-	(*Round1Request)(nil),   // 2: keygen.Round1Request
-	(*Round1Response)(nil),  // 3: keygen.Round1Response
-	(*Round2Request)(nil),   // 4: keygen.Round2Request
-	(*Round2Response)(nil),  // 5: keygen.Round2Response
-	(*Round3Request)(nil),   // 6: keygen.Round3Request
-	(*Round3Response)(nil),  // 7: keygen.Round3Response
-	(*Round4Request)(nil),   // 8: keygen.Round4Request
-	(*Round4Response)(nil),  // 9: keygen.Round4Response
-	(*Round5Request)(nil),   // 10: keygen.Round5Request
-	(*Round5Response)(nil),  // 11: keygen.Round5Response
-	(*Round6Request)(nil),   // 12: keygen.Round6Request
-	(*Round6Response)(nil),  // 13: keygen.Round6Response
-	(*Round7Request)(nil),   // 14: keygen.Round7Request
-	(*Round7Response)(nil),  // 15: keygen.Round7Response
-	(*Round8Request)(nil),   // 16: keygen.Round8Request
-	(*Round8Response)(nil),  // 17: keygen.Round8Response
-	(*Round9Request)(nil),   // 18: keygen.Round9Request
-	(*Round9Response)(nil),  // 19: keygen.Round9Response
-	(*Round10Request)(nil),  // 20: keygen.Round10Request
-	(*Round10Response)(nil), // 21: keygen.Round10Response
-	(*KeyGenResponse)(nil),  // 22: keygen.KeyGenResponse
+	(*KeygenMessage)(nil),                 // 0: keygen.KeygenMessage
+	(*KeyGenRequestMessage)(nil),          // 1: keygen.KeyGenRequestMessage
+	(*KeyGenRequestTo1Output)(nil),        // 2: keygen.KeyGenRequestTo1Output
+	(*KeyGenRound1To2Output)(nil),         // 3: keygen.KeyGenRound1To2Output
+	(*KeyGenRound2To3Output)(nil),         // 4: keygen.KeyGenRound2To3Output
+	(*KeyGenRound3To4Output)(nil),         // 5: keygen.KeyGenRound3To4Output
+	(*KeyGenRound4To5Output)(nil),         // 6: keygen.KeyGenRound4To5Output
+	(*KeyGenRound5To6Output)(nil),         // 7: keygen.KeyGenRound5To6Output
+	(*KeyGenRound6To7Output)(nil),         // 8: keygen.KeyGenRound6To7Output
+	(*KeyGenRound7To8Output)(nil),         // 9: keygen.KeyGenRound7To8Output
+	(*KeyGenRound8To9Output)(nil),         // 10: keygen.KeyGenRound8To9Output
+	(*KeyGenRound9To10Output)(nil),        // 11: keygen.KeyGenRound9To10Output
+	(*KeyGenRound10To11Output)(nil),       // 12: keygen.KeyGenRound10To11Output
+	(*KeyGenRound11ToResponseOutput)(nil), // 13: keygen.KeyGenRound11ToResponseOutput
+	(*KeyGenResponse)(nil),                // 14: keygen.KeyGenResponse
 }
 var file_keygen_keygen_proto_depIdxs = []int32{
-	1,  // 0: keygen.KeygenMessage.keyGenRequest:type_name -> keygen.KeyGenRequest
-	2,  // 1: keygen.KeygenMessage.round1Request:type_name -> keygen.Round1Request
-	3,  // 2: keygen.KeygenMessage.round1Response:type_name -> keygen.Round1Response
-	4,  // 3: keygen.KeygenMessage.round2Request:type_name -> keygen.Round2Request
-	5,  // 4: keygen.KeygenMessage.round2Response:type_name -> keygen.Round2Response
-	6,  // 5: keygen.KeygenMessage.round3Request:type_name -> keygen.Round3Request
-	7,  // 6: keygen.KeygenMessage.round3Response:type_name -> keygen.Round3Response
-	8,  // 7: keygen.KeygenMessage.round4Request:type_name -> keygen.Round4Request
-	9,  // 8: keygen.KeygenMessage.round4Response:type_name -> keygen.Round4Response
-	10, // 9: keygen.KeygenMessage.round5Request:type_name -> keygen.Round5Request
-	11, // 10: keygen.KeygenMessage.round5Response:type_name -> keygen.Round5Response
-	12, // 11: keygen.KeygenMessage.round6Request:type_name -> keygen.Round6Request
-	13, // 12: keygen.KeygenMessage.round6Response:type_name -> keygen.Round6Response
-	14, // 13: keygen.KeygenMessage.round7Request:type_name -> keygen.Round7Request
-	15, // 14: keygen.KeygenMessage.round7Response:type_name -> keygen.Round7Response
-	16, // 15: keygen.KeygenMessage.round8Request:type_name -> keygen.Round8Request
-	17, // 16: keygen.KeygenMessage.round8Response:type_name -> keygen.Round8Response
-	18, // 17: keygen.KeygenMessage.round9Request:type_name -> keygen.Round9Request
-	19, // 18: keygen.KeygenMessage.round9Response:type_name -> keygen.Round9Response
-	20, // 19: keygen.KeygenMessage.round10Request:type_name -> keygen.Round10Request
-	21, // 20: keygen.KeygenMessage.round10Response:type_name -> keygen.Round10Response
-	22, // 21: keygen.KeygenMessage.keyGenResponse:type_name -> keygen.KeyGenResponse
-	0,  // 22: keygen.KeygenService.KeyGen:input_type -> keygen.KeygenMessage
-	0,  // 23: keygen.KeygenService.KeyGen:output_type -> keygen.KeygenMessage
-	23, // [23:24] is the sub-list for method output_type
-	22, // [22:23] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	2,  // 0: keygen.KeygenMessage.keyGenRequestTo1Output:type_name -> keygen.KeyGenRequestTo1Output
+	3,  // 1: keygen.KeygenMessage.keyGenRound1To2Output:type_name -> keygen.KeyGenRound1To2Output
+	4,  // 2: keygen.KeygenMessage.keyGenRound2To3Output:type_name -> keygen.KeyGenRound2To3Output
+	5,  // 3: keygen.KeygenMessage.keyGenRound3To4Output:type_name -> keygen.KeyGenRound3To4Output
+	6,  // 4: keygen.KeygenMessage.keyGenRound4To5Output:type_name -> keygen.KeyGenRound4To5Output
+	7,  // 5: keygen.KeygenMessage.keyGenRound5To6Output:type_name -> keygen.KeyGenRound5To6Output
+	8,  // 6: keygen.KeygenMessage.keyGenRound6To7Output:type_name -> keygen.KeyGenRound6To7Output
+	9,  // 7: keygen.KeygenMessage.keyGenRound7To8Output:type_name -> keygen.KeyGenRound7To8Output
+	10, // 8: keygen.KeygenMessage.keyGenRound8To9Output:type_name -> keygen.KeyGenRound8To9Output
+	11, // 9: keygen.KeygenMessage.keyGenRound9To10Output:type_name -> keygen.KeyGenRound9To10Output
+	12, // 10: keygen.KeygenMessage.keyGenRound10To11Output:type_name -> keygen.KeyGenRound10To11Output
+	13, // 11: keygen.KeygenMessage.keyGenRound11ToResponseOutput:type_name -> keygen.KeyGenRound11ToResponseOutput
+	0,  // 12: keygen.KeygenService.KeyGen:input_type -> keygen.KeygenMessage
+	0,  // 13: keygen.KeygenService.KeyGen:output_type -> keygen.KeygenMessage
+	13, // [13:14] is the sub-list for method output_type
+	12, // [12:13] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_keygen_keygen_proto_init() }
@@ -1687,7 +1140,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[1].Exporter = func(v any, i int) any {
-			switch v := v.(*KeyGenRequest); i {
+			switch v := v.(*KeyGenRequestMessage); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1699,7 +1152,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[2].Exporter = func(v any, i int) any {
-			switch v := v.(*Round1Request); i {
+			switch v := v.(*KeyGenRequestTo1Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1711,7 +1164,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[3].Exporter = func(v any, i int) any {
-			switch v := v.(*Round1Response); i {
+			switch v := v.(*KeyGenRound1To2Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1723,7 +1176,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[4].Exporter = func(v any, i int) any {
-			switch v := v.(*Round2Request); i {
+			switch v := v.(*KeyGenRound2To3Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1735,7 +1188,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[5].Exporter = func(v any, i int) any {
-			switch v := v.(*Round2Response); i {
+			switch v := v.(*KeyGenRound3To4Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1747,7 +1200,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[6].Exporter = func(v any, i int) any {
-			switch v := v.(*Round3Request); i {
+			switch v := v.(*KeyGenRound4To5Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1759,7 +1212,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[7].Exporter = func(v any, i int) any {
-			switch v := v.(*Round3Response); i {
+			switch v := v.(*KeyGenRound5To6Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1771,7 +1224,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[8].Exporter = func(v any, i int) any {
-			switch v := v.(*Round4Request); i {
+			switch v := v.(*KeyGenRound6To7Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1783,7 +1236,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[9].Exporter = func(v any, i int) any {
-			switch v := v.(*Round4Response); i {
+			switch v := v.(*KeyGenRound7To8Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1795,7 +1248,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[10].Exporter = func(v any, i int) any {
-			switch v := v.(*Round5Request); i {
+			switch v := v.(*KeyGenRound8To9Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1807,7 +1260,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[11].Exporter = func(v any, i int) any {
-			switch v := v.(*Round5Response); i {
+			switch v := v.(*KeyGenRound9To10Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1819,7 +1272,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[12].Exporter = func(v any, i int) any {
-			switch v := v.(*Round6Request); i {
+			switch v := v.(*KeyGenRound10To11Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1831,7 +1284,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[13].Exporter = func(v any, i int) any {
-			switch v := v.(*Round6Response); i {
+			switch v := v.(*KeyGenRound11ToResponseOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1843,102 +1296,6 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[14].Exporter = func(v any, i int) any {
-			switch v := v.(*Round7Request); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[15].Exporter = func(v any, i int) any {
-			switch v := v.(*Round7Response); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[16].Exporter = func(v any, i int) any {
-			switch v := v.(*Round8Request); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[17].Exporter = func(v any, i int) any {
-			switch v := v.(*Round8Response); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[18].Exporter = func(v any, i int) any {
-			switch v := v.(*Round9Request); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[19].Exporter = func(v any, i int) any {
-			switch v := v.(*Round9Response); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[20].Exporter = func(v any, i int) any {
-			switch v := v.(*Round10Request); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[21].Exporter = func(v any, i int) any {
-			switch v := v.(*Round10Response); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[22].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenResponse); i {
 			case 0:
 				return &v.state
@@ -1952,28 +1309,18 @@ func file_keygen_keygen_proto_init() {
 		}
 	}
 	file_keygen_keygen_proto_msgTypes[0].OneofWrappers = []any{
-		(*KeygenMessage_KeyGenRequest)(nil),
-		(*KeygenMessage_Round1Request)(nil),
-		(*KeygenMessage_Round1Response)(nil),
-		(*KeygenMessage_Round2Request)(nil),
-		(*KeygenMessage_Round2Response)(nil),
-		(*KeygenMessage_Round3Request)(nil),
-		(*KeygenMessage_Round3Response)(nil),
-		(*KeygenMessage_Round4Request)(nil),
-		(*KeygenMessage_Round4Response)(nil),
-		(*KeygenMessage_Round5Request)(nil),
-		(*KeygenMessage_Round5Response)(nil),
-		(*KeygenMessage_Round6Request)(nil),
-		(*KeygenMessage_Round6Response)(nil),
-		(*KeygenMessage_Round7Request)(nil),
-		(*KeygenMessage_Round7Response)(nil),
-		(*KeygenMessage_Round8Request)(nil),
-		(*KeygenMessage_Round8Response)(nil),
-		(*KeygenMessage_Round9Request)(nil),
-		(*KeygenMessage_Round9Response)(nil),
-		(*KeygenMessage_Round10Request)(nil),
-		(*KeygenMessage_Round10Response)(nil),
-		(*KeygenMessage_KeyGenResponse)(nil),
+		(*KeygenMessage_KeyGenRequestTo1Output)(nil),
+		(*KeygenMessage_KeyGenRound1To2Output)(nil),
+		(*KeygenMessage_KeyGenRound2To3Output)(nil),
+		(*KeygenMessage_KeyGenRound3To4Output)(nil),
+		(*KeygenMessage_KeyGenRound4To5Output)(nil),
+		(*KeygenMessage_KeyGenRound5To6Output)(nil),
+		(*KeygenMessage_KeyGenRound6To7Output)(nil),
+		(*KeygenMessage_KeyGenRound7To8Output)(nil),
+		(*KeygenMessage_KeyGenRound8To9Output)(nil),
+		(*KeygenMessage_KeyGenRound9To10Output)(nil),
+		(*KeygenMessage_KeyGenRound10To11Output)(nil),
+		(*KeygenMessage_KeyGenRound11ToResponseOutput)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1981,7 +1328,7 @@ func file_keygen_keygen_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_keygen_keygen_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

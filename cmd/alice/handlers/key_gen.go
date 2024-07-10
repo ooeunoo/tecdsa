@@ -40,16 +40,16 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 		}
 
 		switch msg := in.Msg.(type) {
-		case *pb.KeygenMessage_Round1Response:
-			err = h.handleRound2(stream, alice, msg.Round1Response)
-		case *pb.KeygenMessage_Round3Response:
-			err = h.handleRound4(stream, alice, msg.Round3Response)
-		case *pb.KeygenMessage_Round5Response:
-			err = h.handleRound6(stream, alice, msg.Round5Response)
-		case *pb.KeygenMessage_Round7Response:
-			err = h.handleRound8(stream, alice, msg.Round7Response)
-		case *pb.KeygenMessage_Round9Response:
-			err = h.handleRound10(stream, alice, msg.Round9Response)
+		case *pb.KeygenMessage_KeyGenRound1To2Output:
+			err = h.handleRound2(stream, alice, msg.KeyGenRound1To2Output)
+		case *pb.KeygenMessage_KeyGenRound3To4Output:
+			err = h.handleRound4(stream, alice, msg.KeyGenRound3To4Output)
+		case *pb.KeygenMessage_KeyGenRound5To6Output:
+			err = h.handleRound6(stream, alice, msg.KeyGenRound5To6Output)
+		case *pb.KeygenMessage_KeyGenRound7To8Output:
+			err = h.handleRound8(stream, alice, msg.KeyGenRound7To8Output)
+		case *pb.KeygenMessage_KeyGenRound9To10Output:
+			err = h.handleRound10(stream, alice, msg.KeyGenRound9To10Output)
 		default:
 			err = fmt.Errorf("unexpected message type")
 		}
@@ -60,142 +60,157 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 	}
 }
 
-func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round1Response) error {
+func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound1To2Output) error {
 	fmt.Println("라운드2")
 
-	// deserialize
-	round2Input, err := deserializer.DecodeDkgRound2Input(msg.Payload)
+	// msg
+	payload := msg.Payload
+
+	//
+	round2Input, err := deserializer.DecodeDkgRound2Input(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 2")
 	}
 
-	// round task
-	output, err := alice.Round2CommitToProof(round2Input)
+	round2Result, err := alice.Round2CommitToProof(round2Input)
 	if err != nil {
 		log.Printf("Error in Round2CommitToProof in Round 2")
 		return err
 	}
 
-	round2Output, err := deserializer.EncodeDkgRound2Output(output)
+	roundPayload, err := deserializer.EncodeDkgRound2Output(round2Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode in Round 2")
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round2Response{
-			Round2Response: &pb.Round2Response{
-				Payload: round2Output,
+		Msg: &pb.KeygenMessage_KeyGenRound2To3Output{
+			KeyGenRound2To3Output: &pb.KeyGenRound2To3Output{
+				Payload: roundPayload,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round3Response) error {
+func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound3To4Output) error {
 	fmt.Println("라운드4")
-	round4Input, err := deserializer.DecodeDkgRound4Input(msg.Payload)
+
+	// msg
+	payload := msg.Payload
+
+	//
+	round4Input, err := deserializer.DecodeDkgRound4Input(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 4")
 	}
 
-	// round task
-	proof, err := alice.Round4VerifyAndReveal(round4Input)
+	round4Result, err := alice.Round4VerifyAndReveal(round4Input)
 	if err != nil {
 		log.Printf("Error in Round4VerifyAndReveal in Round 4")
 		return err
 	}
 
-	round4Output, err := deserializer.EncodeDkgRound4Output(proof)
+	round4Payload, err := deserializer.EncodeDkgRound4Output(round4Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode in Round 4")
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round4Response{
-			Round4Response: &pb.Round4Response{
-				Payload: round4Output,
+		Msg: &pb.KeygenMessage_KeyGenRound4To5Output{
+			KeyGenRound4To5Output: &pb.KeyGenRound4To5Output{
+				Payload: round4Payload,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round5Response) error {
+func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound5To6Output) error {
 	fmt.Println("라운드6")
 
-	round6Input, err := deserializer.DecodeDkgRound6Input(msg.Payload)
+	// msg
+	payload := msg.Payload
+
+	//
+	round6Input, err := deserializer.DecodeDkgRound6Input(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 6")
 	}
-	// round task
-	output, err := alice.Round6DkgRound2Ot(round6Input)
+
+	round6Result, err := alice.Round6DkgRound2Ot(round6Input)
 	if err != nil {
 		return err
 	}
 
-	round6Output, err := deserializer.EncodeDkgRound6Output(output)
+	round6Payload, err := deserializer.EncodeDkgRound6Output(round6Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode in Round 6")
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round6Response{
-			Round6Response: &pb.Round6Response{
-				Payload: round6Output,
+		Msg: &pb.KeygenMessage_KeyGenRound6To7Output{
+			KeyGenRound6To7Output: &pb.KeyGenRound6To7Output{
+				Payload: round6Payload,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round7Response) error {
+func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound7To8Output) error {
 	fmt.Println("라운드8")
 
-	round8Input, err := deserializer.DecodeDkgRound8Input(msg.Payload)
+	// msg
+	payload := msg.Payload
+
+	//
+	round8Input, err := deserializer.DecodeDkgRound8Input(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 8")
 	}
 
-	// round task
-	challengeResponse, err := alice.Round8DkgRound4Ot(round8Input)
+	round8Result, err := alice.Round8DkgRound4Ot(round8Input)
 	if err != nil {
 		return err
 	}
 
-	round8Output, err := deserializer.EncodeDkgRound8Output(challengeResponse)
+	round8Payload, err := deserializer.EncodeDkgRound8Output(round8Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode in Round 8")
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round8Response{
-			Round8Response: &pb.Round8Response{
-				Payload: round8Output,
+		Msg: &pb.KeygenMessage_KeyGenRound8To9Output{
+			KeyGenRound8To9Output: &pb.KeyGenRound8To9Output{
+				Payload: round8Payload,
 			},
 		},
 	})
 }
 
-func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.Round9Response) error {
+func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound9To10Output) error {
 	fmt.Println("라운드10")
 
-	round10Input, err := deserializer.DecodeDkgRound10Input(msg.Payload)
+	// msg
+	payload := msg.Payload
+
+	//
+	round10Input, err := deserializer.DecodeDkgRound10Input(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 10")
 	}
 
-	// round task
 	roundErr := alice.Round10DkgRound6Ot(round10Input)
 	if roundErr != nil {
 		return roundErr
 	}
 
-	// save result
+	// ###################################
+	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
 	aliceOutput := alice.Output()
 	address, err := network.DeriveAddress(aliceOutput.PublicKey, network.Ethereum)
 	if err != nil {
 		return err
 	}
 
-	// ###################################
-	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
 	secretKey, _ := utils.GenerateSecretKey()
 	share, err := deserializer.EncodeAliceDkgOutput(aliceOutput)
 	if err != nil {
@@ -208,15 +223,11 @@ func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alic
 
 	// ###################################
 
-	// serialize
-	round10Output := pb.Round10Response{
-		Success:   true,
-		SecretKey: secretKey,
-	}
-
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_Round10Response{
-			Round10Response: &round10Output,
+		Msg: &pb.KeygenMessage_KeyGenRound10To11Output{
+			KeyGenRound10To11Output: &pb.KeyGenRound10To11Output{
+				SecretKey: secretKey,
+			},
 		},
 	})
 }
