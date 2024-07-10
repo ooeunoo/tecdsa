@@ -29,8 +29,6 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Encoded request:", encodedReq)
-
 	// 채널 생성
 	bobChan := make(chan *pb.SignMessage)
 	aliceChan := make(chan *pb.SignMessage)
@@ -75,6 +73,7 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 				marshaler := protojson.MarshalOptions{
 					EmitUnpopulated: true,
 					UseProtoNames:   true,
+					UseEnumNumbers:  true,
 				}
 
 				// SignResponse를 JSON으로 변환

@@ -2,7 +2,6 @@
 package handlers
 
 import (
-	"encoding/binary"
 	"fmt"
 	"hash"
 	"io"
@@ -122,15 +121,10 @@ func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, msg *pb.Sig
 	}
 
 	signature := h.bob.Signature
-	vBytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(vBytes, uint32(signature.V))
-
-	// TODO: Verify Check
-
 	return stream.Send(&pb.SignMessage{
 		Msg: &pb.SignMessage_SignRound4ToResponseOutput{
 			SignRound4ToResponseOutput: &pb.SignRound4ToResponseOutput{
-				V: vBytes,
+				V: int64(signature.V),
 				R: signature.R.Bytes(),
 				S: signature.S.Bytes(),
 			},

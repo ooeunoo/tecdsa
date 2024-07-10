@@ -52,7 +52,7 @@ message SignRound3To4Output {
 
 // 라운드 4 -> 게이트웨이
 message SignRound4ToResponseOutput {
-  bytes v = 1;
+  int64 v = 1;
   bytes r = 2;
   bytes s = 3;
 }
@@ -60,7 +60,7 @@ message SignRound4ToResponseOutput {
 // 게이트웨이 -> 응답
 message SignResponse {
   bool success = 1;
-  bytes v = 2;
+  int64 v = 2;
   bytes r = 3;
   bytes s = 4;
 }

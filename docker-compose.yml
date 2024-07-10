@@ -1,8 +1,4 @@
-version: '3'
-
 services:
-
-
   gateway:
     build:
       context: .
@@ -68,6 +64,8 @@ services:
       - DB_NAME=bob
       - SERVER_PORT=50051
 
+
+  ############### REMOVE: production ######################### 
   gateway_db:
     image: mysql:latest
     environment:
@@ -110,4 +108,4 @@ services:
       retries: 10
     ports:
       - "3308:3306"
-  
+    ############### REMOVE: production ######################### 

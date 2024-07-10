@@ -94,9 +94,6 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 			if res, ok := bobResp.Msg.(*pb.KeygenMessage_KeyGenRound11ToResponseOutput); ok {
 				endTime := time.Now()
 				duration := endTime.Sub(startTime)
-				fmt.Printf("Start time: %v\n", startTime)
-				fmt.Printf("End time: %v\n", endTime)
-				fmt.Printf("Duration: %v\n", duration)
 
 				// SignResponse 메시지 생성
 				response := &pb.KeyGenResponse{
