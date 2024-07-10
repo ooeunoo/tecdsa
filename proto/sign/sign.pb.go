@@ -27,16 +27,11 @@ type SignMessage struct {
 
 	// Types that are assignable to Msg:
 	//
-	//	*SignMessage_SignRequest
-	//	*SignMessage_Round1Request
-	//	*SignMessage_Round1Response
-	//	*SignMessage_Round2Request
-	//	*SignMessage_Round2Response
-	//	*SignMessage_Round3Request
-	//	*SignMessage_Round3Response
-	//	*SignMessage_Round4Request
-	//	*SignMessage_Round4Response
-	//	*SignMessage_SignResponse
+	//	*SignMessage_SignRequestTo1Output
+	//	*SignMessage_SignRound1To2Output
+	//	*SignMessage_SignRound2To3Output
+	//	*SignMessage_SignRound3To4Output
+	//	*SignMessage_SignRound4ToResponseOutput
 	Msg isSignMessage_Msg `protobuf_oneof:"msg"`
 }
 
@@ -79,72 +74,37 @@ func (m *SignMessage) GetMsg() isSignMessage_Msg {
 	return nil
 }
 
-func (x *SignMessage) GetSignRequest() *SignRequest {
-	if x, ok := x.GetMsg().(*SignMessage_SignRequest); ok {
-		return x.SignRequest
+func (x *SignMessage) GetSignRequestTo1Output() *SignRequestTo1Output {
+	if x, ok := x.GetMsg().(*SignMessage_SignRequestTo1Output); ok {
+		return x.SignRequestTo1Output
 	}
 	return nil
 }
 
-func (x *SignMessage) GetRound1Request() *Round1Request {
-	if x, ok := x.GetMsg().(*SignMessage_Round1Request); ok {
-		return x.Round1Request
+func (x *SignMessage) GetSignRound1To2Output() *SignRound1To2Output {
+	if x, ok := x.GetMsg().(*SignMessage_SignRound1To2Output); ok {
+		return x.SignRound1To2Output
 	}
 	return nil
 }
 
-func (x *SignMessage) GetRound1Response() *Round1Response {
-	if x, ok := x.GetMsg().(*SignMessage_Round1Response); ok {
-		return x.Round1Response
+func (x *SignMessage) GetSignRound2To3Output() *SignRound2To3Output {
+	if x, ok := x.GetMsg().(*SignMessage_SignRound2To3Output); ok {
+		return x.SignRound2To3Output
 	}
 	return nil
 }
 
-func (x *SignMessage) GetRound2Request() *Round2Request {
-	if x, ok := x.GetMsg().(*SignMessage_Round2Request); ok {
-		return x.Round2Request
+func (x *SignMessage) GetSignRound3To4Output() *SignRound3To4Output {
+	if x, ok := x.GetMsg().(*SignMessage_SignRound3To4Output); ok {
+		return x.SignRound3To4Output
 	}
 	return nil
 }
 
-func (x *SignMessage) GetRound2Response() *Round2Response {
-	if x, ok := x.GetMsg().(*SignMessage_Round2Response); ok {
-		return x.Round2Response
-	}
-	return nil
-}
-
-func (x *SignMessage) GetRound3Request() *Round3Request {
-	if x, ok := x.GetMsg().(*SignMessage_Round3Request); ok {
-		return x.Round3Request
-	}
-	return nil
-}
-
-func (x *SignMessage) GetRound3Response() *Round3Response {
-	if x, ok := x.GetMsg().(*SignMessage_Round3Response); ok {
-		return x.Round3Response
-	}
-	return nil
-}
-
-func (x *SignMessage) GetRound4Request() *Round4Request {
-	if x, ok := x.GetMsg().(*SignMessage_Round4Request); ok {
-		return x.Round4Request
-	}
-	return nil
-}
-
-func (x *SignMessage) GetRound4Response() *Round4Response {
-	if x, ok := x.GetMsg().(*SignMessage_Round4Response); ok {
-		return x.Round4Response
-	}
-	return nil
-}
-
-func (x *SignMessage) GetSignResponse() *SignResponse {
-	if x, ok := x.GetMsg().(*SignMessage_SignResponse); ok {
-		return x.SignResponse
+func (x *SignMessage) GetSignRound4ToResponseOutput() *SignRound4ToResponseOutput {
+	if x, ok := x.GetMsg().(*SignMessage_SignRound4ToResponseOutput); ok {
+		return x.SignRound4ToResponseOutput
 	}
 	return nil
 }
@@ -153,78 +113,49 @@ type isSignMessage_Msg interface {
 	isSignMessage_Msg()
 }
 
-type SignMessage_SignRequest struct {
-	SignRequest *SignRequest `protobuf:"bytes,1,opt,name=signRequest,proto3,oneof"`
+type SignMessage_SignRequestTo1Output struct {
+	SignRequestTo1Output *SignRequestTo1Output `protobuf:"bytes,1,opt,name=signRequestTo1Output,proto3,oneof"`
 }
 
-type SignMessage_Round1Request struct {
-	Round1Request *Round1Request `protobuf:"bytes,2,opt,name=round1Request,proto3,oneof"`
+type SignMessage_SignRound1To2Output struct {
+	SignRound1To2Output *SignRound1To2Output `protobuf:"bytes,2,opt,name=signRound1To2Output,proto3,oneof"`
 }
 
-type SignMessage_Round1Response struct {
-	Round1Response *Round1Response `protobuf:"bytes,3,opt,name=round1Response,proto3,oneof"`
+type SignMessage_SignRound2To3Output struct {
+	SignRound2To3Output *SignRound2To3Output `protobuf:"bytes,3,opt,name=signRound2To3Output,proto3,oneof"`
 }
 
-type SignMessage_Round2Request struct {
-	Round2Request *Round2Request `protobuf:"bytes,4,opt,name=round2Request,proto3,oneof"`
+type SignMessage_SignRound3To4Output struct {
+	SignRound3To4Output *SignRound3To4Output `protobuf:"bytes,4,opt,name=signRound3To4Output,proto3,oneof"`
 }
 
-type SignMessage_Round2Response struct {
-	Round2Response *Round2Response `protobuf:"bytes,5,opt,name=round2Response,proto3,oneof"`
+type SignMessage_SignRound4ToResponseOutput struct {
+	SignRound4ToResponseOutput *SignRound4ToResponseOutput `protobuf:"bytes,5,opt,name=signRound4ToResponseOutput,proto3,oneof"`
 }
 
-type SignMessage_Round3Request struct {
-	Round3Request *Round3Request `protobuf:"bytes,6,opt,name=round3Request,proto3,oneof"`
-}
+func (*SignMessage_SignRequestTo1Output) isSignMessage_Msg() {}
 
-type SignMessage_Round3Response struct {
-	Round3Response *Round3Response `protobuf:"bytes,7,opt,name=round3Response,proto3,oneof"`
-}
+func (*SignMessage_SignRound1To2Output) isSignMessage_Msg() {}
 
-type SignMessage_Round4Request struct {
-	Round4Request *Round4Request `protobuf:"bytes,8,opt,name=round4Request,proto3,oneof"`
-}
+func (*SignMessage_SignRound2To3Output) isSignMessage_Msg() {}
 
-type SignMessage_Round4Response struct {
-	Round4Response *Round4Response `protobuf:"bytes,9,opt,name=round4Response,proto3,oneof"`
-}
+func (*SignMessage_SignRound3To4Output) isSignMessage_Msg() {}
 
-type SignMessage_SignResponse struct {
-	SignResponse *SignResponse `protobuf:"bytes,10,opt,name=signResponse,proto3,oneof"`
-}
+func (*SignMessage_SignRound4ToResponseOutput) isSignMessage_Msg() {}
 
-func (*SignMessage_SignRequest) isSignMessage_Msg() {}
-
-func (*SignMessage_Round1Request) isSignMessage_Msg() {}
-
-func (*SignMessage_Round1Response) isSignMessage_Msg() {}
-
-func (*SignMessage_Round2Request) isSignMessage_Msg() {}
-
-func (*SignMessage_Round2Response) isSignMessage_Msg() {}
-
-func (*SignMessage_Round3Request) isSignMessage_Msg() {}
-
-func (*SignMessage_Round3Response) isSignMessage_Msg() {}
-
-func (*SignMessage_Round4Request) isSignMessage_Msg() {}
-
-func (*SignMessage_Round4Response) isSignMessage_Msg() {}
-
-func (*SignMessage_SignResponse) isSignMessage_Msg() {}
-
-type SignRequest struct {
+// 요청 메시지 DTO
+type SignRequestMessage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	Address   string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	SecretKey []byte `protobuf:"bytes,2,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
-	Message   []byte `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	TxOrigin  []byte `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
 }
 
-func (x *SignRequest) Reset() {
-	*x = SignRequest{}
+func (x *SignRequestMessage) Reset() {
+	*x = SignRequestMessage{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_sign_sign_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -232,13 +163,13 @@ func (x *SignRequest) Reset() {
 	}
 }
 
-func (x *SignRequest) String() string {
+func (x *SignRequestMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SignRequest) ProtoMessage() {}
+func (*SignRequestMessage) ProtoMessage() {}
 
-func (x *SignRequest) ProtoReflect() protoreflect.Message {
+func (x *SignRequestMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_sign_sign_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -250,33 +181,34 @@ func (x *SignRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SignRequest.ProtoReflect.Descriptor instead.
-func (*SignRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SignRequestMessage.ProtoReflect.Descriptor instead.
+func (*SignRequestMessage) Descriptor() ([]byte, []int) {
 	return file_sign_sign_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *SignRequest) GetAddress() string {
+func (x *SignRequestMessage) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *SignRequest) GetSecretKey() []byte {
+func (x *SignRequestMessage) GetSecretKey() []byte {
 	if x != nil {
 		return x.SecretKey
 	}
 	return nil
 }
 
-func (x *SignRequest) GetMessage() []byte {
+func (x *SignRequestMessage) GetTxOrigin() []byte {
 	if x != nil {
-		return x.Message
+		return x.TxOrigin
 	}
 	return nil
 }
 
-type Round1Request struct {
+// 요청 -> 라운드 1
+type SignRequestTo1Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -284,8 +216,8 @@ type Round1Request struct {
 	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round1Request) Reset() {
-	*x = Round1Request{}
+func (x *SignRequestTo1Output) Reset() {
+	*x = SignRequestTo1Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_sign_sign_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -293,13 +225,13 @@ func (x *Round1Request) Reset() {
 	}
 }
 
-func (x *Round1Request) String() string {
+func (x *SignRequestTo1Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round1Request) ProtoMessage() {}
+func (*SignRequestTo1Output) ProtoMessage() {}
 
-func (x *Round1Request) ProtoReflect() protoreflect.Message {
+func (x *SignRequestTo1Output) ProtoReflect() protoreflect.Message {
 	mi := &file_sign_sign_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -311,28 +243,32 @@ func (x *Round1Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round1Request.ProtoReflect.Descriptor instead.
-func (*Round1Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use SignRequestTo1Output.ProtoReflect.Descriptor instead.
+func (*SignRequestTo1Output) Descriptor() ([]byte, []int) {
 	return file_sign_sign_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *Round1Request) GetPayload() []byte {
+func (x *SignRequestTo1Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round1Response struct {
+// 라운드 1 -> 라운드 2
+type SignRound1To2Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	Address   string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	SecretKey []byte `protobuf:"bytes,2,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
+	TxOrigin  []byte `protobuf:"bytes,3,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
+	Payload   []byte `protobuf:"bytes,4,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round1Response) Reset() {
-	*x = Round1Response{}
+func (x *SignRound1To2Output) Reset() {
+	*x = SignRound1To2Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_sign_sign_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -340,13 +276,13 @@ func (x *Round1Response) Reset() {
 	}
 }
 
-func (x *Round1Response) String() string {
+func (x *SignRound1To2Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round1Response) ProtoMessage() {}
+func (*SignRound1To2Output) ProtoMessage() {}
 
-func (x *Round1Response) ProtoReflect() protoreflect.Message {
+func (x *SignRound1To2Output) ProtoReflect() protoreflect.Message {
 	mi := &file_sign_sign_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -358,28 +294,51 @@ func (x *Round1Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round1Response.ProtoReflect.Descriptor instead.
-func (*Round1Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use SignRound1To2Output.ProtoReflect.Descriptor instead.
+func (*SignRound1To2Output) Descriptor() ([]byte, []int) {
 	return file_sign_sign_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *Round1Response) GetPayload() []byte {
+func (x *SignRound1To2Output) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *SignRound1To2Output) GetSecretKey() []byte {
+	if x != nil {
+		return x.SecretKey
+	}
+	return nil
+}
+
+func (x *SignRound1To2Output) GetTxOrigin() []byte {
+	if x != nil {
+		return x.TxOrigin
+	}
+	return nil
+}
+
+func (x *SignRound1To2Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round2Request struct {
+// 라운드 2 -> 라운드 3
+type SignRound2To3Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	TxOrigin []byte `protobuf:"bytes,1,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
+	Payload  []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round2Request) Reset() {
-	*x = Round2Request{}
+func (x *SignRound2To3Output) Reset() {
+	*x = SignRound2To3Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_sign_sign_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -387,13 +346,13 @@ func (x *Round2Request) Reset() {
 	}
 }
 
-func (x *Round2Request) String() string {
+func (x *SignRound2To3Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round2Request) ProtoMessage() {}
+func (*SignRound2To3Output) ProtoMessage() {}
 
-func (x *Round2Request) ProtoReflect() protoreflect.Message {
+func (x *SignRound2To3Output) ProtoReflect() protoreflect.Message {
 	mi := &file_sign_sign_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -405,28 +364,37 @@ func (x *Round2Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round2Request.ProtoReflect.Descriptor instead.
-func (*Round2Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use SignRound2To3Output.ProtoReflect.Descriptor instead.
+func (*SignRound2To3Output) Descriptor() ([]byte, []int) {
 	return file_sign_sign_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *Round2Request) GetPayload() []byte {
+func (x *SignRound2To3Output) GetTxOrigin() []byte {
+	if x != nil {
+		return x.TxOrigin
+	}
+	return nil
+}
+
+func (x *SignRound2To3Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round2Response struct {
+// 라운드 3 -> 라운드 4
+type SignRound3To4Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	TxOrigin []byte `protobuf:"bytes,1,opt,name=tx_origin,json=txOrigin,proto3" json:"tx_origin,omitempty"`
+	Payload  []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
-func (x *Round2Response) Reset() {
-	*x = Round2Response{}
+func (x *SignRound3To4Output) Reset() {
+	*x = SignRound3To4Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_sign_sign_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -434,13 +402,13 @@ func (x *Round2Response) Reset() {
 	}
 }
 
-func (x *Round2Response) String() string {
+func (x *SignRound3To4Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round2Response) ProtoMessage() {}
+func (*SignRound3To4Output) ProtoMessage() {}
 
-func (x *Round2Response) ProtoReflect() protoreflect.Message {
+func (x *SignRound3To4Output) ProtoReflect() protoreflect.Message {
 	mi := &file_sign_sign_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -452,28 +420,38 @@ func (x *Round2Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round2Response.ProtoReflect.Descriptor instead.
-func (*Round2Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use SignRound3To4Output.ProtoReflect.Descriptor instead.
+func (*SignRound3To4Output) Descriptor() ([]byte, []int) {
 	return file_sign_sign_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *Round2Response) GetPayload() []byte {
+func (x *SignRound3To4Output) GetTxOrigin() []byte {
+	if x != nil {
+		return x.TxOrigin
+	}
+	return nil
+}
+
+func (x *SignRound3To4Output) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-type Round3Request struct {
+// 라운드 4 -> 응답
+type SignRound4ToResponseOutput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	V []byte `protobuf:"bytes,1,opt,name=v,proto3" json:"v,omitempty"`
+	R []byte `protobuf:"bytes,2,opt,name=r,proto3" json:"r,omitempty"`
+	S []byte `protobuf:"bytes,3,opt,name=s,proto3" json:"s,omitempty"`
 }
 
-func (x *Round3Request) Reset() {
-	*x = Round3Request{}
+func (x *SignRound4ToResponseOutput) Reset() {
+	*x = SignRound4ToResponseOutput{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_sign_sign_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -481,13 +459,13 @@ func (x *Round3Request) Reset() {
 	}
 }
 
-func (x *Round3Request) String() string {
+func (x *SignRound4ToResponseOutput) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Round3Request) ProtoMessage() {}
+func (*SignRound4ToResponseOutput) ProtoMessage() {}
 
-func (x *Round3Request) ProtoReflect() protoreflect.Message {
+func (x *SignRound4ToResponseOutput) ProtoReflect() protoreflect.Message {
 	mi := &file_sign_sign_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -499,202 +477,28 @@ func (x *Round3Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Round3Request.ProtoReflect.Descriptor instead.
-func (*Round3Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use SignRound4ToResponseOutput.ProtoReflect.Descriptor instead.
+func (*SignRound4ToResponseOutput) Descriptor() ([]byte, []int) {
 	return file_sign_sign_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *Round3Request) GetPayload() []byte {
+func (x *SignRound4ToResponseOutput) GetV() []byte {
 	if x != nil {
-		return x.Payload
+		return x.V
 	}
 	return nil
 }
 
-type Round3Response struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round3Response) Reset() {
-	*x = Round3Response{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_sign_sign_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round3Response) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round3Response) ProtoMessage() {}
-
-func (x *Round3Response) ProtoReflect() protoreflect.Message {
-	mi := &file_sign_sign_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round3Response.ProtoReflect.Descriptor instead.
-func (*Round3Response) Descriptor() ([]byte, []int) {
-	return file_sign_sign_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *Round3Response) GetPayload() []byte {
+func (x *SignRound4ToResponseOutput) GetR() []byte {
 	if x != nil {
-		return x.Payload
+		return x.R
 	}
 	return nil
 }
 
-type Round4Request struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round4Request) Reset() {
-	*x = Round4Request{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_sign_sign_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round4Request) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round4Request) ProtoMessage() {}
-
-func (x *Round4Request) ProtoReflect() protoreflect.Message {
-	mi := &file_sign_sign_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round4Request.ProtoReflect.Descriptor instead.
-func (*Round4Request) Descriptor() ([]byte, []int) {
-	return file_sign_sign_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *Round4Request) GetPayload() []byte {
+func (x *SignRound4ToResponseOutput) GetS() []byte {
 	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type Round4Response struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *Round4Response) Reset() {
-	*x = Round4Response{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_sign_sign_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Round4Response) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Round4Response) ProtoMessage() {}
-
-func (x *Round4Response) ProtoReflect() protoreflect.Message {
-	mi := &file_sign_sign_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Round4Response.ProtoReflect.Descriptor instead.
-func (*Round4Response) Descriptor() ([]byte, []int) {
-	return file_sign_sign_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *Round4Response) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
-	}
-	return nil
-}
-
-type SignResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Payload []byte `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
-}
-
-func (x *SignResponse) Reset() {
-	*x = SignResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_sign_sign_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *SignResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SignResponse) ProtoMessage() {}
-
-func (x *SignResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sign_sign_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SignResponse.ProtoReflect.Descriptor instead.
-func (*SignResponse) Descriptor() ([]byte, []int) {
-	return file_sign_sign_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *SignResponse) GetPayload() []byte {
-	if x != nil {
-		return x.Payload
+		return x.S
 	}
 	return nil
 }
@@ -703,77 +507,67 @@ var File_sign_sign_proto protoreflect.FileDescriptor
 
 var file_sign_sign_proto_rawDesc = []byte{
 	0x0a, 0x0f, 0x73, 0x69, 0x67, 0x6e, 0x2f, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x12, 0x04, 0x73, 0x69, 0x67, 0x6e, 0x22, 0xf9, 0x04, 0x0a, 0x0b, 0x53, 0x69, 0x67, 0x6e,
-	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x35, 0x0a, 0x0b, 0x73, 0x69, 0x67, 0x6e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x73,
-	0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48,
-	0x00, 0x52, 0x0b, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3b,
-	0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75,
-	0x6e, 0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f,
-	0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x0e, 0x72,
-	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
-	0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75,
-	0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x0d, 0x72,
-	0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x13, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64,
-	0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e,
-	0x64, 0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x14, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x32,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e,
-	0x64, 0x33, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x13, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e,
-	0x73, 0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x73,
-	0x69, 0x67, 0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x48, 0x00, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x3e, 0x0a, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x73, 0x69, 0x67,
-	0x6e, 0x2e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x48, 0x00, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x38, 0x0a, 0x0c, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e,
-	0x53, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x0c,
-	0x73, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x05, 0x0a, 0x03,
-	0x6d, 0x73, 0x67, 0x22, 0x60, 0x0a, 0x0b, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1d, 0x0a, 0x0a,
-	0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
-	0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a,
-	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07,
-	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
-	0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79,
-	0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c,
-	0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a,
-	0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x29, 0x0a, 0x0d, 0x52, 0x6f,
-	0x75, 0x6e, 0x64, 0x34, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70,
-	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61,
-	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x2a, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
-	0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
-	0x64, 0x22, 0x28, 0x0a, 0x0c, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x32, 0x3f, 0x0a, 0x0b, 0x53,
+	0x6f, 0x12, 0x04, 0x73, 0x69, 0x67, 0x6e, 0x22, 0xb7, 0x03, 0x0a, 0x0b, 0x53, 0x69, 0x67, 0x6e,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x50, 0x0a, 0x14, 0x73, 0x69, 0x67, 0x6e, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69, 0x67,
+	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x48, 0x00, 0x52, 0x14, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x4d, 0x0a, 0x13, 0x73, 0x69, 0x67,
+	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69,
+	0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x48, 0x00, 0x52, 0x13, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54,
+	0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x4d, 0x0a, 0x13, 0x73, 0x69, 0x67, 0x6e,
+	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69, 0x67,
+	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x48, 0x00, 0x52, 0x13, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f,
+	0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x4d, 0x0a, 0x13, 0x73, 0x69, 0x67, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69, 0x67, 0x6e,
+	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48,
+	0x00, 0x52, 0x13, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34,
+	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x62, 0x0a, 0x1a, 0x73, 0x69, 0x67, 0x6e, 0x52, 0x6f,
+	0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x4f, 0x75,
+	0x74, 0x70, 0x75, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x73, 0x69, 0x67,
+	0x6e, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x1a,
+	0x73, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73,
+	0x67, 0x22, 0x6a, 0x0a, 0x12, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79,
+	0x12, 0x1b, 0x0a, 0x09, 0x74, 0x78, 0x5f, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x08, 0x74, 0x78, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x22, 0x30, 0x0a,
+	0x14, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x54, 0x6f, 0x31, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22,
+	0x85, 0x01, 0x0a, 0x13, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f,
+	0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79,
+	0x12, 0x1b, 0x0a, 0x09, 0x74, 0x78, 0x5f, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x08, 0x74, 0x78, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x12, 0x18, 0x0a,
+	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07,
+	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x4c, 0x0a, 0x13, 0x53, 0x69, 0x67, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x1b,
+	0x0a, 0x09, 0x74, 0x78, 0x5f, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0c, 0x52, 0x08, 0x74, 0x78, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x70,
+	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61,
+	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x4c, 0x0a, 0x13, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75,
+	0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x1b, 0x0a, 0x09,
+	0x74, 0x78, 0x5f, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x08, 0x74, 0x78, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79,
+	0x6c, 0x6f, 0x61, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c,
+	0x6f, 0x61, 0x64, 0x22, 0x46, 0x0a, 0x1a, 0x53, 0x69, 0x67, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
+	0x34, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x12, 0x0c, 0x0a, 0x01, 0x76, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x01, 0x76, 0x12,
+	0x0c, 0x0a, 0x01, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x01, 0x72, 0x12, 0x0c, 0x0a,
+	0x01, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x01, 0x73, 0x32, 0x3f, 0x0a, 0x0b, 0x53,
 	0x69, 0x67, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x30, 0x0a, 0x04, 0x53, 0x69,
 	0x67, 0x6e, 0x12, 0x11, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x4d, 0x65,
 	0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x11, 0x2e, 0x73, 0x69, 0x67, 0x6e, 0x2e, 0x53, 0x69, 0x67,
@@ -794,38 +588,29 @@ func file_sign_sign_proto_rawDescGZIP() []byte {
 	return file_sign_sign_proto_rawDescData
 }
 
-var file_sign_sign_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_sign_sign_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_sign_sign_proto_goTypes = []any{
-	(*SignMessage)(nil),    // 0: sign.SignMessage
-	(*SignRequest)(nil),    // 1: sign.SignRequest
-	(*Round1Request)(nil),  // 2: sign.Round1Request
-	(*Round1Response)(nil), // 3: sign.Round1Response
-	(*Round2Request)(nil),  // 4: sign.Round2Request
-	(*Round2Response)(nil), // 5: sign.Round2Response
-	(*Round3Request)(nil),  // 6: sign.Round3Request
-	(*Round3Response)(nil), // 7: sign.Round3Response
-	(*Round4Request)(nil),  // 8: sign.Round4Request
-	(*Round4Response)(nil), // 9: sign.Round4Response
-	(*SignResponse)(nil),   // 10: sign.SignResponse
+	(*SignMessage)(nil),                // 0: sign.SignMessage
+	(*SignRequestMessage)(nil),         // 1: sign.SignRequestMessage
+	(*SignRequestTo1Output)(nil),       // 2: sign.SignRequestTo1Output
+	(*SignRound1To2Output)(nil),        // 3: sign.SignRound1To2Output
+	(*SignRound2To3Output)(nil),        // 4: sign.SignRound2To3Output
+	(*SignRound3To4Output)(nil),        // 5: sign.SignRound3To4Output
+	(*SignRound4ToResponseOutput)(nil), // 6: sign.SignRound4ToResponseOutput
 }
 var file_sign_sign_proto_depIdxs = []int32{
-	1,  // 0: sign.SignMessage.signRequest:type_name -> sign.SignRequest
-	2,  // 1: sign.SignMessage.round1Request:type_name -> sign.Round1Request
-	3,  // 2: sign.SignMessage.round1Response:type_name -> sign.Round1Response
-	4,  // 3: sign.SignMessage.round2Request:type_name -> sign.Round2Request
-	5,  // 4: sign.SignMessage.round2Response:type_name -> sign.Round2Response
-	6,  // 5: sign.SignMessage.round3Request:type_name -> sign.Round3Request
-	7,  // 6: sign.SignMessage.round3Response:type_name -> sign.Round3Response
-	8,  // 7: sign.SignMessage.round4Request:type_name -> sign.Round4Request
-	9,  // 8: sign.SignMessage.round4Response:type_name -> sign.Round4Response
-	10, // 9: sign.SignMessage.signResponse:type_name -> sign.SignResponse
-	0,  // 10: sign.SignService.Sign:input_type -> sign.SignMessage
-	0,  // 11: sign.SignService.Sign:output_type -> sign.SignMessage
-	11, // [11:12] is the sub-list for method output_type
-	10, // [10:11] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	2, // 0: sign.SignMessage.signRequestTo1Output:type_name -> sign.SignRequestTo1Output
+	3, // 1: sign.SignMessage.signRound1To2Output:type_name -> sign.SignRound1To2Output
+	4, // 2: sign.SignMessage.signRound2To3Output:type_name -> sign.SignRound2To3Output
+	5, // 3: sign.SignMessage.signRound3To4Output:type_name -> sign.SignRound3To4Output
+	6, // 4: sign.SignMessage.signRound4ToResponseOutput:type_name -> sign.SignRound4ToResponseOutput
+	0, // 5: sign.SignService.Sign:input_type -> sign.SignMessage
+	0, // 6: sign.SignService.Sign:output_type -> sign.SignMessage
+	6, // [6:7] is the sub-list for method output_type
+	5, // [5:6] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_sign_sign_proto_init() }
@@ -847,7 +632,7 @@ func file_sign_sign_proto_init() {
 			}
 		}
 		file_sign_sign_proto_msgTypes[1].Exporter = func(v any, i int) any {
-			switch v := v.(*SignRequest); i {
+			switch v := v.(*SignRequestMessage); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -859,7 +644,7 @@ func file_sign_sign_proto_init() {
 			}
 		}
 		file_sign_sign_proto_msgTypes[2].Exporter = func(v any, i int) any {
-			switch v := v.(*Round1Request); i {
+			switch v := v.(*SignRequestTo1Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -871,7 +656,7 @@ func file_sign_sign_proto_init() {
 			}
 		}
 		file_sign_sign_proto_msgTypes[3].Exporter = func(v any, i int) any {
-			switch v := v.(*Round1Response); i {
+			switch v := v.(*SignRound1To2Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -883,7 +668,7 @@ func file_sign_sign_proto_init() {
 			}
 		}
 		file_sign_sign_proto_msgTypes[4].Exporter = func(v any, i int) any {
-			switch v := v.(*Round2Request); i {
+			switch v := v.(*SignRound2To3Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -895,7 +680,7 @@ func file_sign_sign_proto_init() {
 			}
 		}
 		file_sign_sign_proto_msgTypes[5].Exporter = func(v any, i int) any {
-			switch v := v.(*Round2Response); i {
+			switch v := v.(*SignRound3To4Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -907,55 +692,7 @@ func file_sign_sign_proto_init() {
 			}
 		}
 		file_sign_sign_proto_msgTypes[6].Exporter = func(v any, i int) any {
-			switch v := v.(*Round3Request); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_sign_sign_proto_msgTypes[7].Exporter = func(v any, i int) any {
-			switch v := v.(*Round3Response); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_sign_sign_proto_msgTypes[8].Exporter = func(v any, i int) any {
-			switch v := v.(*Round4Request); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_sign_sign_proto_msgTypes[9].Exporter = func(v any, i int) any {
-			switch v := v.(*Round4Response); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_sign_sign_proto_msgTypes[10].Exporter = func(v any, i int) any {
-			switch v := v.(*SignResponse); i {
+			switch v := v.(*SignRound4ToResponseOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -968,16 +705,11 @@ func file_sign_sign_proto_init() {
 		}
 	}
 	file_sign_sign_proto_msgTypes[0].OneofWrappers = []any{
-		(*SignMessage_SignRequest)(nil),
-		(*SignMessage_Round1Request)(nil),
-		(*SignMessage_Round1Response)(nil),
-		(*SignMessage_Round2Request)(nil),
-		(*SignMessage_Round2Response)(nil),
-		(*SignMessage_Round3Request)(nil),
-		(*SignMessage_Round3Response)(nil),
-		(*SignMessage_Round4Request)(nil),
-		(*SignMessage_Round4Response)(nil),
-		(*SignMessage_SignResponse)(nil),
+		(*SignMessage_SignRequestTo1Output)(nil),
+		(*SignMessage_SignRound1To2Output)(nil),
+		(*SignMessage_SignRound2To3Output)(nil),
+		(*SignMessage_SignRound3To4Output)(nil),
+		(*SignMessage_SignRound4ToResponseOutput)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -985,7 +717,7 @@ func file_sign_sign_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_sign_sign_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

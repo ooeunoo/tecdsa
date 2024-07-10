@@ -4,12 +4,28 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/sign"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
+
+	pb "tecdsa/proto/sign"
 )
 
-func EncodeSignRound1Output(commitment [32]byte) ([]byte, error) {
+func EncodeSignRequestToRound1(req *pb.SignRequestMessage) ([]byte, error) {
+	return proto.Marshal(req)
+}
+
+func DecodeSignRequestToRound1(payload []byte) (*pb.SignRequestMessage, error) {
+	req := &pb.SignRequestMessage{}
+	err := proto.Unmarshal(payload, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshaling SignRequest")
+	}
+	return req, nil
+}
+
+func EncodeSignRound1Payload(commitment [32]byte) ([]byte, error) {
+	registerTypes()
 	buf := bytes.NewBuffer([]byte{})
 	enc := gob.NewEncoder(buf)
 	if err := enc.Encode(&commitment); err != nil {
@@ -18,7 +34,7 @@ func EncodeSignRound1Output(commitment [32]byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func DecodeSignRound2Input(payload []byte) ([32]byte, error) {
+func DecodeSignRound1Payload(payload []byte) ([32]byte, error) {
 	buf := bytes.NewBuffer(payload)
 	dec := gob.NewDecoder(buf)
 	decoded := [32]byte{}
@@ -28,7 +44,7 @@ func DecodeSignRound2Input(payload []byte) ([32]byte, error) {
 	return decoded, nil
 }
 
-func EncodeSignRound2Output(output *sign.SignRound2Output) ([]byte, error) {
+func EncodeSignRound2Payload(output *sign.SignRound2Output) ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{})
 	enc := gob.NewEncoder(buf)
 	if err := enc.Encode(output); err != nil {
@@ -37,7 +53,7 @@ func EncodeSignRound2Output(output *sign.SignRound2Output) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func DecodeSignRound3Input(payload []byte) (*sign.SignRound2Output, error) {
+func DecodeSignRound2Payload(payload []byte) (*sign.SignRound2Output, error) {
 	buf := bytes.NewBuffer(payload)
 	dec := gob.NewDecoder(buf)
 	decoded := &sign.SignRound2Output{}
@@ -47,7 +63,7 @@ func DecodeSignRound3Input(payload []byte) (*sign.SignRound2Output, error) {
 	return decoded, nil
 }
 
-func EncodeSignRound3Output(output *sign.SignRound3Output) ([]byte, error) {
+func EncodeSignRound3Payload(output *sign.SignRound3Output) ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{})
 	enc := gob.NewEncoder(buf)
 	if err := enc.Encode(output); err != nil {
@@ -56,30 +72,11 @@ func EncodeSignRound3Output(output *sign.SignRound3Output) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func DecodeSignRound4Input(payload []byte) (*sign.SignRound3Output, error) {
+func DecodeSignRound3Payload(payload []byte) (*sign.SignRound3Output, error) {
 	buf := bytes.NewBuffer(payload)
 	dec := gob.NewDecoder(buf)
 	decoded := &sign.SignRound3Output{}
 	if err := dec.Decode(&decoded); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return decoded, nil
-}
-
-func EncodeSignature(signature *curves.EcdsaSignature) ([]byte, error) {
-	buf := bytes.NewBuffer([]byte{})
-	enc := gob.NewEncoder(buf)
-	if err := enc.Encode(signature); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return buf.Bytes(), nil
-}
-
-func DecodeSignature(payload []byte) (*curves.EcdsaSignature, error) {
-	buf := bytes.NewBuffer(payload)
-	dec := gob.NewDecoder(buf)
-	decoded := &curves.EcdsaSignature{}
-	if err := dec.Decode(decoded); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return decoded, nil

@@ -2,9 +2,12 @@
 package handlers
 
 import (
+	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
 	"tecdsa/pkg/database/repository"
+	deserializer "tecdsa/pkg/deserializers"
 
 	// "tecdsa/pkg/dkls/dkg"
 
@@ -13,6 +16,7 @@ import (
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/sign"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -33,7 +37,7 @@ func NewSignHandler(repo repository.SecretRepository) *SignHandler {
 
 func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 	for {
-		_, err := stream.Recv()
+		in, err := stream.Recv()
 		if err == io.EOF {
 			return nil
 		}
@@ -41,73 +45,95 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 			return err
 		}
 
-		// switch msg := in.Msg.(type) {
-		// case *pb.SignMessage_Round1Response:
-		// 	err = h.handleRound2(stream, msg.Round1Response)
-		// case *pb.SignMessage_Round3Response:
-		// 	err = h.handleRound4(stream, msg.Round3Response)
-		// default:
-		// 	err = fmt.Errorf("unexpected message type")
-		// }
+		switch msg := in.Msg.(type) {
+		case *pb.SignMessage_SignRound1To2Output:
+			err = h.handleRound2(stream, msg.SignRound1To2Output)
+		case *pb.SignMessage_SignRound3To4Output:
+			err = h.handleRound4(stream, msg.SignRound3To4Output)
+		default:
+			err = fmt.Errorf("unexpected message type")
+		}
 
-		// if err != nil {
-		// 	return err
-		// }
+		if err != nil {
+			return err
+		}
 	}
 }
 
-// func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, msg *pb.Round1Response) error {
-// 	fmt.Println("라운드2")
+func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, msg *pb.SignRound1To2Output) error {
+	fmt.Println("라운드2")
 
-// 	output, err := h.repo.GetSecretShare(msg.Address, msg.SecretKey)
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed to get secret share")
-// 	}
+	// param
+	payload := msg.Payload
+	address := msg.Address
+	secretKey := msg.SecretKey
+	txOrigin := msg.TxOrigin
 
-// 	bobOutput, ok := output.(*repository.BobOutputWrapper)
-// 	if !ok {
-// 		return errors.New("retrieved secret share is not a BobOutput")
-// 	}
+	//
+	round1Payload, err := deserializer.DecodeSignRound1Payload(payload)
 
-// 	h.bob = sign.NewBob(h.curve, h.hash, bobOutput.BobOutput)
+	output, err := h.repo.GetSecretShare(address, secretKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to get secret share")
+	}
 
-// 	seed, err := deserializer.DecodeSignRound2Input(msg.Payload)
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed to decode in Round 2")
-// 	}
+	bobOutput, err := deserializer.DecodeBobDkgResult(output)
+	if err != nil {
+		return errors.New("retrieved secret share is not an BobOutput")
+	}
 
-// 	round2Output, err := h.bob.Round2Initialize(seed)
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed in Round2Initialize")
-// 	}
+	h.bob = sign.NewBob(h.curve, h.hash, bobOutput)
 
-// 	encodeRound2Ouput, err := deserializer.EncodeSignRound2Output(round2Output)
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed in encode in Round 2")
-// 	}
+	round2Result, err := h.bob.Round2Initialize(round1Payload)
+	if err != nil {
+		return errors.Wrap(err, "failed in Round2Initialize")
+	}
 
-// 	return stream.Send(&pb.SignMessage{
-// 		Msg: &pb.SignMessage_Round2Response{
-// 			payload: encodeRound2Ouput,
-// 		},
-// 	})
-// }
+	round2Payload, err := deserializer.EncodeSignRound2Payload(round2Result)
+	if err != nil {
+		return errors.Wrap(err, "failed in encode in Round 2")
+	}
 
-// func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, msg *pb.Round3Response) error {
-// 	fmt.Println("라운드4")
+	return stream.Send(&pb.SignMessage{
+		Msg: &pb.SignMessage_SignRound2To3Output{
+			SignRound2To3Output: &pb.SignRound2To3Output{
+				TxOrigin: txOrigin,
+				Payload:  round2Payload,
+			},
+		},
+	})
+}
 
-// 	// deserialize
-// 	round4Input, err := deserializer.DecodeSignRound4Input(msg.Payload)
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed to decode in Round 4")
-// 	}
+func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, msg *pb.SignRound3To4Output) error {
+	fmt.Println("라운드4")
 
-// 	if err = h.bob.Round4Final("message", round4Input); err != nil {
-// 		return errors.Wrap(err, "failed in Round4Final")
-// 	}
+	// msg
+	payload := msg.Payload
+	txOrigin := msg.TxOrigin
 
-// 	return stream.Send(&pb.SignMessage{
-// 		Msg: &pb.SignMessage_Round4Response{
-// 			Round4Response: &round4Response},
-// 	})
-// }
+	//
+	round3Payload, err := deserializer.DecodeSignRound3Payload(payload)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode in Round 4")
+	}
+
+	if err = h.bob.Round4Final(txOrigin, round3Payload); err != nil {
+		return errors.Wrap(err, "failed in Round4Final")
+	}
+
+	signature := h.bob.Signature
+	vBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(vBytes, uint32(signature.V))
+
+	// TODO: Verify Check
+
+	return stream.Send(&pb.SignMessage{
+		Msg: &pb.SignMessage_SignRound4ToResponseOutput{
+			SignRound4ToResponseOutput: &pb.SignRound4ToResponseOutput{
+				V: vBytes,
+				R: signature.R.Bytes(),
+				S: signature.S.Bytes(),
+			},
+		},
+	})
+}

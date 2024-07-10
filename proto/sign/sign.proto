@@ -10,57 +10,52 @@ service SignService {
 
 message SignMessage {
   oneof msg {
-    SignRequest signRequest = 1;
-    Round1Request round1Request = 2;
-    Round1Response round1Response = 3;
-    Round2Request round2Request = 4;
-    Round2Response round2Response = 5;
-    Round3Request round3Request = 6;
-    Round3Response round3Response = 7;
-    Round4Request round4Request = 8;
-    Round4Response round4Response = 9;
-    SignResponse signResponse = 10;
+    SignRequestTo1Output signRequestTo1Output = 1;
+    SignRound1To2Output signRound1To2Output = 2;
+    SignRound2To3Output signRound2To3Output = 3;
+    SignRound3To4Output signRound3To4Output = 4;
+    SignRound4ToResponseOutput signRound4ToResponseOutput = 5;
   }
 }
 
-message SignRequest {
+// 요청 메시지 DTO
+message SignRequestMessage {
   string address = 1;
   bytes secret_key = 2;
-  bytes message = 3;
+  bytes tx_origin = 3;
 }
 
-message Round1Request {
+// 요청 -> 라운드 1 
+message SignRequestTo1Output {
   bytes payload = 1;
 }
 
-message Round1Response {
-  bytes payload = 1;
+// 라운드 1 -> 라운드 2
+message SignRound1To2Output {
+  string address = 1;
+  bytes secret_key = 2;
+  bytes tx_origin = 3;
+  bytes payload = 4; 
 }
 
-message Round2Request {
-  bytes payload = 1;
+// 라운드 2 -> 라운드 3
+message SignRound2To3Output {
+  bytes tx_origin = 1;
+  bytes payload = 2;
 }
 
-message Round2Response {
-  bytes payload = 1;
+// 라운드 3 -> 라운드 4
+message SignRound3To4Output {
+  bytes tx_origin = 1;
+  bytes payload = 2;
 }
 
-message Round3Request {
-  bytes payload = 1;
+// 라운드 4 -> 응답
+message SignRound4ToResponseOutput {
+  bytes v = 1;
+  bytes r = 2;
+  bytes s = 3;
 }
 
-message Round3Response {
-  bytes payload = 1;
-}
 
-message Round4Request {
-  bytes payload = 1;
-}
 
-message Round4Response {
-  bytes payload = 1;
-}
-
-message SignResponse {
-  bytes payload = 1;
-}
