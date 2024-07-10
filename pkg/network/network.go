@@ -123,7 +123,7 @@ type NetworkHandler struct {
 
 var networkHandlerMap = map[Network]NetworkHandler{
 	Bitcoin: {
-		AddressDerivation: deriveSegWitAddress,
+		AddressDerivation: deriveBitcoinAddress,
 		// TransactionHandler: handleBitcoinTransaction,
 	},
 	Ethereum: {
