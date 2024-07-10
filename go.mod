@@ -3,6 +3,8 @@ module tecdsa
 go 1.22.4
 
 require (
+	github.com/btcsuite/btcd v0.22.3
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/coinbase/kryptology v1.8.0
 	github.com/stretchr/testify v1.9.0
 	gorm.io/driver/mysql v1.5.7
@@ -12,6 +14,7 @@ require (
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -27,8 +30,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/btcsuite/btcd v0.21.0-beta.0.20201114000516-e9c7a5ac6401 // indirect
-	github.com/btcsuite/btcutil v1.0.2
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/bwesterb/go-ristretto v1.2.0 // indirect
 	github.com/consensys/gnark-crypto v0.7.0 // indirect
 	github.com/ethereum/go-ethereum v1.10.26

@@ -3,7 +3,6 @@ package network
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/coinbase/kryptology/pkg/core/curves"
@@ -38,31 +37,32 @@ const (
 	AddressTypeP2WPKH = 2
 )
 
-func deriveBitcoinAddress(point curves.Point) (string, error) {
-	// 1. 공개키를 바이트 배열로 변환
+func deriveBitcoinAddress(point curves.Point, network Network) (string, error) {
 	pubKeyBytes := point.ToAffineCompressed()
 	if len(pubKeyBytes) == 0 {
 		return "", fmt.Errorf("failed to convert public key to bytes")
 	}
 
-	// 2. btcec 라이브러리의 PublicKey로 변환
-	_, err := btcec.ParsePubKey(pubKeyBytes)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse public key: %w", err)
+	var params *chaincfg.Params
+	var addrType int
+	switch network {
+	case Bitcoin:
+		params = &chaincfg.MainNetParams
+		addrType = AddressTypeP2WPKH // 메인넷
+	case BitcoinTestNet:
+		params = &chaincfg.TestNet3Params
+		addrType = AddressTypeP2WPKH // 테스트넷
+	default:
+		return "", fmt.Errorf("unsupported Bitcoin network: %v", network)
 	}
 
-	// 3. 네트워크 파라미터 설정 (여기서는 메인넷 사용)
-	params := &chaincfg.MainNetParams
-
 	var address btcutil.Address
+	var err error
 
-	switch 2 {
+	switch addrType {
 	case AddressTypeP2PKH:
 		hash160 := btcutil.Hash160(pubKeyBytes)
 		address, err = btcutil.NewAddressPubKeyHash(hash160, params)
-		if err != nil {
-			return "", fmt.Errorf("failed to create P2PKH address: %w", err)
-		}
 	case AddressTypeP2SHP2WPKH:
 		witnessProg := btcutil.Hash160(pubKeyBytes)
 		witnessAddress, err := btcutil.NewAddressWitnessPubKeyHash(witnessProg, params)
@@ -70,23 +70,16 @@ func deriveBitcoinAddress(point curves.Point) (string, error) {
 			return "", fmt.Errorf("failed to create witness address for P2SH-P2WPKH: %w", err)
 		}
 		address, err = btcutil.NewAddressScriptHash(witnessAddress.ScriptAddress(), params)
-		if err != nil {
-			return "", fmt.Errorf("failed to create P2SH-P2WPKH address: %w", err)
-		}
 	case AddressTypeP2WPKH:
 		witnessProg := btcutil.Hash160(pubKeyBytes)
 		address, err = btcutil.NewAddressWitnessPubKeyHash(witnessProg, params)
-		if err != nil {
-			return "", fmt.Errorf("failed to create P2WPKH address: %w", err)
-		}
 	default:
-		return "", fmt.Errorf("unsupported address type: %d", "// TODO: Address type")
+		return "", fmt.Errorf("unsupported address type: %d", addrType)
 	}
 
-	encodedAddress := address.EncodeAddress()
-	if encodedAddress == "" {
-		return "", fmt.Errorf("failed to encode address")
+	if err != nil {
+		return "", fmt.Errorf("failed to create address: %w", err)
 	}
 
-	return encodedAddress, nil
+	return address.EncodeAddress(), nil
 }

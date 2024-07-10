@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func deriveEthereumAddress(point curves.Point) (string, error) {
+func deriveEthereumAddress(point curves.Point, _ Network) (string, error) {
 	pointToBytes := point.ToAffineUncompressed()
 	unmarshalPubKey, err := crypto.UnmarshalPubkey(pointToBytes)
 	if err != nil {
@@ -14,4 +14,9 @@ func deriveEthereumAddress(point curves.Point) (string, error) {
 	}
 	address := crypto.PubkeyToAddress(*unmarshalPubKey).Hex()
 	return address, nil
+}
+
+func verifyEtherumSignature(point curves.Point, txOrigin []byte, signature []byte) bool {
+	publicKey := point.ToAffineUncompressed()
+	return crypto.VerifySignature(publicKey, crypto.Keccak256(txOrigin), signature)
 }

@@ -1,10 +1,12 @@
-package eth_test_util
+package test_util
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"math/big"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -12,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-func GenerateTxOrigin(toAddress string) (*types.Transaction, []byte, error) {
+func GenerateETHTxOrigin(toAddress string) (*types.Transaction, []byte, error) {
 	// 테스트용 값 설정
 	nonce := uint64(0)
 	to := common.HexToAddress(toAddress)
@@ -42,7 +44,50 @@ func GenerateTxOrigin(toAddress string) (*types.Transaction, []byte, error) {
 	return tx, txHash, nil
 }
 
-func PrintSignedTxAsJSON(signedTx *types.Transaction) {
+func CombineETHUnsignedTxWithSignature(tx *types.Transaction, response []byte) (*types.Transaction, error) {
+	var signResponse SignResponse
+	err := json.Unmarshal(response, &signResponse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal sign response: %v", err)
+	}
+
+	// V를 int64로 변환
+	v, err := strconv.ParseInt(signResponse.V, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse 'v' as int64: %v", err)
+	}
+
+	// R과 S를 big.Int로 변환
+	rBytes, err := base64.StdEncoding.DecodeString(signResponse.R)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode 'r': %v", err)
+	}
+	r := new(big.Int).SetBytes(rBytes)
+
+	sBytes, err := base64.StdEncoding.DecodeString(signResponse.S)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode 's': %v", err)
+	}
+	s := new(big.Int).SetBytes(sBytes)
+
+	// 서명 생성 (r + s + v)
+	signatureBytes := append(r.Bytes(), s.Bytes()...)
+	signatureBytes = append(signatureBytes, byte(v))
+
+	// 로깅 (필요한 경우)
+	// fmt.Printf("Generated Signature: %x\n", signatureBytes)
+	// fmt.Printf("Signature length: %d\n", len(signatureBytes))
+
+	signer := types.NewEIP155Signer(big.NewInt(1)) // 체인 ID를 1로 가정 (메인넷)
+	txWithSignature, err := tx.WithSignature(signer, signatureBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply signature to transaction: %v", err)
+	}
+
+	return txWithSignature, nil
+}
+
+func PrintETHSignedTxAsJSON(signedTx *types.Transaction) {
 	signer := types.LatestSignerForChainID(signedTx.ChainId())
 	from, _ := types.Sender(signer, signedTx)
 
@@ -77,4 +122,9 @@ func PrintSignedTxAsJSON(signedTx *types.Transaction) {
 		log.Fatalf("Failed to marshal transaction to JSON: %v", err)
 	}
 	fmt.Printf("Signed Transaction as JSON:\n%s\n", string(jsonData))
+}
+
+
+func VerifyETHSignature() {
+	
 }
