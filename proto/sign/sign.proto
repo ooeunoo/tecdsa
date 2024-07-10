@@ -40,13 +40,11 @@ message SignRound1To2Output {
 
 // 라운드 2 -> 라운드 3
 message SignRound2To3Output {
-  bytes tx_origin = 1;
   bytes payload = 2;
 }
 
 // 라운드 3 -> 라운드 4
 message SignRound3To4Output {
-  bytes tx_origin = 1;
   bytes payload = 2;
 }
 

@@ -1,4 +1,3 @@
-// alice handler
 package handlers
 
 import (
@@ -15,11 +14,15 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+type signContext struct {
+	alice    *sign.Alice
+	txOrigin []byte
+}
+
 type SignHandler struct {
 	curve *curves.Curve
 	hash  hash.Hash
 	repo  repository.SecretRepository
-	alice *sign.Alice
 }
 
 func NewSignHandler(repo repository.SecretRepository) *SignHandler {
@@ -31,6 +34,8 @@ func NewSignHandler(repo repository.SecretRepository) *SignHandler {
 }
 
 func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
+	ctx := &signContext{}
+
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -42,9 +47,9 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 
 		switch msg := in.Msg.(type) {
 		case *pb.SignMessage_SignRequestTo1Output:
-			err = h.handleRound1(stream, msg.SignRequestTo1Output)
+			err = h.handleRound1(stream, ctx, msg.SignRequestTo1Output)
 		case *pb.SignMessage_SignRound2To3Output:
-			err = h.handleRound3(stream, msg.SignRound2To3Output)
+			err = h.handleRound3(stream, ctx, msg.SignRound2To3Output)
 		default:
 			err = fmt.Errorf("unexpected message type")
 		}
@@ -55,7 +60,7 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 	}
 }
 
-func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, msg *pb.SignRequestTo1Output) error {
+func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, ctx *signContext, msg *pb.SignRequestTo1Output) error {
 	fmt.Println("라운드1")
 
 	// msg
@@ -66,9 +71,10 @@ func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, msg *pb.Sig
 		return errors.Wrap(err, "failed to decode in Round 1")
 	}
 
-	// destructors
+	//
 	address := params.Address
 	secretKey := params.SecretKey
+	ctx.txOrigin = params.TxOrigin
 
 	//
 	output, err := h.repo.GetSecretShare(address, secretKey)
@@ -81,10 +87,10 @@ func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, msg *pb.Sig
 		return errors.New("retrieved secret share is not an AliceOutput")
 	}
 
-	h.alice = sign.NewAlice(h.curve, h.hash, aliceOutput)
+	ctx.alice = sign.NewAlice(h.curve, h.hash, aliceOutput)
 
 	//
-	round1Result, err := h.alice.Round1GenerateRandomSeed()
+	round1Result, err := ctx.alice.Round1GenerateRandomSeed()
 	if err != nil {
 		return errors.Wrap(err, "failed to generate random seed in Round 1")
 	}
@@ -99,26 +105,25 @@ func (h *SignHandler) handleRound1(stream pb.SignService_SignServer, msg *pb.Sig
 			SignRound1To2Output: &pb.SignRound1To2Output{
 				Address:   params.Address,
 				SecretKey: params.SecretKey,
-				TxOrigin:  params.TxOrigin,
+				TxOrigin:  ctx.txOrigin,
 				Payload:   round1Payload,
 			},
 		},
 	})
 }
 
-func (h *SignHandler) handleRound3(stream pb.SignService_SignServer, msg *pb.SignRound2To3Output) error {
+func (h *SignHandler) handleRound3(stream pb.SignService_SignServer, ctx *signContext, msg *pb.SignRound2To3Output) error {
 	fmt.Println("라운드3")
 
 	// msg
 	payload := msg.Payload
-	txOrigin := msg.TxOrigin
 
 	round2Payload, err := deserializer.DecodeSignRound2Payload(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 3 input")
 	}
 
-	round3Result, err := h.alice.Round3Sign(txOrigin, round2Payload)
+	round3Result, err := ctx.alice.Round3Sign(ctx.txOrigin, round2Payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to sign in Round 3")
 	}
@@ -131,10 +136,8 @@ func (h *SignHandler) handleRound3(stream pb.SignService_SignServer, msg *pb.Sig
 	return stream.Send(&pb.SignMessage{
 		Msg: &pb.SignMessage_SignRound3To4Output{
 			SignRound3To4Output: &pb.SignRound3To4Output{
-				TxOrigin: txOrigin,
-				Payload:  round3Payload,
+				Payload: round3Payload,
 			},
 		},
 	})
-
 }

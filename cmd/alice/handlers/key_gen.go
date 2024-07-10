@@ -15,6 +15,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+type keygenContext struct {
+	network int32
+	alice   *dkg.Alice
+}
+
 type KeygenHandler struct {
 	curve *curves.Curve
 	repo  repository.SecretRepository
@@ -28,7 +33,9 @@ func NewKeygenHandler(repo repository.SecretRepository) *KeygenHandler {
 }
 
 func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error {
-	alice := dkg.NewAlice(h.curve)
+	ctx := &keygenContext{
+		alice: dkg.NewAlice(h.curve),
+	}
 
 	for {
 		in, err := stream.Recv()
@@ -41,15 +48,15 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 
 		switch msg := in.Msg.(type) {
 		case *pb.KeygenMessage_KeyGenRound1To2Output:
-			err = h.handleRound2(stream, alice, msg.KeyGenRound1To2Output)
+			err = h.handleRound2(stream, ctx, msg.KeyGenRound1To2Output)
 		case *pb.KeygenMessage_KeyGenRound3To4Output:
-			err = h.handleRound4(stream, alice, msg.KeyGenRound3To4Output)
+			err = h.handleRound4(stream, ctx, msg.KeyGenRound3To4Output)
 		case *pb.KeygenMessage_KeyGenRound5To6Output:
-			err = h.handleRound6(stream, alice, msg.KeyGenRound5To6Output)
+			err = h.handleRound6(stream, ctx, msg.KeyGenRound5To6Output)
 		case *pb.KeygenMessage_KeyGenRound7To8Output:
-			err = h.handleRound8(stream, alice, msg.KeyGenRound7To8Output)
+			err = h.handleRound8(stream, ctx, msg.KeyGenRound7To8Output)
 		case *pb.KeygenMessage_KeyGenRound9To10Output:
-			err = h.handleRound10(stream, alice, msg.KeyGenRound9To10Output)
+			err = h.handleRound10(stream, ctx, msg.KeyGenRound9To10Output)
 		default:
 			err = fmt.Errorf("unexpected message type")
 		}
@@ -60,7 +67,7 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 	}
 }
 
-func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound1To2Output) error {
+func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound1To2Output) error {
 	fmt.Println("라운드2")
 
 	// msg
@@ -72,7 +79,7 @@ func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice
 		return errors.Wrap(err, "failed to decode in Round 2")
 	}
 
-	round2Result, err := alice.Round2CommitToProof(round2Input)
+	round2Result, err := ctx.alice.Round2CommitToProof(round2Input)
 	if err != nil {
 		log.Printf("Error in Round2CommitToProof in Round 2")
 		return err
@@ -92,7 +99,7 @@ func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, alice
 	})
 }
 
-func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound3To4Output) error {
+func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound3To4Output) error {
 	fmt.Println("라운드4")
 
 	// msg
@@ -104,7 +111,7 @@ func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice
 		return errors.Wrap(err, "failed to decode in Round 4")
 	}
 
-	round4Result, err := alice.Round4VerifyAndReveal(round4Input)
+	round4Result, err := ctx.alice.Round4VerifyAndReveal(round4Input)
 	if err != nil {
 		log.Printf("Error in Round4VerifyAndReveal in Round 4")
 		return err
@@ -124,7 +131,7 @@ func (h *KeygenHandler) handleRound4(stream pb.KeygenService_KeyGenServer, alice
 	})
 }
 
-func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound5To6Output) error {
+func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound5To6Output) error {
 	fmt.Println("라운드6")
 
 	// msg
@@ -136,7 +143,7 @@ func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice
 		return errors.Wrap(err, "failed to decode in Round 6")
 	}
 
-	round6Result, err := alice.Round6DkgRound2Ot(round6Input)
+	round6Result, err := ctx.alice.Round6DkgRound2Ot(round6Input)
 	if err != nil {
 		return err
 	}
@@ -155,7 +162,7 @@ func (h *KeygenHandler) handleRound6(stream pb.KeygenService_KeyGenServer, alice
 	})
 }
 
-func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound7To8Output) error {
+func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound7To8Output) error {
 	fmt.Println("라운드8")
 
 	// msg
@@ -167,7 +174,7 @@ func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice
 		return errors.Wrap(err, "failed to decode in Round 8")
 	}
 
-	round8Result, err := alice.Round8DkgRound4Ot(round8Input)
+	round8Result, err := ctx.alice.Round8DkgRound4Ot(round8Input)
 	if err != nil {
 		return err
 	}
@@ -186,7 +193,7 @@ func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, alice
 	})
 }
 
-func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alice *dkg.Alice, msg *pb.KeyGenRound9To10Output) error {
+func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound9To10Output) error {
 	fmt.Println("라운드10")
 
 	// msg
@@ -198,14 +205,14 @@ func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, alic
 		return errors.Wrap(err, "failed to decode in Round 10")
 	}
 
-	roundErr := alice.Round10DkgRound6Ot(round10Input)
+	roundErr := ctx.alice.Round10DkgRound6Ot(round10Input)
 	if roundErr != nil {
 		return roundErr
 	}
 
 	// ###################################
 	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
-	aliceOutput := alice.Output()
+	aliceOutput := ctx.alice.Output()
 	address, err := network.DeriveAddress(aliceOutput.PublicKey, network.Ethereum)
 	if err != nil {
 		return err

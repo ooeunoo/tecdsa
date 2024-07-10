@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TECDSA API Documentation</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        #sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #f4f4f4;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        #content {
+            flex-grow: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        h1 { color: #333; }
+        h2 { color: #666; }
+        h3 { color: #888; margin-top: 20px; cursor: pointer; }
+        h3:hover { color: #666; }
+        pre { 
+            background-color: #f4f4f4; 
+            padding: 10px; 
+            border-radius: 5px; 
+        }
+        .api-details, .guide-details { 
+            display: none; 
+            margin-left: 20px;
+        }
+        .sidebar-link {
+            display: block;
+            padding: 5px 0;
+            color: #333;
+            text-decoration: none;
+        }
+        .sidebar-link:hover {
+            color: #666;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Documentation</h2>
+        <div class="section-title">API</div>
+        <a href="#key_gen" class="sidebar-link">Key Generation</a>
+        <a href="#sign" class="sidebar-link">Sign</a>
+        <a href="#networks" class="sidebar-link">Get All Networks</a>
+        
+        <div class="section-title">GUIDE</div>
+        <a href="#bitcoin" class="sidebar-link">Bitcoin</a>
+        <a href="#ethereum" class="sidebar-link">Ethereum</a>
+    </div>
+
+    <div id="content">
+        <h1>TECDSA Documentation</h1>
+
+        <h2>API Reference</h2>
+
+        <h3 id="key_gen">Key Generation</h3>
+        <div class="api-details">
+            <p><strong>Endpoint:</strong> POST /key_gen</p>
+            <p><strong>Description:</strong> Generate a new ECDSA key pair</p>
+            
+            <h4>Request</h4>
+            <p>This endpoint doesn't require any parameters.</p>
+
+            <h4>Response</h4>
+            <pre>
+{
+    "success": true,
+    "address": "0x...",
+    "secret_key": "...",
+    "duration": 0.123
+}
+</pre>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>success</td>
+                    <td>boolean</td>
+                    <td>Indicates if the operation was successful</td>
+                </tr>
+                <tr>
+                    <td>address</td>
+                    <td>string</td>
+                    <td>The generated Ethereum address</td>
+                </tr>
+                <tr>
+                    <td>secret_key</td>
+                    <td>string</td>
+                    <td>The generated secret key (handle with care)</td>
+                </tr>
+                <tr>
+                    <td>duration</td>
+                    <td>number</td>
+                    <td>Time taken to generate the key pair (in seconds)</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3 id="sign">Sign</h3>
+        <div class="api-details">
+            <p><strong>Endpoint:</strong> POST /sign</p>
+            <p><strong>Description:</strong> Sign a message using the generated key</p>
+            
+            <h4>Request</h4>
+            <pre>
+{
+    "address": "0x...",
+    "secret_key": "...",
+    "tx_origin": "..."
+}
+</pre>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>address</td>
+                    <td>string</td>
+                    <td>The Ethereum address associated with the key</td>
+                </tr>
+                <tr>
+                    <td>secret_key</td>
+                    <td>string</td>
+                    <td>The secret key for signing</td>
+                </tr>
+                <tr>
+                    <td>tx_origin</td>
+                    <td>string</td>
+                    <td>The transaction origin data to be signed</td>
+                </tr>
+            </table>
+
+            <h4>Response</h4>
+            <pre>
+{
+    "success": true,
+    "v": "...",
+    "r": "...",
+    "s": "..."
+}
+</pre>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>success</td>
+                    <td>boolean</td>
+                    <td>Indicates if the signing operation was successful</td>
+                </tr>
+                <tr>
+                    <td>v</td>
+                    <td>string</td>
+                    <td>The v component of the ECDSA signature</td>
+                </tr>
+                <tr>
+                    <td>r</td>
+                    <td>string</td>
+                    <td>The r component of the ECDSA signature</td>
+                </tr>
+                <tr>
+                    <td>s</td>
+                    <td>string</td>
+                    <td>The s component of the ECDSA signature</td>
+                </tr>
+            </table>
+        </div>
+
+        <h3 id="networks">Get All Networks</h3>
+        <div class="api-details">
+            <p><strong>Endpoint:</strong> GET /networks</p>
+            <p><strong>Description:</strong> Retrieve all available networks</p>
+            
+            <h4>Request</h4>
+            <p>This endpoint doesn't require any parameters.</p>
+
+            <h4>Response</h4>
+            <pre>
+[
+    {
+        "name": "Ethereum",
+        "chain_id": 1
+    },
+    ...
+]
+</pre>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>string</td>
+                    <td>The name of the network</td>
+                </tr>
+                <tr>
+                    <td>chain_id</td>
+                    <td>number</td>
+                    <td>The chain ID of the network</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>Guide</h2>
+
+        <h3 id="bitcoin">Bitcoin</h3>
+        <div class="guide-details">
+            <p>Bitcoin guide content goes here...</p>
+        </div>
+
+        <h3 id="ethereum">Ethereum</h3>
+        <div class="guide-details">
+            <p>Ethereum guide content goes here...</p>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('h3').forEach(header => {
+            header.addEventListener('click', () => {
+                const details = header.nextElementSibling;
+                details.style.display = details.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                targetElement.scrollIntoView({behavior: 'smooth'});
+                const details = targetElement.nextElementSibling;
+                details.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

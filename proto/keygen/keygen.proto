@@ -25,14 +25,19 @@ message KeygenMessage {
   }
 }
 // 요청 메시지 DTO
-message KeyGenRequestMessage{}
+message KeyGenRequestMessage{
+  int32 network = 1;
+}
 
 // 요청 -> 라운드 1 
-message KeyGenRequestTo1Output {}
+message KeyGenRequestTo1Output {
+  int32 network = 1;
+}
 
 // 라운드 1 -> 라운드 2
 message KeyGenRound1To2Output {
-  bytes payload = 1;
+  int32 network = 1;
+  bytes payload = 2;
 }
 
 // 라운드 2 -> 라운드 3

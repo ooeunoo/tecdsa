@@ -1,4 +1,4 @@
-.PHONY: proto build run clean
+.PHONY: proto build run clean reset
 
 PROTO_DIR := proto
 PROTO_FILES := $(shell find $(PROTO_DIR) -name '*.proto')
@@ -24,3 +24,6 @@ clean:
 	find $(PROTO_DIR) -name "*.pb.go" -type f -delete
 	find $(PROTO_DIR) -name "*_grpc.pb.go" -type f -delete
 	rm -rf bin
+
+reset:
+	find cmd -name "data" -type d -exec rm -rf {} +

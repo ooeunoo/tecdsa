@@ -18,7 +18,7 @@ func GetAllNetworksHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 모든 네트워크를 순회합니다.
 	for id := 1; id < len(network.Networks); id++ {
-		network, err := network.GetNetworkByID(id)
+		network, err := network.GetNetworkByID(int32(id))
 		if err == nil {
 			networks = append(networks, NetworkInfo{
 				ID:   id,

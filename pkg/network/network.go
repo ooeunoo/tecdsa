@@ -55,7 +55,8 @@ func (n Network) String() string {
 		"Arbitrum", "Optimism", "Loopring", "zkSync", "StarkNet",
 	}[n]
 }
-func GetNetworkByID(id int) (Network, error) {
+
+func GetNetworkByID(id int32) (Network, error) {
 	switch id {
 	case 1:
 		return Bitcoin, nil
@@ -122,7 +123,7 @@ type NetworkHandler struct {
 
 var networkHandlerMap = map[Network]NetworkHandler{
 	Bitcoin: {
-		// AddressDerivation:  deriveBitcoinAddress,
+		AddressDerivation: deriveSegWitAddress,
 		// TransactionHandler: handleBitcoinTransaction,
 	},
 	Ethereum: {

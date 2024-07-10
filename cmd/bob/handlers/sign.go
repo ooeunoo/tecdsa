@@ -1,4 +1,3 @@
-// bob handler
 package handlers
 
 import (
@@ -7,10 +6,6 @@ import (
 	"io"
 	"tecdsa/pkg/database/repository"
 	deserializer "tecdsa/pkg/deserializers"
-
-	// "tecdsa/pkg/dkls/dkg"
-
-	// "tecdsa/pkg/dkls/dkg"
 	pb "tecdsa/proto/sign"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
@@ -19,11 +14,15 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+type signContext struct {
+	bob      *sign.Bob
+	txOrigin []byte
+}
+
 type SignHandler struct {
 	curve *curves.Curve
 	hash  hash.Hash
 	repo  repository.SecretRepository
-	bob   *sign.Bob
 }
 
 func NewSignHandler(repo repository.SecretRepository) *SignHandler {
@@ -35,6 +34,8 @@ func NewSignHandler(repo repository.SecretRepository) *SignHandler {
 }
 
 func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
+	ctx := &signContext{}
+
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -46,9 +47,9 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 
 		switch msg := in.Msg.(type) {
 		case *pb.SignMessage_SignRound1To2Output:
-			err = h.handleRound2(stream, msg.SignRound1To2Output)
+			err = h.handleRound2(stream, ctx, msg.SignRound1To2Output)
 		case *pb.SignMessage_SignRound3To4Output:
-			err = h.handleRound4(stream, msg.SignRound3To4Output)
+			err = h.handleRound4(stream, ctx, msg.SignRound3To4Output)
 		default:
 			err = fmt.Errorf("unexpected message type")
 		}
@@ -59,17 +60,20 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 	}
 }
 
-func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, msg *pb.SignRound1To2Output) error {
+func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, ctx *signContext, msg *pb.SignRound1To2Output) error {
 	fmt.Println("라운드2")
 
 	// param
 	payload := msg.Payload
 	address := msg.Address
 	secretKey := msg.SecretKey
-	txOrigin := msg.TxOrigin
+	ctx.txOrigin = msg.TxOrigin
 
 	//
 	round1Payload, err := deserializer.DecodeSignRound1Payload(payload)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode round 1 payload")
+	}
 
 	output, err := h.repo.GetSecretShare(address, secretKey)
 	if err != nil {
@@ -78,37 +82,35 @@ func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, msg *pb.Sig
 
 	bobOutput, err := deserializer.DecodeBobDkgResult(output)
 	if err != nil {
-		return errors.New("retrieved secret share is not an BobOutput")
+		return errors.New("retrieved secret share is not a BobOutput")
 	}
 
-	h.bob = sign.NewBob(h.curve, h.hash, bobOutput)
+	ctx.bob = sign.NewBob(h.curve, h.hash, bobOutput)
 
-	round2Result, err := h.bob.Round2Initialize(round1Payload)
+	round2Result, err := ctx.bob.Round2Initialize(round1Payload)
 	if err != nil {
 		return errors.Wrap(err, "failed in Round2Initialize")
 	}
 
 	round2Payload, err := deserializer.EncodeSignRound2Payload(round2Result)
 	if err != nil {
-		return errors.Wrap(err, "failed in encode in Round 2")
+		return errors.Wrap(err, "failed to encode in Round 2")
 	}
 
 	return stream.Send(&pb.SignMessage{
 		Msg: &pb.SignMessage_SignRound2To3Output{
 			SignRound2To3Output: &pb.SignRound2To3Output{
-				TxOrigin: txOrigin,
-				Payload:  round2Payload,
+				Payload: round2Payload,
 			},
 		},
 	})
 }
 
-func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, msg *pb.SignRound3To4Output) error {
+func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, ctx *signContext, msg *pb.SignRound3To4Output) error {
 	fmt.Println("라운드4")
 
 	// msg
 	payload := msg.Payload
-	txOrigin := msg.TxOrigin
 
 	//
 	round3Payload, err := deserializer.DecodeSignRound3Payload(payload)
@@ -116,11 +118,11 @@ func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, msg *pb.Sig
 		return errors.Wrap(err, "failed to decode in Round 4")
 	}
 
-	if err = h.bob.Round4Final(txOrigin, round3Payload); err != nil {
+	if err = ctx.bob.Round4Final(ctx.txOrigin, round3Payload); err != nil {
 		return errors.Wrap(err, "failed in Round4Final")
 	}
 
-	signature := h.bob.Signature
+	signature := ctx.bob.Signature
 	return stream.Send(&pb.SignMessage{
 		Msg: &pb.SignMessage_SignRound4ToResponseOutput{
 			SignRound4ToResponseOutput: &pb.SignRound4ToResponseOutput{

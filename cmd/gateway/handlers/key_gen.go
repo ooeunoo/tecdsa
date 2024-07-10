@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	pb "tecdsa/proto/keygen"
@@ -11,8 +12,22 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+type KeyGenResponse struct {
+	Success   bool    `json:"success"`
+	Address   string  `json:"address"`
+	SecretKey string  `json:"secret_key"`
+	Duration  float64 `json:"duration"`
+}
+
 func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
+	var req pb.KeyGenRequestMessage
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		fmt.Printf("Failed to parse request body: %v\n", err)
+		return
+	}
 
 	// 채널 생성
 	bobChan := make(chan *pb.KeygenMessage)
@@ -82,7 +97,9 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// DKG 프로토콜 시작
-	if err := bobStream.Send(&pb.KeygenMessage{Msg: &pb.KeygenMessage_KeyGenRequestTo1Output{KeyGenRequestTo1Output: &pb.KeyGenRequestTo1Output{}}}); err != nil {
+	if err := bobStream.Send(&pb.KeygenMessage{Msg: &pb.KeygenMessage_KeyGenRequestTo1Output{KeyGenRequestTo1Output: &pb.KeyGenRequestTo1Output{
+		Network: req.Network,
+	}}}); err != nil {
 		http.Error(w, "Failed to send initial request to Bob", http.StatusInternalServerError)
 		fmt.Printf("Failed to send initial request to Bob: %v\n", err)
 		return
