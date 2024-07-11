@@ -13,6 +13,7 @@ const (
 	Bitcoin Network = iota
 	BitcoinTestNet
 	Ethereum
+	Ethereum_Sepolia
 	// Litecoin
 	// Dogecoin
 	// Ripple
@@ -40,7 +41,7 @@ const (
 )
 
 var Networks = []Network{
-	Bitcoin, BitcoinTestNet, Ethereum,
+	Bitcoin, BitcoinTestNet, Ethereum, Ethereum_Sepolia,
 	// Litecoin, Dogecoin, Ripple,
 	// Cardano, Polkadot, Solana, BinanceSmartChain, Polygon,
 	// Avalanche, Tron, Cosmos, Algorand, Stellar,
@@ -50,7 +51,7 @@ var Networks = []Network{
 
 func (n Network) String() string {
 	return [...]string{
-		"Bitcoin", "Bitcoin Testnet", "Ethereum",
+		"Bitcoin", "Bitcoin Testnet", "Ethereum", "Ethereum Sepolia",
 		// "Litecoin", "Dogecoin", "Ripple",
 		// "Cardano", "Polkadot", "Solana", "Binance Smart Chain", "Polygon",
 		// "Avalanche", "Tron", "Cosmos", "Algorand", "Stellar",
@@ -67,6 +68,8 @@ func GetNetworkByID(id int32) (Network, error) {
 		return BitcoinTestNet, nil
 	case 3:
 		return Ethereum, nil
+	case 4:
+		return Ethereum_Sepolia, nil
 	// case 3:
 	// 	return Litecoin, nil
 	// case 4:
@@ -138,6 +141,11 @@ var networkHandlerMap = map[Network]NetworkHandler{
 		// TransactionHandler: handleBitcoinTransaction,
 	},
 	Ethereum: {
+		AddressDerivation: deriveEthereumAddress,
+		SignatureVerifier: verifyEtherumSignature,
+		// TransactionHandler: handleEthereumTransaction,
+	},
+	Ethereum_Sepolia: {
 		AddressDerivation: deriveEthereumAddress,
 		SignatureVerifier: verifyEtherumSignature,
 		// TransactionHandler: handleEthereumTransaction,

@@ -21,13 +21,16 @@ message SignMessage {
 // 요청 메시지 DTO
 message SignRequestMessage {
   string address = 1;
-  bytes secret_key = 2;
-  bytes tx_origin = 3;
+  string secret_key = 2; // encoded base64
+  string tx_origin = 3; // encoded base64
 }
+
 
 // 요청 -> 라운드 1 
 message SignRequestTo1Output {
-  bytes payload = 1;
+  string address = 1;
+  bytes secret_key = 2; // decode base64
+  bytes tx_origin = 3; //  decode base64
 }
 
 // 라운드 1 -> 라운드 2
@@ -40,27 +43,27 @@ message SignRound1To2Output {
 
 // 라운드 2 -> 라운드 3
 message SignRound2To3Output {
-  bytes payload = 2;
+  bytes payload = 1;
 }
 
 // 라운드 3 -> 라운드 4
 message SignRound3To4Output {
-  bytes payload = 2;
+  bytes payload = 1;
 }
 
 // 라운드 4 -> 게이트웨이
 message SignRound4ToResponseOutput {
-  int64 v = 1;
+  uint64 v = 1;
   bytes r = 2;
   bytes s = 3;
 }
 
 // 게이트웨이 -> 응답
 message SignResponse {
-  bool success = 1;
-  int64 v = 2;
-  bytes r = 3;
-  bytes s = 4;
+  uint64 v = 1;
+  string r = 2; // encoded base64
+  string s = 3; // encoded base64
+  int32 duration=4; 
 }
 
 

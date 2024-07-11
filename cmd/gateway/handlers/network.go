@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"tecdsa/pkg/network"
+	"tecdsa/pkg/response"
 )
 
 type NetworkInfo struct {
@@ -27,8 +27,7 @@ func GetAllNetworksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success":  true,
+	response.SendResponse(w, response.NewSuccessResponse(http.StatusOK, map[string]interface{}{
 		"networks": networks,
-	})
+	}))
 }

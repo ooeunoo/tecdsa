@@ -69,11 +69,12 @@ func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, ctx *signCo
 	secretKey := msg.SecretKey
 	ctx.txOrigin = msg.TxOrigin
 
-	//
 	round1Payload, err := deserializer.DecodeSignRound1Payload(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode round 1 payload")
 	}
+	fmt.Println("address:", address)
+	fmt.Println("secretKey:", secretKey)
 
 	output, err := h.repo.GetSecretShare(address, secretKey)
 	if err != nil {
@@ -126,7 +127,7 @@ func (h *SignHandler) handleRound4(stream pb.SignService_SignServer, ctx *signCo
 	return stream.Send(&pb.SignMessage{
 		Msg: &pb.SignMessage_SignRound4ToResponseOutput{
 			SignRound4ToResponseOutput: &pb.SignRound4ToResponseOutput{
-				V: int64(signature.V),
+				V: uint64(signature.V),
 				R: signature.R.Bytes(),
 				S: signature.S.Bytes(),
 			},

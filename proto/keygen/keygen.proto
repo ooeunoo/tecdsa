@@ -82,21 +82,20 @@ message KeyGenRound9To10Output {
 
 // 라운드 10 -> 라운드 11(시크릿키 공유를 위함)
 message KeyGenRound10To11Output {
-  bytes secret_key =3;
+  bytes secret_key =1;
 }
 
 // 라운드 11 -> 게이트 웨이
 message KeyGenRound11ToResponseOutput {
-  string address = 2;
-  bytes secret_key =3;
+  string address = 1;
+  bytes secret_key =2;
 }
 
 // 게이트 웨이 -> 응답
 message KeyGenResponse { 
-  bool success = 1; 
-  string address=2;  
-  bytes secret_key = 3; 
-  int32 duration=4; 
+  string address=1;  
+  string secret_key = 2;  // encoded base64
+  int32 duration=3; 
 }
 
 

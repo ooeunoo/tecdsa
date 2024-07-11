@@ -86,6 +86,7 @@ func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, ctx *
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_KeyGenRound1To2Output{
 			KeyGenRound1To2Output: &pb.KeyGenRound1To2Output{
+				Network: msg.Network,
 				Payload: round1Output,
 			},
 		},

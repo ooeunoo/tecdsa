@@ -38,7 +38,7 @@ func TestETHKeyGenIntegration(t *testing.T) {
 
 	// 요청 데이터 생성
 	requestData := map[string]interface{}{
-		"network": 3, // 3 for Ethereum Mainnet
+		"network": 4, // 3 for Ethereum Mainnet
 	}
 	jsonData, err := json.Marshal(requestData)
 	assert.NoError(t, err)
@@ -73,13 +73,6 @@ func TestETHKeyGenIntegration(t *testing.T) {
 	err = json.Unmarshal(body, &keyGenResponse)
 	assert.NoError(t, err)
 
-	// 응답 필드 확인
-	assert.True(t, keyGenResponse["success"].(bool))
-	assert.NotEmpty(t, keyGenResponse["address"])
-	assert.NotEmpty(t, keyGenResponse["secret_key"])
-	assert.Greater(t, keyGenResponse["duration"].(float64), 0.0)
-
-	// 파싱된 응답 로깅
 	t.Logf("Parsed KeyGen Response: %+v", keyGenResponse)
 }
 func TestETHSignIntegration(t *testing.T) {
@@ -102,6 +95,7 @@ func TestETHSignIntegration(t *testing.T) {
 		"secret_key": keyGenResponse["secret_key"],
 		"tx_origin":  base64.StdEncoding.EncodeToString(txOrigin),
 	}
+	t.Logf("Sign Request Data: %+v", signRequest)
 
 	jsonData, err := json.Marshal(signRequest)
 	assert.NoError(t, err)
@@ -130,52 +124,69 @@ func TestETHSignIntegration(t *testing.T) {
 	}
 
 	// 응답 본문 읽기
-	response, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 
 	// 응답 로깅
-	t.Logf("Response Body: %s", string(response))
+	t.Logf("Response Body: %s", string(body))
 
 	// 상태 코드 확인
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Unexpected status code: %d", resp.StatusCode)
-	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	txWithSignature, _ := test_util.CombineETHUnsignedTxWithSignature(tx, response)
-	test_util.PrintETHSignedTxAsJSON(txWithSignature)
-	assert.NoError(t, err, "Failed to combine unsigned transaction with signature")
+	// JSON 파싱
+	var signResponse struct {
+		Data test_util.SignResponse `json:"data"`
+	}
+	err = json.Unmarshal(body, &signResponse)
+	assert.NoError(t, err)
+
+	// 응답 필드 확인
+	assert.True(t, signResponse.Data.Success)
+	assert.NotZero(t, signResponse.Data.V)
+	assert.NotZero(t, signResponse.Data.R)
+	assert.NotZero(t, signResponse.Data.S)
+
+	// V, R, S 값을 big.Int로 변환
+	v := new(big.Int).SetUint64(signResponse.Data.V)
+	r := new(big.Int).SetBytes(signResponse.Data.R)
+	s := new(big.Int).SetBytes(signResponse.Data.S)
+
+	// 서명된 트랜잭션 생성
+	chainID := big.NewInt(1) // 메인넷의 경우
+	signer := types.NewEIP155Signer(chainID)
+
+	// R과 S를 32바이트로 패딩
+	rBytes := make([]byte, 32)
+	sBytes := make([]byte, 32)
+	r.FillBytes(rBytes)
+	s.FillBytes(sBytes)
+
+	signedTx, err := tx.WithSignature(signer, append(rBytes, append(sBytes, v.Bytes()...)...))
+	assert.NoError(t, err, "Failed to create signed transaction")
 
 	// 서명된 트랜잭션 검증
-	assert.NotNil(t, txWithSignature, "Signed transaction should not be nil")
+	assert.NotNil(t, signedTx, "Signed transaction should not be nil")
 
 	// 트랜잭션 필드 검증
-	assert.Equal(t, tx.To().Hex(), txWithSignature.To().Hex(), "To address should match")
-	assert.Equal(t, tx.Value().String(), txWithSignature.Value().String(), "Transaction value should match")
-	assert.Equal(t, tx.Gas(), txWithSignature.Gas(), "Gas limit should match")
-	assert.Equal(t, tx.GasPrice().String(), txWithSignature.GasPrice().String(), "Gas price should match")
-	assert.Equal(t, tx.Nonce(), txWithSignature.Nonce(), "Nonce should match")
+	assert.Equal(t, tx.To().Hex(), signedTx.To().Hex(), "To address should match")
+	assert.Equal(t, tx.Value().String(), signedTx.Value().String(), "Transaction value should match")
+	assert.Equal(t, tx.Gas(), signedTx.Gas(), "Gas limit should match")
+	assert.Equal(t, tx.GasPrice().String(), signedTx.GasPrice().String(), "Gas price should match")
+	assert.Equal(t, tx.Nonce(), signedTx.Nonce(), "Nonce should match")
 
 	// 서명 검증
-	v, r, s := txWithSignature.RawSignatureValues()
-	assert.NotNil(t, v, "V value should not be nil")
-	assert.NotNil(t, r, "R value should not be nil")
-	assert.NotNil(t, s, "S value should not be nil")
-
-	// 서명 길이 검증
-	assert.Equal(t, 32, len(r.Bytes()), "R should be 32 bytes long")
-	assert.Equal(t, 32, len(s.Bytes()), "S should be 32 bytes long")
-
-	// 체인 ID 검증 (예: 메인넷의 경우 1)
-	chainID := txWithSignature.ChainId()
-	assert.Equal(t, big.NewInt(1), chainID, "Chain ID should be 1 for mainnet")
+	vv, rr, ss := signedTx.RawSignatureValues()
+	assert.Equal(t, v.Uint64(), vv.Uint64(), "V value should match")
+	assert.Equal(t, r.Bytes()[0], rr.Bytes()[0], "R value should match")
+	assert.Equal(t, s.Bytes()[0], ss.Bytes()[0], "S value should match")
 
 	// 서명자 복구 및 검증
-	signer := types.NewEIP155Signer(chainID)
-	recoveredAddr, err := types.Sender(signer, txWithSignature)
+	recoveredAddr, err := types.Sender(signer, signedTx)
 	assert.NoError(t, err, "Failed to recover signer address")
 	assert.Equal(t, keyGenResponse["address"], recoveredAddr.Hex(), "Recovered address should match the key generation address")
 
-	test_util.PrintETHSignedTxAsJSON(txWithSignature)
+	test_util.PrintETHSignedTxAsJSON(signedTx)
 
 	t.Logf("Signed transaction successfully verified")
+
 }

@@ -72,6 +72,7 @@ func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, ctx *
 
 	// msg
 	payload := msg.Payload
+	ctx.network = msg.Network
 
 	//
 	round2Input, err := deserializer.DecodeDkgRound2Input(payload)
@@ -213,7 +214,12 @@ func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, ctx 
 	// ###################################
 	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
 	aliceOutput := ctx.alice.Output()
-	address, err := network.DeriveAddress(aliceOutput.PublicKey, network.Ethereum)
+	networkObj, err := network.GetNetworkByID(ctx.network)
+	if err != nil {
+		return errors.Wrap(err, "failed to get network by ID")
+	}
+
+	address, err := network.DeriveAddress(aliceOutput.PublicKey, networkObj)
 	if err != nil {
 		return err
 	}

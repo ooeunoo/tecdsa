@@ -2,18 +2,27 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
-	deserializer "tecdsa/pkg/deserializers"
+	"tecdsa/pkg/response"
 	pb "tecdsa/proto/sign"
 
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
+type SignRequestDTO struct {
+	Address   string `json:"address"`
+	SecretKey string `json:"secretKey"`
+	TxOrigin  string `json:"txOrigin"`
+}
+
 func SignHandler(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
+
 	var req pb.SignRequestMessage
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -22,12 +31,20 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encodedReq, err := deserializer.EncodeSignRequestToRound1(&req)
-	if err != nil {
-		http.Error(w, "Failed to encode request", http.StatusInternalServerError)
-		fmt.Printf("Failed to encode request: %v\n", err)
-		return
+	fmt.Println("req:", req)
+
+	secretKeyBytes, _ := base64.StdEncoding.DecodeString(req.SecretKey)
+	txOriginBytes, _ := base64.StdEncoding.DecodeString(req.TxOrigin)
+
+	signRequestOutput := pb.SignRequestTo1Output{
+		Address:   req.Address,
+		SecretKey: secretKeyBytes,
+		TxOrigin:  txOriginBytes,
 	}
+
+	fmt.Println("req secretkey:", req.SecretKey)
+	fmt.Println("req tx origin:", req.TxOrigin)
+	fmt.Println("signRequestOutput:", signRequestOutput)
 
 	// 채널 생성
 	bobChan := make(chan *pb.SignMessage)
@@ -35,25 +52,26 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 	errorChan := make(chan error)
 
 	// Bob과 Alice 연결 및 스트림 설정
-	bobStream, aliceStream, err := setupStreams()
+	bobStream, aliceStream, err := setupSignStreams()
 	if err != nil {
-		http.Error(w, "Failed to setup streams", http.StatusInternalServerError)
+		response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to setup streams"))
 		return
 	}
 
 	// Goroutine을 사용하여 Bob과 Alice 간의 메시지 교환
-	go receiveMessages(bobStream, bobChan, errorChan)
-	go receiveMessages(aliceStream, aliceChan, errorChan)
+	go receiveSignMessages(bobStream, bobChan, errorChan)
+	go receiveSignMessages(aliceStream, aliceChan, errorChan)
 
 	// 서명 프로토콜 시작
 	if err := aliceStream.Send(&pb.SignMessage{
 		Msg: &pb.SignMessage_SignRequestTo1Output{
 			SignRequestTo1Output: &pb.SignRequestTo1Output{
-				Payload: encodedReq,
-			},
+				Address:   req.Address,
+				SecretKey: secretKeyBytes,
+				TxOrigin:  txOriginBytes},
 		},
 	}); err != nil {
-		http.Error(w, "Failed to send initial request to Alice", http.StatusInternalServerError)
+		response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send initial request to Alice"))
 		fmt.Printf("Failed to send initial request to Alice: %v\n", err)
 		return
 	}
@@ -62,56 +80,52 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		select {
 		case bobResp := <-bobChan:
 			if signResp, ok := bobResp.Msg.(*pb.SignMessage_SignRound4ToResponseOutput); ok {
-				// SignResponse 메시지 생성
-				response := &pb.SignResponse{
-					Success: true,
-					V:       signResp.SignRound4ToResponseOutput.V,
-					R:       signResp.SignRound4ToResponseOutput.R,
-					S:       signResp.SignRound4ToResponseOutput.S,
+				endTime := time.Now()
+				duration := endTime.Sub(startTime)
+
+				signResponse := &pb.SignResponse{
+					V:        signResp.SignRound4ToResponseOutput.V,
+					R:        base64.StdEncoding.EncodeToString(signResp.SignRound4ToResponseOutput.R),
+					S:        base64.StdEncoding.EncodeToString(signResp.SignRound4ToResponseOutput.S),
+					Duration: int32(duration.Milliseconds()),
 				}
 
-				marshaler := protojson.MarshalOptions{
-					EmitUnpopulated: true,
-					UseProtoNames:   true,
-					UseEnumNumbers:  true,
-				}
-
-				// SignResponse를 JSON으로 변환
-				jsonBytes, err := marshaler.Marshal(response)
-				if err != nil {
-					http.Error(w, "Failed to marshal response to JSON", http.StatusInternalServerError)
-					return
-				}
-
-				// Content-Type 설정
-				w.Header().Set("Content-Type", "application/json")
-
-				// JSON 응답 전송
-				w.Write(jsonBytes)
+				response.SendResponse(w, response.NewSuccessResponse(http.StatusOK, signResponse))
 				return
 			}
 			if err := aliceStream.Send(bobResp); err != nil {
-				http.Error(w, "Failed to send Bob's response to Alice", http.StatusInternalServerError)
+				response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send Bob's response to Alice"))
 				fmt.Printf("Failed to send Bob's response to Alice: %v\n", err)
 				return
 			}
 
 		case aliceResp := <-aliceChan:
 			if err := bobStream.Send(aliceResp); err != nil {
-				http.Error(w, "Failed to send Alice's response to Bob", http.StatusInternalServerError)
+				response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send Alice's response to Bob"))
 				fmt.Printf("Failed to send Alice's response to Bob: %v\n", err)
 				return
 			}
 
 		case err := <-errorChan:
-			http.Error(w, "Error during signing protocol", http.StatusInternalServerError)
+			response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Error during signing protocol"))
 			fmt.Printf("Error during signing protocol: %v\n", err)
 			return
 		}
 	}
 }
 
-func setupStreams() (pb.SignService_SignClient, pb.SignService_SignClient, error) {
+func receiveSignMessages(stream pb.SignService_SignClient, msgChan chan<- *pb.SignMessage, errChan chan<- error) {
+	for {
+		resp, err := stream.Recv()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		msgChan <- resp
+	}
+}
+
+func setupSignStreams() (pb.SignService_SignClient, pb.SignService_SignClient, error) {
 	// Bob과 연결
 	bobConn, err := grpc.Dial("bob:50051", grpc.WithInsecure())
 	if err != nil {
@@ -135,15 +149,4 @@ func setupStreams() (pb.SignService_SignClient, pb.SignService_SignClient, error
 	}
 
 	return bobStream, aliceStream, nil
-}
-
-func receiveMessages(stream pb.SignService_SignClient, msgChan chan<- *pb.SignMessage, errChan chan<- error) {
-	for {
-		resp, err := stream.Recv()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		msgChan <- resp
-	}
 }
