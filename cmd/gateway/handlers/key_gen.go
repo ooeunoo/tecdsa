@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"tecdsa/pkg/network"
 	"tecdsa/pkg/response"
 	pb "tecdsa/proto/keygen"
 	"time"
@@ -19,11 +20,16 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 	var req pb.KeyGenRequestMessage
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		response.SendResponse(w, response.NewErrorResponse(http.StatusBadRequest, "Invalid request body"))
-		fmt.Printf("Failed to parse request body: %v\n", err)
+		response.SendResponse(w, response.NewErrorResponse(response.ErrCodeBadRequest))
 		return
 	}
 
+	// Network 값 검증
+	_, err = network.GetNetworkByID(req.Network)
+	if err != nil {
+		response.SendResponse(w, response.NewErrorResponse(response.ErrCodeBadRequest, "지원하지 않는 네트워크입니다"))
+		return
+	}
 	// 채널 생성
 	bobChan := make(chan *pb.KeygenMessage)
 	aliceChan := make(chan *pb.KeygenMessage)
@@ -45,7 +51,7 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 	if err := bobStream.Send(&pb.KeygenMessage{Msg: &pb.KeygenMessage_KeyGenRequestTo1Output{KeyGenRequestTo1Output: &pb.KeyGenRequestTo1Output{
 		Network: req.Network,
 	}}}); err != nil {
-		response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Error during DKG protocol"))
+		response.SendResponse(w, response.NewErrorResponse(response.ErrCodeKeyGeneration))
 		fmt.Printf("Failed to send initial request to Bob: %v\n", err)
 		return
 	}
@@ -66,20 +72,20 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if err := aliceStream.Send(bobResp); err != nil {
-				response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Error during DKG protocol"))
+				response.SendResponse(w, response.NewErrorResponse(response.ErrCodeKeyGeneration))
 				fmt.Printf("Failed to send Bob's response to Alice: %v\n", err)
 				return
 			}
 
 		case aliceResp := <-aliceChan:
 			if err := bobStream.Send(aliceResp); err != nil {
-				response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Error during DKG protocol"))
+				response.SendResponse(w, response.NewErrorResponse(response.ErrCodeKeyGeneration))
 				fmt.Printf("Failed to send Alice's response to Bob: %v\n", err)
 				return
 			}
 
 		case err := <-errorChan:
-			response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Error during DKG protocol"))
+			response.SendResponse(w, response.NewErrorResponse(response.ErrCodeKeyGeneration))
 			fmt.Printf("Error during DKG protocol: %v\n", err)
 			return
 		}

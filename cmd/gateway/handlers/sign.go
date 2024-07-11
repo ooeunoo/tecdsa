@@ -42,7 +42,7 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 	// Bob과 Alice 연결 및 스트림 설정
 	bobStream, aliceStream, err := setupSignStreams()
 	if err != nil {
-		response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to setup streams"))
+		response.SendResponse(w, response.NewErrorResponse(response.ErrCodeSigning))
 		return
 	}
 
@@ -60,7 +60,7 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}); err != nil {
-		response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send initial request to Alice"))
+		response.SendResponse(w, response.NewErrorResponse(response.ErrCodeSigning))
 		fmt.Printf("Failed to send initial request to Alice: %v\n", err)
 		return
 	}
@@ -83,20 +83,20 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if err := aliceStream.Send(bobResp); err != nil {
-				response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send Bob's response to Alice"))
+				response.SendResponse(w, response.NewErrorResponse(response.ErrCodeSigning))
 				fmt.Printf("Failed to send Bob's response to Alice: %v\n", err)
 				return
 			}
 
 		case aliceResp := <-aliceChan:
 			if err := bobStream.Send(aliceResp); err != nil {
-				response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send Alice's response to Bob"))
+				response.SendResponse(w, response.NewErrorResponse(response.ErrCodeSigning))
 				fmt.Printf("Failed to send Alice's response to Bob: %v\n", err)
 				return
 			}
 
 		case err := <-errorChan:
-			response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Error during signing protocol"))
+			response.SendResponse(w, response.NewErrorResponse(response.ErrCodeSigning))
 			fmt.Printf("Error during signing protocol: %v\n", err)
 			return
 		}

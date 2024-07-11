@@ -41,7 +41,7 @@ func InjectTestEther(client *ethclient.Client, privateKey string, toAddress stri
 }
 
 // 로우 트랜잭션 생성
-func GenerateTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *types.Transaction {
+func CreateUnsignedTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *types.Transaction {
 	tx := types.NewTx(&types.LegacyTx{
 		Nonce:    nonce,
 		To:       &to,
@@ -76,7 +76,7 @@ func SignTransactionWithPrivateKey(client *ethclient.Client, privateKey *ecdsa.P
 	gasPrice = new(big.Int).Mul(gasPrice, big.NewInt(15))
 	gasPrice = new(big.Int).Div(gasPrice, big.NewInt(10))
 
-	tx := GenerateTransaction(nonce, toAddress, amount, gasLimit, gasPrice, nil)
+	tx := CreateUnsignedTransaction(nonce, toAddress, amount, gasLimit, gasPrice, nil)
 
 	chainID, err := client.NetworkID(context.Background())
 	if err != nil {
@@ -147,7 +147,7 @@ func GenerateRlpEncodedTx(client ethclient.Client, signer types.Signer, fromAddr
 	gasPrice = new(big.Int).Div(gasPrice, big.NewInt(10))
 
 	gasLimit := uint64(21000)
-	tx := GenerateTransaction(nonce, toAddress, amount, gasLimit, gasPrice, nil)
+	tx := CreateUnsignedTransaction(nonce, toAddress, amount, gasLimit, gasPrice, nil)
 	rlpEncodedTx, _ := rlp.EncodeToBytes([]interface{}{
 		tx.Nonce(),
 		tx.GasPrice(),

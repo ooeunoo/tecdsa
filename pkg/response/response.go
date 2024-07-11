@@ -12,6 +12,7 @@ type SuccessResponse struct {
 
 type ErrorResponse struct {
 	StatusCode int    `json:"status_code"`
+	ErrorCode  string `json:"error_code"`
 	Message    string `json:"message"`
 }
 
@@ -26,9 +27,20 @@ func NewSuccessResponse(statusCode int, data interface{}) *SuccessResponse {
 	}
 }
 
-func NewErrorResponse(statusCode int, message string) *ErrorResponse {
+func NewErrorResponse(errorCode string, customMessage ...string) *ErrorResponse {
+	statusCode, ok := ErrorCodeToStatusCode[errorCode]
+	if !ok {
+		statusCode = http.StatusInternalServerError
+	}
+
+	message := ErrorCodeToMessage[errorCode]
+	if len(customMessage) > 0 {
+		message = customMessage[0]
+	}
+
 	return &ErrorResponse{
 		StatusCode: statusCode,
+		ErrorCode:  errorCode,
 		Message:    message,
 	}
 }
