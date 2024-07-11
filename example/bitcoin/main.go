@@ -56,7 +56,7 @@ func main() {
 	// KeyGen 응답 출력 및 저장
 	saveKeyGenResponse(keyGenResp)
 
-	// 테스트 비트코인 주입 (privateKey를 사용하여 keyGenResp.Address에게 0.00001 BTC 주입)
+	// // 테스트 비트코인 주입 (privateKey를 사용하여 keyGenResp.Address에게 0.00001 BTC 주입)
 	toAddress := keyGenResp.Address
 	amount := big.NewInt(1000) // 0.00001 BTC in satoshis
 	txHash, err := lib.InjectTestBTC(PRIVATE_KEY, toAddress, amount)
