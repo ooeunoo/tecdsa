@@ -48,6 +48,7 @@ func GetPayToAddrScript(address string, network *chaincfg.Params) ([]byte, error
 	}
 	return txscript.PayToAddrScript(addr)
 }
+
 func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string, error) {
 	wif, err := btcutil.DecodeWIF(privateKey)
 	if err != nil {
@@ -61,58 +62,21 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 	}
 
 	fmt.Println("From Address: ", fromAddress.EncodeAddress())
-
 	tx, unspentTxs, fee, err := CreateUnsignedTransaction(fromAddress.EncodeAddress(), toAddress, amount)
 	if err != nil {
 		return "", err
 	}
 
 	// 서명 과정
-	for i, txIn := range tx.TxIn {
-		utxo := unspentTxs[i]
-		witnessProgram, err := txscript.PayToAddrScript(fromAddress)
-		if err != nil {
-			return "", fmt.Errorf("failed to create witness program: %v", err)
-		}
-
-		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(witnessProgram, utxo.Value)
-		sigHashes := txscript.NewTxSigHashes(tx, prevOutputFetcher)
-
-		witness, err := txscript.WitnessSignature(tx, sigHashes, i, utxo.Value, witnessProgram, txscript.SigHashAll, wif.PrivKey, true)
-		if err != nil {
-			return "", fmt.Errorf("failed to create witness signature: %v", err)
-		}
-		txIn.Witness = witness
+	err = SignTransaction(tx, unspentTxs, wif, fromAddress)
+	if err != nil {
+		return "", err
 	}
 
 	// 트랜잭션 유효성 검사
-	for i, _ := range tx.TxIn {
-		utxo := unspentTxs[i]
-		witnessProgram, err := txscript.PayToAddrScript(fromAddress)
-		if err != nil {
-			return "", fmt.Errorf("failed to create witness program for validation: %v", err)
-		}
-
-		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(witnessProgram, utxo.Value)
-		sigHashes := txscript.NewTxSigHashes(tx, prevOutputFetcher)
-
-		vm, err := txscript.NewEngine(
-			witnessProgram,
-			tx,
-			i,
-			txscript.StandardVerifyFlags,
-			nil,
-			sigHashes,
-			utxo.Value,
-			prevOutputFetcher,
-		)
-		if err != nil {
-			return "", fmt.Errorf("failed to create script engine for input %d: %v", i, err)
-		}
-
-		if err := vm.Execute(); err != nil {
-			return "", fmt.Errorf("failed to validate transaction for input %d: %v", i, err)
-		}
+	err = ValidateTransaction(tx, unspentTxs, fromAddress)
+	if err != nil {
+		return "", err
 	}
 
 	// 트랜잭션 정보 출력
@@ -149,6 +113,7 @@ func getTotalInput(utxos []UTXO) int64 {
 	}
 	return total
 }
+
 func SendSignedTransaction(signedTxHex string) error {
 	url := "https://mempool.space/testnet/api/tx"
 	payload := []byte(signedTxHex)
@@ -177,6 +142,7 @@ func SendSignedTransaction(signedTxHex string) error {
 	fmt.Printf("Transaction broadcast successful. Transaction ID: %s\n", body)
 	return nil
 }
+
 func GetBalance(address string) (int64, error) {
 	utxos, err := GetUnspentTxs(address)
 	if err != nil {
@@ -190,6 +156,7 @@ func GetBalance(address string) (int64, error) {
 
 	return balance, nil
 }
+
 func PrintTransactionInfo(rawTxHex string) error {
 	rawTxBytes, err := hex.DecodeString(rawTxHex)
 	if err != nil {
@@ -294,4 +261,56 @@ func CreateUnsignedTransaction(fromAddress string, toAddress string, amount *big
 	}
 
 	return tx, unspentTxs, fee, nil
+}
+
+func SignTransaction(tx *wire.MsgTx, unspentTxs []UTXO, wif *btcutil.WIF, fromAddress btcutil.Address) error {
+	for i, txIn := range tx.TxIn {
+		utxo := unspentTxs[i]
+		witnessProgram, err := txscript.PayToAddrScript(fromAddress)
+		if err != nil {
+			return fmt.Errorf("failed to create witness program: %v", err)
+		}
+
+		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(witnessProgram, utxo.Value)
+		sigHashes := txscript.NewTxSigHashes(tx, prevOutputFetcher)
+
+		witness, err := txscript.WitnessSignature(tx, sigHashes, i, utxo.Value, witnessProgram, txscript.SigHashAll, wif.PrivKey, true)
+		if err != nil {
+			return fmt.Errorf("failed to create witness signature: %v", err)
+		}
+		txIn.Witness = witness
+	}
+	return nil
+}
+
+func ValidateTransaction(tx *wire.MsgTx, unspentTxs []UTXO, fromAddress btcutil.Address) error {
+	for i, _ := range tx.TxIn {
+		utxo := unspentTxs[i]
+		witnessProgram, err := txscript.PayToAddrScript(fromAddress)
+		if err != nil {
+			return fmt.Errorf("failed to create witness program for validation: %v", err)
+		}
+
+		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(witnessProgram, utxo.Value)
+		sigHashes := txscript.NewTxSigHashes(tx, prevOutputFetcher)
+
+		vm, err := txscript.NewEngine(
+			witnessProgram,
+			tx,
+			i,
+			txscript.StandardVerifyFlags,
+			nil,
+			sigHashes,
+			utxo.Value,
+			prevOutputFetcher,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create script engine for input %d: %v", i, err)
+		}
+
+		if err := vm.Execute(); err != nil {
+			return fmt.Errorf("failed to validate transaction for input %d: %v", i, err)
+		}
+	}
+	return nil
 }

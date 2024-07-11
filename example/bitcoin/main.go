@@ -47,23 +47,36 @@ func main() {
 
 	fmt.Printf("Current balance: %d satoshis (%.8f BTC)\n", balance, float64(balance)/100000000)
 
-	// KeyGen 요청
+	// ********************************
+	// 키생성 요청
+	fmt.Printf("\n############################\n")
+	fmt.Printf("\n 1. Key Generation: DKG를 사용한 키 생성 단계 \n\n")
 	keyGenResp, err := performKeyGen()
 	if err != nil {
 		log.Fatalf("Key generation failed: %v", err)
 	}
-
-	// KeyGen 응답 출력 및 저장
 	saveKeyGenResponse(keyGenResp)
+	fmt.Printf("Address: %s\n", keyGenResp.Address)
+	fmt.Printf("Secret Key: %s\n", keyGenResp.SecretKey)
+	fmt.Printf("\n############################\n")
 
-	// // 테스트 비트코인 주입 (privateKey를 사용하여 keyGenResp.Address에게 0.00001 BTC 주입)
+	// ********************************
+	// 테스트 BTC 주입
+	fmt.Printf("\n 2. Inject Test BTC: 이후 코인 전송 테스트를 위한 테스트 비트 주입 단계  \n\n")
 	toAddress := keyGenResp.Address
 	amount := big.NewInt(1000) // 0.00001 BTC in satoshis
 	txHash, err := lib.InjectTestBTC(PRIVATE_KEY, toAddress, amount)
 	if err != nil {
 		log.Fatalf("Failed to inject test BTC: %v", err)
 	}
-	fmt.Printf("Transaction successfully sent. Transaction hash: %s\n", txHash)
+	fmt.Printf("TxHash: %s \n", txHash)
+	fmt.Printf("\n############################\n")
+
+	// ********************************
+	// 서명 데이터 생성
+	fmt.Printf("\n 3. Create Encoded Unsigned Transaction: 서명되지않은 트랜잭션 데이터 생성 단계 \n\n")
+	// amount2 := big.NewInt(1000) // 0.00001 BTC in satoshis
+	// tx, unspentTxs, fee, err := lib.CreateUnsignedTransaction(keyGenResp.Address, "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5", amount2)
 
 	// fromAddress := keyGenResp.Address
 	// toAddress = "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5"
