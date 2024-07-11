@@ -73,8 +73,6 @@ func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, ctx *signCo
 	if err != nil {
 		return errors.Wrap(err, "failed to decode round 1 payload")
 	}
-	fmt.Println("address:", address)
-	fmt.Println("secretKey:", secretKey)
 
 	output, err := h.repo.GetSecretShare(address, secretKey)
 	if err != nil {

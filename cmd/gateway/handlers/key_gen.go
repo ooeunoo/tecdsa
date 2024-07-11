@@ -62,7 +62,6 @@ func KeyGenHandler(w http.ResponseWriter, r *http.Request) {
 					SecretKey: base64.StdEncoding.EncodeToString(res.KeyGenRound11ToResponseOutput.SecretKey),
 					Duration:  int32(duration.Milliseconds()),
 				}
-				fmt.Println("keyGenResponse:", keyGenResponse)
 				response.SendResponse(w, response.NewSuccessResponse(http.StatusOK, keyGenResponse))
 				return
 			}

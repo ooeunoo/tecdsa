@@ -31,20 +31,8 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("req:", req)
-
 	secretKeyBytes, _ := base64.StdEncoding.DecodeString(req.SecretKey)
 	txOriginBytes, _ := base64.StdEncoding.DecodeString(req.TxOrigin)
-
-	signRequestOutput := pb.SignRequestTo1Output{
-		Address:   req.Address,
-		SecretKey: secretKeyBytes,
-		TxOrigin:  txOriginBytes,
-	}
-
-	fmt.Println("req secretkey:", req.SecretKey)
-	fmt.Println("req tx origin:", req.TxOrigin)
-	fmt.Println("signRequestOutput:", signRequestOutput)
 
 	// 채널 생성
 	bobChan := make(chan *pb.SignMessage)
@@ -68,7 +56,8 @@ func SignHandler(w http.ResponseWriter, r *http.Request) {
 			SignRequestTo1Output: &pb.SignRequestTo1Output{
 				Address:   req.Address,
 				SecretKey: secretKeyBytes,
-				TxOrigin:  txOriginBytes},
+				TxOrigin:  txOriginBytes,
+			},
 		},
 	}); err != nil {
 		response.SendResponse(w, response.NewErrorResponse(http.StatusInternalServerError, "Failed to send initial request to Alice"))
