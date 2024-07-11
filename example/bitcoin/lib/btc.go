@@ -81,13 +81,10 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 		txIn := wire.NewTxIn(outPoint, nil, nil)
 		tx.AddTxIn(txIn)
 		totalInput += utxo.Value
-		if totalInput >= amount.Int64()+5000 { // 예상 수수료를 고려하여 충분한 입력을 추가
-			break
-		}
 	}
 
 	if totalInput < amount.Int64() {
-		return "", fmt.Errorf("insufficient funds")
+		return "", fmt.Errorf("insufficient funds: have %d satoshis, need %d satoshis", totalInput, amount.Int64())
 	}
 
 	toAddr, err := btcutil.DecodeAddress(toAddress, &chaincfg.TestNet3Params)
