@@ -61,7 +61,6 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 		return "", fmt.Errorf("failed to get from address: %v", err)
 	}
 
-	fmt.Println("From Address: ", fromAddress.EncodeAddress())
 	tx, unspentTxs, fee, err := CreateUnsignedTransaction(fromAddress.EncodeAddress(), toAddress, amount)
 	if err != nil {
 		return "", err

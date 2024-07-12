@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/base64"
-	"fmt"
 	"hash"
 	"io"
 	"log"
@@ -64,7 +63,6 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to decode tx_origin")
 	}
-	fmt.Println("alice txOrigin:", txOrigin)
 
 	ctx := &signContext{
 		requestID: requestID,

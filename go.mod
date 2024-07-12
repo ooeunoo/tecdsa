@@ -25,6 +25,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
+	golang.org/x/term v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
