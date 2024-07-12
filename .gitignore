@@ -4,7 +4,8 @@
 
 .DS_Store
 
-alice
-bob
-gat4eway
-main
+
+/alice
+/bob
+/gateway
+/main
