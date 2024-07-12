@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 ############################### REMOVE: production #######################################
-CMD CompileDaemon --build="go build -o main ./cmd/bob" --command="./main"
+CMD CompileDaemon --build="go build -o bob ./cmd/bob" --command="./bob"
 ############################### REMOVE: production #######################################
 
 

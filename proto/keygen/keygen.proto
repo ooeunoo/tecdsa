@@ -10,7 +10,7 @@ service KeygenService {
 
 message KeygenMessage {
   oneof msg {
-    KeyGenRequestTo1Output keyGenRequestTo1Output = 1;
+    KeyGenGatewayTo1Output keyGenGatewayTo1Output = 1;
     KeyGenRound1To2Output  keyGenRound1To2Output = 2;
     KeyGenRound2To3Output  keyGenRound2To3Output = 3;
     KeyGenRound3To4Output  keyGenRound3To4Output = 4;
@@ -21,23 +21,17 @@ message KeygenMessage {
     KeyGenRound8To9Output  keyGenRound8To9Output = 9;
     KeyGenRound9To10Output keyGenRound9To10Output = 10;
     KeyGenRound10To11Output keyGenRound10To11Output = 11;
-    KeyGenRound11ToResponseOutput keyGenRound11ToResponseOutput = 12;
+    KeyGenRound11ToGatewayOutput keyGenRound11ToGatewayOutput = 12;
   }
-}
-// 요청 메시지 DTO
-message KeyGenRequestMessage{
-  int32 network = 1;
 }
 
 // 요청 -> 라운드 1 
-message KeyGenRequestTo1Output {
-  int32 network = 1;
+message KeyGenGatewayTo1Output {
 }
 
 // 라운드 1 -> 라운드 2
 message KeyGenRound1To2Output {
-  int32 network = 1;
-  bytes payload = 2;
+  bytes payload = 3;
 }
 
 // 라운드 2 -> 라운드 3
@@ -82,22 +76,13 @@ message KeyGenRound9To10Output {
 
 // 라운드 10 -> 라운드 11(시크릿키 공유를 위함)
 message KeyGenRound10To11Output {
-  bytes secret_key =1;
 }
 
 // 라운드 11 -> 게이트 웨이
-message KeyGenRound11ToResponseOutput {
-  string address = 1;
-  bytes secret_key =2;
+message KeyGenRound11ToGatewayOutput {
+string request_id = 1;
+  string address = 2;
 }
-
-// 게이트 웨이 -> 응답
-message KeyGenResponse { 
-  string address=1;  
-  string secret_key = 2;  // encoded base64
-  int32 duration=3; 
-}
-
 
 
 

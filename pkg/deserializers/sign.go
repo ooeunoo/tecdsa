@@ -6,23 +6,7 @@ import (
 
 	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/sign"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/proto"
-
-	pb "tecdsa/proto/sign"
 )
-
-func EncodeSignRequestToRound1(req *pb.SignRequestMessage) ([]byte, error) {
-	return proto.Marshal(req)
-}
-
-func DecodeSignRequestToRound1(payload []byte) (*pb.SignRequestMessage, error) {
-	req := &pb.SignRequestMessage{}
-	err := proto.Unmarshal(payload, req)
-	if err != nil {
-		return nil, errors.Wrap(err, "unmarshaling SignRequest")
-	}
-	return req, nil
-}
 
 func EncodeSignRound1Payload(commitment [32]byte) ([]byte, error) {
 	registerTypes()

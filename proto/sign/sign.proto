@@ -10,34 +10,22 @@ service SignService {
 
 message SignMessage {
   oneof msg {
-    SignRequestTo1Output signRequestTo1Output = 1;
+    SignGatewayTo1Output signGatewayTo1Output = 1;
     SignRound1To2Output signRound1To2Output = 2;
     SignRound2To3Output signRound2To3Output = 3;
     SignRound3To4Output signRound3To4Output = 4;
-    SignRound4ToResponseOutput signRound4ToResponseOutput = 5;
+    SignRound4ToGatewayOutput signRound4ToGatewayOutput = 5;
   }
 }
 
-// 요청 메시지 DTO
-message SignRequestMessage {
-  string address = 1;
-  string secret_key = 2; // encoded base64
-  string tx_origin = 3; // encoded base64
-}
 
 
 // 요청 -> 라운드 1 
-message SignRequestTo1Output {
-  string address = 1;
-  bytes secret_key = 2; // decode base64
-  bytes tx_origin = 3; //  decode base64
+message SignGatewayTo1Output {
 }
 
 // 라운드 1 -> 라운드 2
 message SignRound1To2Output {
-  string address = 1;
-  bytes secret_key = 2;
-  bytes tx_origin = 3;
   bytes payload = 4; 
 }
 
@@ -52,18 +40,9 @@ message SignRound3To4Output {
 }
 
 // 라운드 4 -> 게이트웨이
-message SignRound4ToResponseOutput {
-  uint64 v = 1;
-  bytes r = 2;
-  bytes s = 3;
+message SignRound4ToGatewayOutput {
+  string request_id = 1;
+  uint64 v = 2;
+  bytes r = 3;
+  bytes s = 4;
 }
-
-// 게이트웨이 -> 응답
-message SignResponse {
-  uint64 v = 1;
-  string r = 2; // encoded base64
-  string s = 3; // encoded base64
-  int32 duration=4; 
-}
-
-

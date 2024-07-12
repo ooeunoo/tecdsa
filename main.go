@@ -1,87 +1,99 @@
 package main
 
 import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
-	"os"
+	"log"
+	"os/user"
 	"path/filepath"
-	"strings"
 )
 
 func main() {
-	rootDir := "." // 현재 디렉토리를 루트로 설정
-	outputFile := "one.txt"
-
-	file, err := os.Create(outputFile)
+	usr, err := user.Current()
 	if err != nil {
-		fmt.Printf("파일 생성 오류: %v\n", err)
-		return
+		log.Fatalf("Failed to get current user: %v", err)
 	}
-	defer file.Close()
 
-	err = filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+	// 개인키 파일의 전체 경로 생성
+	privateKeyPath := filepath.Join(usr.HomeDir, ".ssh", "private_key.pem")
+
+	// 개인키 로드
+	privateKey, err := loadPrivateKey(privateKeyPath)
+	if err != nil {
+		log.Fatalf("Failed to load private key: %v", err)
+	}
+
+	// 공개키 추출
+	publicKey := &privateKey.PublicKey
+
+	// 서명할 메시지
+	message := []byte("Hello, World!")
+
+	// 메시지 서명
+	signature, err := signMessage(privateKey, message)
+	if err != nil {
+		log.Fatalf("Failed to sign message: %v", err)
+	}
+
+	fmt.Printf("Signature: %x\n", signature)
+
+	// 서명 검증
+	err = verifySignature(publicKey, message, signature)
+	if err != nil {
+		log.Fatalf("Signature verification failed: %v", err)
+	}
+
+	fmt.Println("Signature verified successfully!")
+}
+func loadPrivateKey(filename string) (*rsa.PrivateKey, error) {
+	keyData, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	block, _ := pem.Decode(keyData)
+	if block == nil {
+		return nil, fmt.Errorf("failed to parse PEM block containing the private key")
+	}
+
+	var privateKey *rsa.PrivateKey
+
+	switch block.Type {
+	case "RSA PRIVATE KEY":
+		privateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	case "PRIVATE KEY":
+		key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			relPath, _ := filepath.Rel(rootDir, path)
-			content, err := ioutil.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			_, err = fmt.Fprintf(file, "// %s\n%s\n\n", relPath, string(content))
-			if err != nil {
-				return err
-			}
+		var ok bool
+		privateKey, ok = key.(*rsa.PrivateKey)
+		if !ok {
+			return nil, fmt.Errorf("not an RSA private key")
 		}
-
-		return nil
-	})
+	default:
+		return nil, fmt.Errorf("unsupported key type %q", block.Type)
+	}
 
 	if err != nil {
-		fmt.Printf("오류 발생: %v\n", err)
-	} else {
-		fmt.Printf("%s 파일이 생성되었습니다.\n", outputFile)
+		return nil, err
 	}
+
+	return privateKey, nil
 }
 
-// package main
+func signMessage(privateKey *rsa.PrivateKey, message []byte) ([]byte, error) {
+	hashed := sha256.Sum256(message)
+	return rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hashed[:])
+}
 
-// import (
-// 	"fmt"
-// 	"net/http"
-// 	"sync"
-// )
-
-// func main() {
-// 	var wg sync.WaitGroup
-// 	url := "http://localhost:8080/key_gen"
-
-// 	for i := 0; i < 10; i++ {
-// 		wg.Add(1)
-// 		go func() {
-// 			defer wg.Done()
-
-// 			req, err := http.NewRequest("POST", url, nil)
-// 			if err != nil {
-// 				fmt.Println("Failed to create request:", err)
-// 				return
-// 			}
-
-// 			client := &http.Client{}
-// 			resp, err := client.Do(req)
-// 			if err != nil {
-// 				fmt.Println("Failed to send request:", err)
-// 				return
-// 			}
-// 			defer resp.Body.Close()
-
-// 			fmt.Printf("Response status for request %d: %s\n", i+1, resp.Status)
-// 		}()
-// 	}
-
-// 	wg.Wait()
-// 	fmt.Println("All requests completed.")
-// }
+func verifySignature(publicKey *rsa.PublicKey, message, signature []byte) error {
+	hashed := sha256.Sum256(message)
+	return rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, hashed[:], signature)
+}

@@ -18,10 +18,13 @@ services:
         condition: service_started
     ############### CHANGE: production ######################### 
     environment:
-      - DB_HOST=mysql
+      - DB_HOST=gateway_db
       - DB_USER=root
       - DB_PASSWORD=password
-      - DB_NAME=requestlog
+      - DB_NAME=gateway
+      - SERVER_PORT=8080
+      - BOB_GRPC_ADDRESS=bob:50051
+      - ALICE_GRPC_ADDRESS=alice:50052
     ############### CHANGE: production ######################### 
   
   alice:
@@ -64,7 +67,6 @@ services:
       - DB_NAME=bob
       - SERVER_PORT=50051
 
-
   ############### REMOVE: production ######################### 
   gateway_db:
     image: mysql:latest
@@ -79,7 +81,6 @@ services:
       retries: 10
     ports:
       - "3306:3306"
-
 
   alice_db:
     image: mysql:latest
@@ -108,4 +109,4 @@ services:
       retries: 10
     ports:
       - "3308:3306"
-    ############### REMOVE: production ######################### 
+  ############### REMOVE: production ######################### 

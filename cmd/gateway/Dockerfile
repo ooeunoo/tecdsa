@@ -13,7 +13,7 @@ RUN go mod download
 COPY . .
 
 ############################### REMOVE: production #######################################
-CMD CompileDaemon --build="go build -o main ./cmd/gateway" --command="./main"
+CMD CompileDaemon --build="go build -o gateway ./cmd/gateway" --command="./gateway"
 ############################### REMOVE: production #######################################
 
 

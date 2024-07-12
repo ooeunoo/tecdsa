@@ -4,37 +4,74 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 	"tecdsa/pkg/database/repository"
 	deserializer "tecdsa/pkg/deserializers"
-	"tecdsa/pkg/network"
-	"tecdsa/pkg/utils"
+	"tecdsa/pkg/service"
 	pb "tecdsa/proto/keygen"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/metadata"
 )
 
 type keygenContext struct {
-	network int32
-	alice   *dkg.Alice
+	network          int32
+	alice            *dkg.Alice
+	clientSecurityID uint32
+	requestID        string
 }
 
 type KeygenHandler struct {
-	curve *curves.Curve
-	repo  repository.SecretRepository
+	curve          *curves.Curve
+	repo           repository.ParitalSecretShareRepository
+	networkService *service.NetworkService
 }
 
-func NewKeygenHandler(repo repository.SecretRepository) *KeygenHandler {
+func NewKeygenHandler(repo repository.ParitalSecretShareRepository, networkService *service.NetworkService) *KeygenHandler {
 	return &KeygenHandler{
-		curve: curves.K256(),
-		repo:  repo,
+		curve:          curves.K256(),
+		repo:           repo,
+		networkService: networkService,
 	}
 }
 
 func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error {
+	md, ok := metadata.FromIncomingContext(stream.Context())
+	if !ok {
+		return errors.New("no metadata received")
+	}
+
+	requestIDs := md.Get("request_id")
+	if len(requestIDs) == 0 {
+		return errors.New("request_id not found in metadata")
+	}
+	requestID := requestIDs[0]
+
+	networkStr := md.Get("network")
+	if len(networkStr) == 0 {
+		return errors.New("network not found in metadata")
+	}
+	network, err := strconv.Atoi(networkStr[0])
+	if err != nil {
+		return errors.Wrap(err, "invalid network value in metadata")
+	}
+
+	clientSecurityIDStr := md.Get("client_security_id")
+	if len(clientSecurityIDStr) == 0 {
+		return errors.New("client_security_id not found in metadata")
+	}
+	clientSecurityID, err := strconv.ParseUint(clientSecurityIDStr[0], 10, 32)
+	if err != nil {
+		return errors.Wrap(err, "invalid client_security_id value in metadata")
+	}
+
 	ctx := &keygenContext{
-		alice: dkg.NewAlice(h.curve),
+		alice:            dkg.NewAlice(h.curve),
+		requestID:        requestID,
+		network:          int32(network),
+		clientSecurityID: uint32(clientSecurityID),
 	}
 
 	for {
@@ -66,16 +103,10 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 		}
 	}
 }
-
 func (h *KeygenHandler) handleRound2(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound1To2Output) error {
 	fmt.Println("라운드2")
 
-	// msg
-	payload := msg.Payload
-	ctx.network = msg.Network
-
-	//
-	round2Input, err := deserializer.DecodeDkgRound2Input(payload)
+	round2Input, err := deserializer.DecodeDkgRound2Input(msg.Payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 2")
 	}
@@ -197,11 +228,7 @@ func (h *KeygenHandler) handleRound8(stream pb.KeygenService_KeyGenServer, ctx *
 func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRound9To10Output) error {
 	fmt.Println("라운드10")
 
-	// msg
-	payload := msg.Payload
-
-	//
-	round10Input, err := deserializer.DecodeDkgRound10Input(payload)
+	round10Input, err := deserializer.DecodeDkgRound10Input(msg.Payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode in Round 10")
 	}
@@ -211,36 +238,29 @@ func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, ctx 
 		return roundErr
 	}
 
-	// ###################################
-	// TODO: 보안적으로 안전한 데이터 저장 플로우 필요
 	aliceOutput := ctx.alice.Output()
-	networkObj, err := network.GetNetworkByID(ctx.network)
+	networkObj, err := h.networkService.GetNetworkByID(ctx.network)
 	if err != nil {
 		return errors.Wrap(err, "failed to get network by ID")
 	}
 
-	address, err := network.DeriveAddress(aliceOutput.PublicKey, networkObj)
+	address, err := h.networkService.DeriveAddress(aliceOutput.PublicKey, networkObj)
 	if err != nil {
 		return err
 	}
 
-	secretKey, _ := utils.GenerateSecretKey()
 	share, err := deserializer.EncodeAliceDkgOutput(aliceOutput)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode alice output")
 	}
 
-	if err := h.repo.StoreSecretShare(address, share, secretKey); err != nil {
+	if err := h.repo.Create(address, share, uint(ctx.clientSecurityID)); err != nil {
 		return errors.Wrap(err, "failed to store secret alice share")
 	}
 
-	// ###################################
-
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_KeyGenRound10To11Output{
-			KeyGenRound10To11Output: &pb.KeyGenRound10To11Output{
-				SecretKey: secretKey,
-			},
+			KeyGenRound10To11Output: &pb.KeyGenRound10To11Output{},
 		},
 	})
 }

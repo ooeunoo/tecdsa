@@ -28,6 +28,16 @@ func EncodeAliceDkgOutput(result *dkg.AliceOutput) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func EncodeBobDkgOutput(result *dkg.BobOutput) ([]byte, error) {
+	registerTypes()
+	buf := bytes.NewBuffer([]byte{})
+	enc := gob.NewEncoder(buf)
+	if err := enc.Encode(result); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return buf.Bytes(), nil
+}
+
 func DecodeAliceDkgResult(m []byte) (*dkg.AliceOutput, error) {
 	registerTypes()
 	buf := bytes.NewBuffer(m)
@@ -39,17 +49,9 @@ func DecodeAliceDkgResult(m []byte) (*dkg.AliceOutput, error) {
 	return decoded, nil
 }
 
-func EncodeBobDkgOutput(result *dkg.BobOutput) ([]byte, error) {
-	registerTypes()
-	buf := bytes.NewBuffer([]byte{})
-	enc := gob.NewEncoder(buf)
-	if err := enc.Encode(result); err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return buf.Bytes(), nil
-}
-
 func DecodeBobDkgResult(m []byte) (*dkg.BobOutput, error) {
+	registerTypes()
+
 	buf := bytes.NewBuffer(m)
 	dec := gob.NewDecoder(buf)
 	decoded := new(dkg.BobOutput)

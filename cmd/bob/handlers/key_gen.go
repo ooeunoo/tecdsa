@@ -3,36 +3,74 @@ package handlers
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"tecdsa/pkg/database/repository"
 	deserializer "tecdsa/pkg/deserializers"
-	"tecdsa/pkg/network"
+	"tecdsa/pkg/service"
 	pb "tecdsa/proto/keygen"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/tecdsa/dkls/v1/dkg"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/metadata"
 )
 
 type keygenContext struct {
-	network int32
-	bob     *dkg.Bob
+	network          int32
+	bob              *dkg.Bob
+	clientSecurityID uint32
+	requestID        string
 }
 
 type KeygenHandler struct {
-	curve *curves.Curve
-	repo  repository.SecretRepository
+	curve          *curves.Curve
+	repo           repository.ParitalSecretShareRepository
+	networkService *service.NetworkService
 }
 
-func NewKeygenHandler(repo repository.SecretRepository) *KeygenHandler {
+func NewKeygenHandler(repo repository.ParitalSecretShareRepository, networkService *service.NetworkService) *KeygenHandler {
 	return &KeygenHandler{
-		curve: curves.K256(),
-		repo:  repo,
+		curve:          curves.K256(),
+		repo:           repo,
+		networkService: networkService,
 	}
 }
 
 func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error {
+	md, ok := metadata.FromIncomingContext(stream.Context())
+	if !ok {
+		return errors.New("no metadata received")
+	}
+
+	requestIDs := md.Get("request_id")
+	if len(requestIDs) == 0 {
+		return errors.New("request_id not found in metadata")
+	}
+	requestID := requestIDs[0]
+
+	networkStr := md.Get("network")
+	if len(networkStr) == 0 {
+		return errors.New("network not found in metadata")
+	}
+	network, err := strconv.Atoi(networkStr[0])
+	if err != nil {
+		return errors.Wrap(err, "invalid network value in metadata")
+	}
+
+	clientSecurityIDStr := md.Get("client_security_id")
+	if len(clientSecurityIDStr) == 0 {
+		return errors.New("client_security_id not found in metadata")
+	}
+	clientSecurityID, err := strconv.ParseUint(clientSecurityIDStr[0], 10, 32)
+	if err != nil {
+		return errors.Wrap(err, "invalid client_security_id value in metadata")
+	}
+
 	ctx := &keygenContext{
-		bob: dkg.NewBob(h.curve),
+		bob:              dkg.NewBob(h.curve),
+		requestID:        requestID,
+		network:          int32(network),
+		clientSecurityID: uint32(clientSecurityID),
 	}
 
 	for {
@@ -46,8 +84,8 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 		}
 
 		switch msg := in.Msg.(type) {
-		case *pb.KeygenMessage_KeyGenRequestTo1Output:
-			err = h.handleRound1(stream, ctx, msg.KeyGenRequestTo1Output)
+		case *pb.KeygenMessage_KeyGenGatewayTo1Output:
+			err = h.handleRound1(stream, ctx, msg.KeyGenGatewayTo1Output)
 		case *pb.KeygenMessage_KeyGenRound2To3Output:
 			err = h.handleRound3(stream, ctx, msg.KeyGenRound2To3Output)
 		case *pb.KeygenMessage_KeyGenRound4To5Output:
@@ -68,10 +106,8 @@ func (h *KeygenHandler) HandleKeyGen(stream pb.KeygenService_KeyGenServer) error
 	}
 }
 
-func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenRequestTo1Output) error {
+func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, ctx *keygenContext, msg *pb.KeyGenGatewayTo1Output) error {
 	fmt.Println("라운드1")
-
-	ctx.network = msg.Network
 
 	seed, err := ctx.bob.Round1GenerateRandomSeed()
 	if err != nil {
@@ -86,7 +122,6 @@ func (h *KeygenHandler) handleRound1(stream pb.KeygenService_KeyGenServer, ctx *
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_KeyGenRound1To2Output{
 			KeyGenRound1To2Output: &pb.KeyGenRound1To2Output{
-				Network: msg.Network,
 				Payload: round1Output,
 			},
 		},
@@ -203,31 +238,30 @@ func (h *KeygenHandler) handleRound11(stream pb.KeygenService_KeyGenServer, ctx 
 	fmt.Println("라운드끝")
 
 	bobOutput := ctx.bob.Output()
-	networkObj, err := network.GetNetworkByID(ctx.network)
+	networkObj, err := h.networkService.GetNetworkByID(ctx.network)
 	if err != nil {
 		return errors.Wrap(err, "failed to get network by ID")
 	}
 
-	address, err := network.DeriveAddress(bobOutput.PublicKey, networkObj)
+	address, err := h.networkService.DeriveAddress(bobOutput.PublicKey, networkObj)
 	if err != nil {
 		return err
 	}
 
-	secretKey := msg.SecretKey
 	share, err := deserializer.EncodeBobDkgOutput(bobOutput)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode bob output")
 	}
 
-	if err := h.repo.StoreSecretShare(address, share, secretKey); err != nil {
+	if err := h.repo.Create(address, share, uint(ctx.clientSecurityID)); err != nil {
 		return errors.Wrap(err, "failed to store secret bob share")
 	}
 
 	return stream.Send(&pb.KeygenMessage{
-		Msg: &pb.KeygenMessage_KeyGenRound11ToResponseOutput{
-			KeyGenRound11ToResponseOutput: &pb.KeyGenRound11ToResponseOutput{
+		Msg: &pb.KeygenMessage_KeyGenRound11ToGatewayOutput{
+			KeyGenRound11ToGatewayOutput: &pb.KeyGenRound11ToGatewayOutput{
 				Address:   address,
-				SecretKey: secretKey,
+				RequestId: ctx.requestID,
 			},
 		},
 	})

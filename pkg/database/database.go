@@ -17,7 +17,7 @@ func NewDatabase(dsn string) (*gorm.DB, error) {
 	}
 
 	// Auto Migrate
-	db.AutoMigrate(&models.Secret{})
+	db.AutoMigrate(&models.ParitalSecretShare{}, &models.ClientSecurity{})
 
 	return db, nil
 }

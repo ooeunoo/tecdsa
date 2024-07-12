@@ -27,7 +27,7 @@ type KeygenMessage struct {
 
 	// Types that are assignable to Msg:
 	//
-	//	*KeygenMessage_KeyGenRequestTo1Output
+	//	*KeygenMessage_KeyGenGatewayTo1Output
 	//	*KeygenMessage_KeyGenRound1To2Output
 	//	*KeygenMessage_KeyGenRound2To3Output
 	//	*KeygenMessage_KeyGenRound3To4Output
@@ -38,7 +38,7 @@ type KeygenMessage struct {
 	//	*KeygenMessage_KeyGenRound8To9Output
 	//	*KeygenMessage_KeyGenRound9To10Output
 	//	*KeygenMessage_KeyGenRound10To11Output
-	//	*KeygenMessage_KeyGenRound11ToResponseOutput
+	//	*KeygenMessage_KeyGenRound11ToGatewayOutput
 	Msg isKeygenMessage_Msg `protobuf_oneof:"msg"`
 }
 
@@ -81,9 +81,9 @@ func (m *KeygenMessage) GetMsg() isKeygenMessage_Msg {
 	return nil
 }
 
-func (x *KeygenMessage) GetKeyGenRequestTo1Output() *KeyGenRequestTo1Output {
-	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRequestTo1Output); ok {
-		return x.KeyGenRequestTo1Output
+func (x *KeygenMessage) GetKeyGenGatewayTo1Output() *KeyGenGatewayTo1Output {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenGatewayTo1Output); ok {
+		return x.KeyGenGatewayTo1Output
 	}
 	return nil
 }
@@ -158,9 +158,9 @@ func (x *KeygenMessage) GetKeyGenRound10To11Output() *KeyGenRound10To11Output {
 	return nil
 }
 
-func (x *KeygenMessage) GetKeyGenRound11ToResponseOutput() *KeyGenRound11ToResponseOutput {
-	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound11ToResponseOutput); ok {
-		return x.KeyGenRound11ToResponseOutput
+func (x *KeygenMessage) GetKeyGenRound11ToGatewayOutput() *KeyGenRound11ToGatewayOutput {
+	if x, ok := x.GetMsg().(*KeygenMessage_KeyGenRound11ToGatewayOutput); ok {
+		return x.KeyGenRound11ToGatewayOutput
 	}
 	return nil
 }
@@ -169,8 +169,8 @@ type isKeygenMessage_Msg interface {
 	isKeygenMessage_Msg()
 }
 
-type KeygenMessage_KeyGenRequestTo1Output struct {
-	KeyGenRequestTo1Output *KeyGenRequestTo1Output `protobuf:"bytes,1,opt,name=keyGenRequestTo1Output,proto3,oneof"`
+type KeygenMessage_KeyGenGatewayTo1Output struct {
+	KeyGenGatewayTo1Output *KeyGenGatewayTo1Output `protobuf:"bytes,1,opt,name=keyGenGatewayTo1Output,proto3,oneof"`
 }
 
 type KeygenMessage_KeyGenRound1To2Output struct {
@@ -213,11 +213,11 @@ type KeygenMessage_KeyGenRound10To11Output struct {
 	KeyGenRound10To11Output *KeyGenRound10To11Output `protobuf:"bytes,11,opt,name=keyGenRound10To11Output,proto3,oneof"`
 }
 
-type KeygenMessage_KeyGenRound11ToResponseOutput struct {
-	KeyGenRound11ToResponseOutput *KeyGenRound11ToResponseOutput `protobuf:"bytes,12,opt,name=keyGenRound11ToResponseOutput,proto3,oneof"`
+type KeygenMessage_KeyGenRound11ToGatewayOutput struct {
+	KeyGenRound11ToGatewayOutput *KeyGenRound11ToGatewayOutput `protobuf:"bytes,12,opt,name=keyGenRound11ToGatewayOutput,proto3,oneof"`
 }
 
-func (*KeygenMessage_KeyGenRequestTo1Output) isKeygenMessage_Msg() {}
+func (*KeygenMessage_KeyGenGatewayTo1Output) isKeygenMessage_Msg() {}
 
 func (*KeygenMessage_KeyGenRound1To2Output) isKeygenMessage_Msg() {}
 
@@ -239,19 +239,17 @@ func (*KeygenMessage_KeyGenRound9To10Output) isKeygenMessage_Msg() {}
 
 func (*KeygenMessage_KeyGenRound10To11Output) isKeygenMessage_Msg() {}
 
-func (*KeygenMessage_KeyGenRound11ToResponseOutput) isKeygenMessage_Msg() {}
+func (*KeygenMessage_KeyGenRound11ToGatewayOutput) isKeygenMessage_Msg() {}
 
-// 요청 메시지 DTO
-type KeyGenRequestMessage struct {
+// 요청 -> 라운드 1
+type KeyGenGatewayTo1Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Network int32 `protobuf:"varint,1,opt,name=network,proto3" json:"network,omitempty"`
 }
 
-func (x *KeyGenRequestMessage) Reset() {
-	*x = KeyGenRequestMessage{}
+func (x *KeyGenGatewayTo1Output) Reset() {
+	*x = KeyGenGatewayTo1Output{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_keygen_keygen_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -259,13 +257,13 @@ func (x *KeyGenRequestMessage) Reset() {
 	}
 }
 
-func (x *KeyGenRequestMessage) String() string {
+func (x *KeyGenGatewayTo1Output) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KeyGenRequestMessage) ProtoMessage() {}
+func (*KeyGenGatewayTo1Output) ProtoMessage() {}
 
-func (x *KeyGenRequestMessage) ProtoReflect() protoreflect.Message {
+func (x *KeyGenGatewayTo1Output) ProtoReflect() protoreflect.Message {
 	mi := &file_keygen_keygen_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -277,64 +275,9 @@ func (x *KeyGenRequestMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KeyGenRequestMessage.ProtoReflect.Descriptor instead.
-func (*KeyGenRequestMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use KeyGenGatewayTo1Output.ProtoReflect.Descriptor instead.
+func (*KeyGenGatewayTo1Output) Descriptor() ([]byte, []int) {
 	return file_keygen_keygen_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *KeyGenRequestMessage) GetNetwork() int32 {
-	if x != nil {
-		return x.Network
-	}
-	return 0
-}
-
-// 요청 -> 라운드 1
-type KeyGenRequestTo1Output struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Network int32 `protobuf:"varint,1,opt,name=network,proto3" json:"network,omitempty"`
-}
-
-func (x *KeyGenRequestTo1Output) Reset() {
-	*x = KeyGenRequestTo1Output{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *KeyGenRequestTo1Output) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*KeyGenRequestTo1Output) ProtoMessage() {}
-
-func (x *KeyGenRequestTo1Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use KeyGenRequestTo1Output.ProtoReflect.Descriptor instead.
-func (*KeyGenRequestTo1Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *KeyGenRequestTo1Output) GetNetwork() int32 {
-	if x != nil {
-		return x.Network
-	}
-	return 0
 }
 
 // 라운드 1 -> 라운드 2
@@ -343,14 +286,13 @@ type KeyGenRound1To2Output struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Network int32  `protobuf:"varint,1,opt,name=network,proto3" json:"network,omitempty"`
-	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
+	Payload []byte `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
 }
 
 func (x *KeyGenRound1To2Output) Reset() {
 	*x = KeyGenRound1To2Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[3]
+		mi := &file_keygen_keygen_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -363,7 +305,7 @@ func (x *KeyGenRound1To2Output) String() string {
 func (*KeyGenRound1To2Output) ProtoMessage() {}
 
 func (x *KeyGenRound1To2Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[3]
+	mi := &file_keygen_keygen_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -376,14 +318,7 @@ func (x *KeyGenRound1To2Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound1To2Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound1To2Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *KeyGenRound1To2Output) GetNetwork() int32 {
-	if x != nil {
-		return x.Network
-	}
-	return 0
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *KeyGenRound1To2Output) GetPayload() []byte {
@@ -405,7 +340,7 @@ type KeyGenRound2To3Output struct {
 func (x *KeyGenRound2To3Output) Reset() {
 	*x = KeyGenRound2To3Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[4]
+		mi := &file_keygen_keygen_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -418,7 +353,7 @@ func (x *KeyGenRound2To3Output) String() string {
 func (*KeyGenRound2To3Output) ProtoMessage() {}
 
 func (x *KeyGenRound2To3Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[4]
+	mi := &file_keygen_keygen_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -431,7 +366,7 @@ func (x *KeyGenRound2To3Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound2To3Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound2To3Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{4}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *KeyGenRound2To3Output) GetPayload() []byte {
@@ -453,7 +388,7 @@ type KeyGenRound3To4Output struct {
 func (x *KeyGenRound3To4Output) Reset() {
 	*x = KeyGenRound3To4Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[5]
+		mi := &file_keygen_keygen_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -466,7 +401,7 @@ func (x *KeyGenRound3To4Output) String() string {
 func (*KeyGenRound3To4Output) ProtoMessage() {}
 
 func (x *KeyGenRound3To4Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[5]
+	mi := &file_keygen_keygen_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -479,7 +414,7 @@ func (x *KeyGenRound3To4Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound3To4Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound3To4Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{5}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *KeyGenRound3To4Output) GetPayload() []byte {
@@ -501,7 +436,7 @@ type KeyGenRound4To5Output struct {
 func (x *KeyGenRound4To5Output) Reset() {
 	*x = KeyGenRound4To5Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[6]
+		mi := &file_keygen_keygen_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -514,7 +449,7 @@ func (x *KeyGenRound4To5Output) String() string {
 func (*KeyGenRound4To5Output) ProtoMessage() {}
 
 func (x *KeyGenRound4To5Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[6]
+	mi := &file_keygen_keygen_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -527,7 +462,7 @@ func (x *KeyGenRound4To5Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound4To5Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound4To5Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{6}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *KeyGenRound4To5Output) GetPayload() []byte {
@@ -549,7 +484,7 @@ type KeyGenRound5To6Output struct {
 func (x *KeyGenRound5To6Output) Reset() {
 	*x = KeyGenRound5To6Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[7]
+		mi := &file_keygen_keygen_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -562,7 +497,7 @@ func (x *KeyGenRound5To6Output) String() string {
 func (*KeyGenRound5To6Output) ProtoMessage() {}
 
 func (x *KeyGenRound5To6Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[7]
+	mi := &file_keygen_keygen_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +510,7 @@ func (x *KeyGenRound5To6Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound5To6Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound5To6Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{7}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *KeyGenRound5To6Output) GetPayload() []byte {
@@ -597,7 +532,7 @@ type KeyGenRound6To7Output struct {
 func (x *KeyGenRound6To7Output) Reset() {
 	*x = KeyGenRound6To7Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[8]
+		mi := &file_keygen_keygen_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -610,7 +545,7 @@ func (x *KeyGenRound6To7Output) String() string {
 func (*KeyGenRound6To7Output) ProtoMessage() {}
 
 func (x *KeyGenRound6To7Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[8]
+	mi := &file_keygen_keygen_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -623,7 +558,7 @@ func (x *KeyGenRound6To7Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound6To7Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound6To7Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{8}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *KeyGenRound6To7Output) GetPayload() []byte {
@@ -645,7 +580,7 @@ type KeyGenRound7To8Output struct {
 func (x *KeyGenRound7To8Output) Reset() {
 	*x = KeyGenRound7To8Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[9]
+		mi := &file_keygen_keygen_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -658,7 +593,7 @@ func (x *KeyGenRound7To8Output) String() string {
 func (*KeyGenRound7To8Output) ProtoMessage() {}
 
 func (x *KeyGenRound7To8Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[9]
+	mi := &file_keygen_keygen_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -671,7 +606,7 @@ func (x *KeyGenRound7To8Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound7To8Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound7To8Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{9}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *KeyGenRound7To8Output) GetPayload() []byte {
@@ -693,7 +628,7 @@ type KeyGenRound8To9Output struct {
 func (x *KeyGenRound8To9Output) Reset() {
 	*x = KeyGenRound8To9Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[10]
+		mi := &file_keygen_keygen_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -706,7 +641,7 @@ func (x *KeyGenRound8To9Output) String() string {
 func (*KeyGenRound8To9Output) ProtoMessage() {}
 
 func (x *KeyGenRound8To9Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[10]
+	mi := &file_keygen_keygen_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -719,7 +654,7 @@ func (x *KeyGenRound8To9Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound8To9Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound8To9Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{10}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *KeyGenRound8To9Output) GetPayload() []byte {
@@ -741,7 +676,7 @@ type KeyGenRound9To10Output struct {
 func (x *KeyGenRound9To10Output) Reset() {
 	*x = KeyGenRound9To10Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[11]
+		mi := &file_keygen_keygen_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -754,7 +689,7 @@ func (x *KeyGenRound9To10Output) String() string {
 func (*KeyGenRound9To10Output) ProtoMessage() {}
 
 func (x *KeyGenRound9To10Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[11]
+	mi := &file_keygen_keygen_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -767,7 +702,7 @@ func (x *KeyGenRound9To10Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound9To10Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound9To10Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{11}
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *KeyGenRound9To10Output) GetPayload() []byte {
@@ -782,14 +717,12 @@ type KeyGenRound10To11Output struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	SecretKey []byte `protobuf:"bytes,1,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
 }
 
 func (x *KeyGenRound10To11Output) Reset() {
 	*x = KeyGenRound10To11Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[12]
+		mi := &file_keygen_keygen_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -802,7 +735,7 @@ func (x *KeyGenRound10To11Output) String() string {
 func (*KeyGenRound10To11Output) ProtoMessage() {}
 
 func (x *KeyGenRound10To11Output) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[12]
+	mi := &file_keygen_keygen_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -815,43 +748,36 @@ func (x *KeyGenRound10To11Output) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyGenRound10To11Output.ProtoReflect.Descriptor instead.
 func (*KeyGenRound10To11Output) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *KeyGenRound10To11Output) GetSecretKey() []byte {
-	if x != nil {
-		return x.SecretKey
-	}
-	return nil
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{11}
 }
 
 // 라운드 11 -> 게이트 웨이
-type KeyGenRound11ToResponseOutput struct {
+type KeyGenRound11ToGatewayOutput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address   string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	SecretKey []byte `protobuf:"bytes,2,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
+	RequestId string `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Address   string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (x *KeyGenRound11ToResponseOutput) Reset() {
-	*x = KeyGenRound11ToResponseOutput{}
+func (x *KeyGenRound11ToGatewayOutput) Reset() {
+	*x = KeyGenRound11ToGatewayOutput{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[13]
+		mi := &file_keygen_keygen_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *KeyGenRound11ToResponseOutput) String() string {
+func (x *KeyGenRound11ToGatewayOutput) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KeyGenRound11ToResponseOutput) ProtoMessage() {}
+func (*KeyGenRound11ToGatewayOutput) ProtoMessage() {}
 
-func (x *KeyGenRound11ToResponseOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[13]
+func (x *KeyGenRound11ToGatewayOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_keygen_keygen_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -862,100 +788,36 @@ func (x *KeyGenRound11ToResponseOutput) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KeyGenRound11ToResponseOutput.ProtoReflect.Descriptor instead.
-func (*KeyGenRound11ToResponseOutput) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{13}
+// Deprecated: Use KeyGenRound11ToGatewayOutput.ProtoReflect.Descriptor instead.
+func (*KeyGenRound11ToGatewayOutput) Descriptor() ([]byte, []int) {
+	return file_keygen_keygen_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *KeyGenRound11ToResponseOutput) GetAddress() string {
+func (x *KeyGenRound11ToGatewayOutput) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *KeyGenRound11ToGatewayOutput) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
-}
-
-func (x *KeyGenRound11ToResponseOutput) GetSecretKey() []byte {
-	if x != nil {
-		return x.SecretKey
-	}
-	return nil
-}
-
-// 게이트 웨이 -> 응답
-type KeyGenResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Address   string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	SecretKey string `protobuf:"bytes,2,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"` // encoded base64
-	Duration  int32  `protobuf:"varint,3,opt,name=duration,proto3" json:"duration,omitempty"`
-}
-
-func (x *KeyGenResponse) Reset() {
-	*x = KeyGenResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_keygen_keygen_proto_msgTypes[14]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *KeyGenResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*KeyGenResponse) ProtoMessage() {}
-
-func (x *KeyGenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_keygen_keygen_proto_msgTypes[14]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use KeyGenResponse.ProtoReflect.Descriptor instead.
-func (*KeyGenResponse) Descriptor() ([]byte, []int) {
-	return file_keygen_keygen_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *KeyGenResponse) GetAddress() string {
-	if x != nil {
-		return x.Address
-	}
-	return ""
-}
-
-func (x *KeyGenResponse) GetSecretKey() string {
-	if x != nil {
-		return x.SecretKey
-	}
-	return ""
-}
-
-func (x *KeyGenResponse) GetDuration() int32 {
-	if x != nil {
-		return x.Duration
-	}
-	return 0
 }
 
 var File_keygen_keygen_proto protoreflect.FileDescriptor
 
 var file_keygen_keygen_proto_rawDesc = []byte{
 	0x0a, 0x13, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2f, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x22, 0xce, 0x08,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x22, 0xcb, 0x08,
 	0x0a, 0x0d, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12,
-	0x58, 0x0a, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x58, 0x0a, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79,
 	0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x1e, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48,
-	0x00, 0x52, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1e, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x47,
+	0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48,
+	0x00, 0x52, 0x16, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79,
 	0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x55, 0x0a, 0x15, 0x6b, 0x65, 0x79,
 	0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70,
 	0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65,
@@ -1011,67 +873,52 @@ var file_keygen_keygen_proto_rawDesc = []byte{
 	0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e,
 	0x64, 0x31, 0x30, 0x54, 0x6f, 0x31, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52,
 	0x17, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x54, 0x6f,
-	0x31, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x6d, 0x0a, 0x1d, 0x6b, 0x65, 0x79, 0x47,
-	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x25, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
-	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x1d, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x30,
-	0x0a, 0x14, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72,
-	0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
-	0x22, 0x32, 0x0a, 0x16, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x54, 0x6f, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x6e, 0x65,
-	0x74, 0x77, 0x6f, 0x72, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6e, 0x65, 0x74,
-	0x77, 0x6f, 0x72, 0x6b, 0x22, 0x4b, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f,
-	0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a,
-	0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07,
-	0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
-	0x61, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
+	0x31, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x6a, 0x0a, 0x1c, 0x6b, 0x65, 0x79, 0x47,
+	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x47, 0x61, 0x74, 0x65, 0x77,
+	0x61, 0x79, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24,
+	0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f,
+	0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4f, 0x75,
+	0x74, 0x70, 0x75, 0x74, 0x48, 0x00, 0x52, 0x1c, 0x6b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f,
+	0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4f, 0x75,
+	0x74, 0x70, 0x75, 0x74, 0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x18, 0x0a, 0x16, 0x4b,
+	0x65, 0x79, 0x47, 0x65, 0x6e, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x54, 0x6f, 0x31, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52,
+	0x6f, 0x75, 0x6e, 0x64, 0x31, 0x54, 0x6f, 0x32, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18,
+	0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47,
+	0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b,
+	0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75,
+	0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31,
+	0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f,
+	0x35, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
+	0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
 	0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
-	0x32, 0x54, 0x6f, 0x33, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61,
+	0x35, 0x54, 0x6f, 0x36, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61,
 	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79,
 	0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f,
-	0x75, 0x6e, 0x64, 0x33, 0x54, 0x6f, 0x34, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a,
+	0x75, 0x6e, 0x64, 0x36, 0x54, 0x6f, 0x37, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a,
 	0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07,
 	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65,
-	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x34, 0x54, 0x6f, 0x35, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x37, 0x54, 0x6f, 0x38, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
 	0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65,
-	0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x35, 0x54, 0x6f, 0x36, 0x4f, 0x75, 0x74,
+	0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x38, 0x54, 0x6f, 0x39, 0x4f, 0x75, 0x74,
 	0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a,
-	0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x36, 0x54, 0x6f, 0x37,
-	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64,
-	0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x37,
-	0x54, 0x6f, 0x38, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79,
-	0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c,
-	0x6f, 0x61, 0x64, 0x22, 0x31, 0x0a, 0x15, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75,
-	0x6e, 0x64, 0x38, 0x54, 0x6f, 0x39, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07,
-	0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70,
-	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x32, 0x0a, 0x16, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e,
-	0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x54, 0x6f, 0x31, 0x30, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
-	0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x38, 0x0a, 0x17, 0x4b, 0x65,
-	0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x30, 0x54, 0x6f, 0x31, 0x31, 0x4f,
-	0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f,
-	0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65,
-	0x74, 0x4b, 0x65, 0x79, 0x22, 0x58, 0x0a, 0x1d, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f,
-	0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x4f,
-	0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x22, 0x65,
-	0x0a, 0x0e, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65,
-	0x63, 0x72, 0x65, 0x74, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
-	0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x64, 0x75, 0x72,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x64, 0x75, 0x72,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0x4b, 0x0a, 0x0d, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x53,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x22, 0x32, 0x0a,
+	0x16, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x39, 0x54, 0x6f, 0x31,
+	0x30, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
+	0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
+	0x64, 0x22, 0x19, 0x0a, 0x17, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64,
+	0x31, 0x30, 0x54, 0x6f, 0x31, 0x31, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x22, 0x57, 0x0a, 0x1c,
+	0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x31, 0x31, 0x54, 0x6f, 0x47,
+	0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x1d, 0x0a, 0x0a,
+	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x32, 0x4b, 0x0a, 0x0d, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x53,
 	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x4b, 0x65, 0x79, 0x47, 0x65, 0x6e,
 	0x12, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e, 0x2e, 0x4b, 0x65, 0x79, 0x67, 0x65, 0x6e,
 	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x15, 0x2e, 0x6b, 0x65, 0x79, 0x67, 0x65, 0x6e,
@@ -1093,37 +940,35 @@ func file_keygen_keygen_proto_rawDescGZIP() []byte {
 	return file_keygen_keygen_proto_rawDescData
 }
 
-var file_keygen_keygen_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_keygen_keygen_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_keygen_keygen_proto_goTypes = []any{
-	(*KeygenMessage)(nil),                 // 0: keygen.KeygenMessage
-	(*KeyGenRequestMessage)(nil),          // 1: keygen.KeyGenRequestMessage
-	(*KeyGenRequestTo1Output)(nil),        // 2: keygen.KeyGenRequestTo1Output
-	(*KeyGenRound1To2Output)(nil),         // 3: keygen.KeyGenRound1To2Output
-	(*KeyGenRound2To3Output)(nil),         // 4: keygen.KeyGenRound2To3Output
-	(*KeyGenRound3To4Output)(nil),         // 5: keygen.KeyGenRound3To4Output
-	(*KeyGenRound4To5Output)(nil),         // 6: keygen.KeyGenRound4To5Output
-	(*KeyGenRound5To6Output)(nil),         // 7: keygen.KeyGenRound5To6Output
-	(*KeyGenRound6To7Output)(nil),         // 8: keygen.KeyGenRound6To7Output
-	(*KeyGenRound7To8Output)(nil),         // 9: keygen.KeyGenRound7To8Output
-	(*KeyGenRound8To9Output)(nil),         // 10: keygen.KeyGenRound8To9Output
-	(*KeyGenRound9To10Output)(nil),        // 11: keygen.KeyGenRound9To10Output
-	(*KeyGenRound10To11Output)(nil),       // 12: keygen.KeyGenRound10To11Output
-	(*KeyGenRound11ToResponseOutput)(nil), // 13: keygen.KeyGenRound11ToResponseOutput
-	(*KeyGenResponse)(nil),                // 14: keygen.KeyGenResponse
+	(*KeygenMessage)(nil),                // 0: keygen.KeygenMessage
+	(*KeyGenGatewayTo1Output)(nil),       // 1: keygen.KeyGenGatewayTo1Output
+	(*KeyGenRound1To2Output)(nil),        // 2: keygen.KeyGenRound1To2Output
+	(*KeyGenRound2To3Output)(nil),        // 3: keygen.KeyGenRound2To3Output
+	(*KeyGenRound3To4Output)(nil),        // 4: keygen.KeyGenRound3To4Output
+	(*KeyGenRound4To5Output)(nil),        // 5: keygen.KeyGenRound4To5Output
+	(*KeyGenRound5To6Output)(nil),        // 6: keygen.KeyGenRound5To6Output
+	(*KeyGenRound6To7Output)(nil),        // 7: keygen.KeyGenRound6To7Output
+	(*KeyGenRound7To8Output)(nil),        // 8: keygen.KeyGenRound7To8Output
+	(*KeyGenRound8To9Output)(nil),        // 9: keygen.KeyGenRound8To9Output
+	(*KeyGenRound9To10Output)(nil),       // 10: keygen.KeyGenRound9To10Output
+	(*KeyGenRound10To11Output)(nil),      // 11: keygen.KeyGenRound10To11Output
+	(*KeyGenRound11ToGatewayOutput)(nil), // 12: keygen.KeyGenRound11ToGatewayOutput
 }
 var file_keygen_keygen_proto_depIdxs = []int32{
-	2,  // 0: keygen.KeygenMessage.keyGenRequestTo1Output:type_name -> keygen.KeyGenRequestTo1Output
-	3,  // 1: keygen.KeygenMessage.keyGenRound1To2Output:type_name -> keygen.KeyGenRound1To2Output
-	4,  // 2: keygen.KeygenMessage.keyGenRound2To3Output:type_name -> keygen.KeyGenRound2To3Output
-	5,  // 3: keygen.KeygenMessage.keyGenRound3To4Output:type_name -> keygen.KeyGenRound3To4Output
-	6,  // 4: keygen.KeygenMessage.keyGenRound4To5Output:type_name -> keygen.KeyGenRound4To5Output
-	7,  // 5: keygen.KeygenMessage.keyGenRound5To6Output:type_name -> keygen.KeyGenRound5To6Output
-	8,  // 6: keygen.KeygenMessage.keyGenRound6To7Output:type_name -> keygen.KeyGenRound6To7Output
-	9,  // 7: keygen.KeygenMessage.keyGenRound7To8Output:type_name -> keygen.KeyGenRound7To8Output
-	10, // 8: keygen.KeygenMessage.keyGenRound8To9Output:type_name -> keygen.KeyGenRound8To9Output
-	11, // 9: keygen.KeygenMessage.keyGenRound9To10Output:type_name -> keygen.KeyGenRound9To10Output
-	12, // 10: keygen.KeygenMessage.keyGenRound10To11Output:type_name -> keygen.KeyGenRound10To11Output
-	13, // 11: keygen.KeygenMessage.keyGenRound11ToResponseOutput:type_name -> keygen.KeyGenRound11ToResponseOutput
+	1,  // 0: keygen.KeygenMessage.keyGenGatewayTo1Output:type_name -> keygen.KeyGenGatewayTo1Output
+	2,  // 1: keygen.KeygenMessage.keyGenRound1To2Output:type_name -> keygen.KeyGenRound1To2Output
+	3,  // 2: keygen.KeygenMessage.keyGenRound2To3Output:type_name -> keygen.KeyGenRound2To3Output
+	4,  // 3: keygen.KeygenMessage.keyGenRound3To4Output:type_name -> keygen.KeyGenRound3To4Output
+	5,  // 4: keygen.KeygenMessage.keyGenRound4To5Output:type_name -> keygen.KeyGenRound4To5Output
+	6,  // 5: keygen.KeygenMessage.keyGenRound5To6Output:type_name -> keygen.KeyGenRound5To6Output
+	7,  // 6: keygen.KeygenMessage.keyGenRound6To7Output:type_name -> keygen.KeyGenRound6To7Output
+	8,  // 7: keygen.KeygenMessage.keyGenRound7To8Output:type_name -> keygen.KeyGenRound7To8Output
+	9,  // 8: keygen.KeygenMessage.keyGenRound8To9Output:type_name -> keygen.KeyGenRound8To9Output
+	10, // 9: keygen.KeygenMessage.keyGenRound9To10Output:type_name -> keygen.KeyGenRound9To10Output
+	11, // 10: keygen.KeygenMessage.keyGenRound10To11Output:type_name -> keygen.KeyGenRound10To11Output
+	12, // 11: keygen.KeygenMessage.keyGenRound11ToGatewayOutput:type_name -> keygen.KeyGenRound11ToGatewayOutput
 	0,  // 12: keygen.KeygenService.KeyGen:input_type -> keygen.KeygenMessage
 	0,  // 13: keygen.KeygenService.KeyGen:output_type -> keygen.KeygenMessage
 	13, // [13:14] is the sub-list for method output_type
@@ -1152,7 +997,7 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[1].Exporter = func(v any, i int) any {
-			switch v := v.(*KeyGenRequestMessage); i {
+			switch v := v.(*KeyGenGatewayTo1Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1164,18 +1009,6 @@ func file_keygen_keygen_proto_init() {
 			}
 		}
 		file_keygen_keygen_proto_msgTypes[2].Exporter = func(v any, i int) any {
-			switch v := v.(*KeyGenRequestTo1Output); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound1To2Output); i {
 			case 0:
 				return &v.state
@@ -1187,7 +1020,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[4].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound2To3Output); i {
 			case 0:
 				return &v.state
@@ -1199,7 +1032,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[5].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[4].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound3To4Output); i {
 			case 0:
 				return &v.state
@@ -1211,7 +1044,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[6].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[5].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound4To5Output); i {
 			case 0:
 				return &v.state
@@ -1223,7 +1056,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[7].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[6].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound5To6Output); i {
 			case 0:
 				return &v.state
@@ -1235,7 +1068,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[8].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[7].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound6To7Output); i {
 			case 0:
 				return &v.state
@@ -1247,7 +1080,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[9].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[8].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound7To8Output); i {
 			case 0:
 				return &v.state
@@ -1259,7 +1092,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[10].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[9].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound8To9Output); i {
 			case 0:
 				return &v.state
@@ -1271,7 +1104,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[11].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[10].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound9To10Output); i {
 			case 0:
 				return &v.state
@@ -1283,7 +1116,7 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[12].Exporter = func(v any, i int) any {
+		file_keygen_keygen_proto_msgTypes[11].Exporter = func(v any, i int) any {
 			switch v := v.(*KeyGenRound10To11Output); i {
 			case 0:
 				return &v.state
@@ -1295,20 +1128,8 @@ func file_keygen_keygen_proto_init() {
 				return nil
 			}
 		}
-		file_keygen_keygen_proto_msgTypes[13].Exporter = func(v any, i int) any {
-			switch v := v.(*KeyGenRound11ToResponseOutput); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_keygen_keygen_proto_msgTypes[14].Exporter = func(v any, i int) any {
-			switch v := v.(*KeyGenResponse); i {
+		file_keygen_keygen_proto_msgTypes[12].Exporter = func(v any, i int) any {
+			switch v := v.(*KeyGenRound11ToGatewayOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1321,7 +1142,7 @@ func file_keygen_keygen_proto_init() {
 		}
 	}
 	file_keygen_keygen_proto_msgTypes[0].OneofWrappers = []any{
-		(*KeygenMessage_KeyGenRequestTo1Output)(nil),
+		(*KeygenMessage_KeyGenGatewayTo1Output)(nil),
 		(*KeygenMessage_KeyGenRound1To2Output)(nil),
 		(*KeygenMessage_KeyGenRound2To3Output)(nil),
 		(*KeygenMessage_KeyGenRound3To4Output)(nil),
@@ -1332,7 +1153,7 @@ func file_keygen_keygen_proto_init() {
 		(*KeygenMessage_KeyGenRound8To9Output)(nil),
 		(*KeygenMessage_KeyGenRound9To10Output)(nil),
 		(*KeygenMessage_KeyGenRound10To11Output)(nil),
-		(*KeygenMessage_KeyGenRound11ToResponseOutput)(nil),
+		(*KeygenMessage_KeyGenRound11ToGatewayOutput)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1340,7 +1161,7 @@ func file_keygen_keygen_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_keygen_keygen_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

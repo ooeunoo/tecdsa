@@ -10,6 +10,7 @@ import (
 	"tecdsa/cmd/bob/server"
 	"tecdsa/pkg/database"
 	"tecdsa/pkg/database/repository"
+	"tecdsa/pkg/service"
 	pbKeygen "tecdsa/proto/keygen"
 	pbSign "tecdsa/proto/sign"
 
@@ -25,10 +26,13 @@ func main() {
 	db := connectDatabase(cfg)
 
 	// 리포지토리 생성
-	repo := repository.NewGormSecretRepository(db)
+	paritalSecretShareRepository := repository.NewPartialSecretShareRepository(db)
+
+	// 네트워크 서비스 생성
+	networkService := service.NewNetworkService()
 
 	// gRPC 서버 시작
-	startGRPCServer(cfg, repo)
+	startGRPCServer(cfg, paritalSecretShareRepository, networkService)
 }
 
 func loadConfig() *config.Config {
@@ -54,19 +58,19 @@ func connectDatabase(cfg *config.Config) *gorm.DB {
 	return db
 }
 
-func startGRPCServer(cfg *config.Config, repo repository.SecretRepository) {
+func startGRPCServer(cfg *config.Config, repo repository.ParitalSecretShareRepository, networkService *service.NetworkService) {
 	lis, err := net.Listen("tcp", ":"+cfg.ServerPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	srv := server.NewServer(repo)
+	srv := server.NewServer(repo, networkService)
 
 	pbKeygen.RegisterKeygenServiceServer(s, srv)
 	pbSign.RegisterSignServiceServer(s, srv)
 
-	log.Printf("Server listening at %v", lis.Addr())
+	log.Printf("Alice server listening at :%s", cfg.ServerPort)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

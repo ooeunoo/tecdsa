@@ -37,7 +37,7 @@ const (
 	AddressTypeP2WPKH = 2
 )
 
-func deriveBitcoinAddress(point curves.Point, network Network) (string, error) {
+func DeriveBitcoinAddress(point curves.Point, network Network) (string, error) {
 	pubKeyBytes := point.ToAffineCompressed()
 	if len(pubKeyBytes) == 0 {
 		return "", fmt.Errorf("failed to convert public key to bytes")

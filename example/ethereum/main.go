@@ -53,7 +53,7 @@ func main() {
 	}
 	saveKeyGenResponse(keyGenResp)
 	fmt.Printf("Address: %s\n", keyGenResp.Address)
-	fmt.Printf("Secret Key: %s\n", keyGenResp.SecretKey)
+	fmt.Printf("ParitalSecretShare Key: %s\n", keyGenResp.SecretKey)
 	fmt.Printf("\n############################\n")
 
 	// ********************************

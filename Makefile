@@ -27,3 +27,4 @@ clean:
 
 reset:
 	find cmd -name "data" -type d -exec rm -rf {} +
+	docker-compose down --volumes

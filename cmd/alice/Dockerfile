@@ -13,7 +13,7 @@ RUN go mod download
 COPY . .
 
 ############################### REMOVE: production #######################################
-CMD CompileDaemon --build="go build -o main ./cmd/alice" --command="./main"
+CMD CompileDaemon --build="go build -o alice ./cmd/alice" --command="./alice"
 ############################### REMOVE: production #######################################
 
 

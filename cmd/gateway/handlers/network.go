@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"tecdsa/pkg/network"
 	"tecdsa/pkg/response"
+	"tecdsa/pkg/service"
 )
 
 type NetworkInfo struct {
@@ -11,23 +11,30 @@ type NetworkInfo struct {
 	Name string `json:"name"`
 }
 
-func GetAllNetworksHandler(w http.ResponseWriter, r *http.Request) {
+type GetAllNetworksHandler struct {
+	networkService *service.NetworkService
+}
+
+func NewGetAllNetworksHandler(networkService *service.NetworkService) *GetAllNetworksHandler {
+	return &GetAllNetworksHandler{
+		networkService: networkService,
+	}
+}
+
+func (h *GetAllNetworksHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var networks []NetworkInfo
+	networks := h.networkService.GetAllNetworks()
 
-	// 모든 네트워크를 순회합니다.
-	for id := 1; id < len(network.Networks)+1; id++ {
-		network, err := network.GetNetworkByID(int32(id))
-		if err == nil {
-			networks = append(networks, NetworkInfo{
-				ID:   id,
-				Name: network.String(),
-			})
-		}
+	var networkInfos []NetworkInfo
+	for _, net := range networks {
+		networkInfos = append(networkInfos, NetworkInfo{
+			ID:   int(net),
+			Name: net.String(),
+		})
 	}
 
 	response.SendResponse(w, response.NewSuccessResponse(http.StatusOK, map[string]interface{}{
-		"networks": networks,
+		"networks": networkInfos,
 	}))
 }
