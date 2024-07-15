@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,16 +20,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func loadENV() (string, string) {
+func loadENV() string {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
-	return os.Getenv("TATUM_API_KEY"), os.Getenv("PRIVATE_KEY")
+	return os.Getenv("PRIVATE_KEY")
 }
 
 func main() {
-	_, PRIVATE_KEY := loadENV()
+	PRIVATE_KEY := loadENV()
 	wif, err := btcutil.DecodeWIF(PRIVATE_KEY)
 	if err != nil {
 		log.Fatalf("Failed to decode WIF: %v", err)
@@ -51,66 +52,88 @@ func main() {
 	// 키생성 요청
 	fmt.Printf("\n############################\n")
 	fmt.Printf("\n 1. Key Generation: DKG를 사용한 키 생성 단계 \n\n")
-	keyGenResp, err := performKeyGen()
-	if err != nil {
-		log.Fatalf("Key generation failed: %v", err)
+	var keyGenResp *lib.KeyGenResponse
+	keyGenFilePath := "key_gen_response.json"
+
+	if _, err := os.Stat(keyGenFilePath); os.IsNotExist(err) {
+		keyGenResp, err = performKeyGen()
+		if err != nil {
+			log.Fatalf("Key generation failed: %v", err)
+		}
+		saveKeyGenResponse(keyGenResp)
+	} else {
+		keyGenResp, err = loadKeyGenResponse(keyGenFilePath)
+		if err != nil {
+			log.Fatalf("Failed to load existing key: %v", err)
+		}
+		fmt.Println("Loaded existing key from file.")
 	}
-	saveKeyGenResponse(keyGenResp)
 	fmt.Printf("Address: %s\n", keyGenResp.Address)
 	fmt.Printf("ParitalSecretShare Key: %s\n", keyGenResp.SecretKey)
 	fmt.Printf("\n############################\n")
 
 	// ********************************
 	// 테스트 BTC 주입
-	fmt.Printf("\n 2. Inject Test BTC: 이후 코인 전송 테스트를 위한 테스트 비트 주입 단계  \n\n")
-	toAddress := keyGenResp.Address
-	amount := big.NewInt(1000) // 0.00001 BTC in satoshis
-	txHash, err := lib.InjectTestBTC(PRIVATE_KEY, toAddress, amount)
-	if err != nil {
-		log.Fatalf("Failed to inject test BTC: %v", err)
-	}
-	fmt.Printf("TxHash: %s \n", txHash)
-	fmt.Printf("\n############################\n")
+	// fmt.Printf("\n 2. Inject Test BTC: 이후 코인 전송 테스트를 위한 테스트 비트 주입 단계  \n\n")
+	// toAddress := keyGenResp.Address
+	// amount := big.NewInt(1000) // 0.00001 BTC in satoshis
+	// txHash, err := lib.InjectTestBTC(PRIVATE_KEY, toAddress, amount)
+	// if err != nil {
+	// 	log.Fatalf("Failed to inject test BTC: %v", err)
+	// }
+	// fmt.Printf("TxHash: %s \n", txHash)
+	// fmt.Println("Waiting for block confirmations...")
+	// err = lib.WaitForConfirmations(txHash)
+	// if err != nil {
+	// 	log.Fatalf("Failed to wait for confirmations: %v", err)
+	// }
+	// fmt.Println("Transaction confirmed")
+	// fmt.Printf("\n############################\n")
 
 	// ********************************
 	// 서명 데이터 생성
 	fmt.Printf("\n 3. Create Encoded Unsigned Transaction: 서명되지않은 트랜잭션 데이터 생성 단계 \n\n")
-	// amount2 := big.NewInt(1000) // 0.00001 BTC in satoshis
-	// tx, unspentTxs, fee, err := lib.CreateUnsignedTransaction(keyGenResp.Address, "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5", amount2)
 
-	// fromAddress := keyGenResp.Address
-	// toAddress = "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5"
-	// amount = big.NewInt(500) // 0.000005 BTC in satoshis
+	amount2 := big.NewInt(1000) // 0.00001 BTC in satoshis
+	tx, _, _, err := lib.CreateUnsignedTransaction(keyGenResp.Address, "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5", amount2)
+	if err != nil {
+		log.Fatalf("Failed to create unsigned transaction: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := tx.Serialize(&buf); err != nil {
+		log.Fatalf("Failed to serialize transaction: %v", err)
+	}
+	encodedBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+	fmt.Printf("encoded Transaction(base64): %s\n", encodedBase64)
+	fmt.Printf("\n############################\n")
 
-	// unspentTxs, err := lib.GetUnspentTxs(fromAddress, amount.Int64())
-	// if err != nil {
-	// 	log.Fatalf("Failed to get unspent transactions: %v", err)
-	// }
+	// ********************************
+	// 서명 요청
+	fmt.Printf("\n 4. Sign Transaction: 서명 단계 \n\n")
+	signResp, err := performSign(keyGenResp.Address, keyGenResp.SecretKey, buf.Bytes())
+	if err != nil {
+		log.Fatalf("Failed to sign transaction: %v", err)
+	}
+	fmt.Println("v: ", signResp.V)
+	fmt.Println("r: ", signResp.R)
+	fmt.Println("s: ", signResp.S)
+	fmt.Printf("\n############################\n")
 
-	// unsignedTx, err := lib.GenerateTransaction(fromAddress, toAddress, amount.Int64(), unspentTxs)
-	// if err != nil {
-	// 	log.Fatalf("Failed to generate unsigned transaction: %v", err)
-	// }
+	// ********************************
+	// 트랜잭션, 서명 결합
+	signedTx, err := lib.CombineBTCUnsignedTxWithSignature(tx, *signResp)
+	if err != nil {
+		log.Fatalf("Failed to combine unsigned transaction with signature: %v", err)
+	}
+	var signedBuf bytes.Buffer
+	if err := signedTx.Serialize(&signedBuf); err != nil {
+		log.Fatalf("Failed to serialize signed transaction: %v", err)
+	}
+	signedTxHex := hex.EncodeToString(signedBuf.Bytes())
+	fmt.Printf("Signed Transaction Hex: %s\n", signedTxHex)
+	fmt.Printf("\n############################\n")
+	fmt.Printf("\n 5. Signed Transaction Detail: 트랜잭션과 서명 결합 후 완성된 Raw Transaction \n%s\n", signedTxHex)
 
-	// // 서명되지 않은 트랜잭션을 개인키로 서명하고 r, s 값 반환
-	// r, s, err := lib.SignTransactionByPk(unsignedTx, keyGenResp.SecretKey)
-	// if err != nil {
-	// 	log.Fatalf("Failed to sign transaction: %v", err)
-	// }
-
-	// // 서명되지 않은 트랜잭션과 r, s 값을 결합하여 서명된 트랜잭션 생성
-	// signedTx, err := lib.CombineUnsignedTransactionWithSignature(unsignedTx, r, s)
-	// if err != nil {
-	// 	log.Fatalf("Failed to combine unsigned transaction with signature: %v", err)
-	// }
-
-	// // 서명된 트랜잭션을 브로드캐스트
-	// err = lib.SendSignedTransaction(signedTx)
-	// if err != nil {
-	// 	log.Fatalf("Failed to send signed transaction: %v", err)
-	// }
-
-	// fmt.Println("Transaction successfully sent!")
 }
 
 func performKeyGen() (*lib.KeyGenResponse, error) {
@@ -202,4 +225,19 @@ func saveKeyGenResponse(resp *lib.KeyGenResponse) {
 	}
 
 	filepath.Abs("key_gen_response.json")
+}
+
+func loadKeyGenResponse(filePath string) (*lib.KeyGenResponse, error) {
+	file, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read key file: %v", err)
+	}
+
+	var response lib.KeyGenResponse
+	err = json.Unmarshal(file, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JSON from key file: %v", err)
+	}
+
+	return &response, nil
 }

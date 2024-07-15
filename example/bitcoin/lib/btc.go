@@ -2,12 +2,14 @@ package lib
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
+	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -28,9 +30,6 @@ func GetUnspentTxs(address string) ([]UTXO, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
-
-	// 디버깅을 위해 응답 내용 출력
-	fmt.Printf("Unspent Txs API Response: %s\n", string(body))
 
 	var utxos []UTXO
 	err = json.Unmarshal(body, &utxos)
@@ -61,7 +60,7 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 		return "", fmt.Errorf("failed to get from address: %v", err)
 	}
 
-	tx, unspentTxs, fee, err := CreateUnsignedTransaction(fromAddress.EncodeAddress(), toAddress, amount)
+	tx, unspentTxs, _, err := CreateUnsignedTransaction(fromAddress.EncodeAddress(), toAddress, amount)
 	if err != nil {
 		return "", err
 	}
@@ -77,12 +76,6 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 	if err != nil {
 		return "", err
 	}
-
-	// 트랜잭션 정보 출력
-	fmt.Printf("Total input: %d satoshis\n", getTotalInput(unspentTxs))
-	fmt.Printf("Output amount: %d satoshis\n", amount.Int64())
-	fmt.Printf("Fee: %d satoshis\n", fee)
-	fmt.Printf("Change: %d satoshis\n", getTotalInput(unspentTxs)-amount.Int64()-fee)
 
 	var buf bytes.Buffer
 	if err := tx.Serialize(&buf); err != nil {
@@ -103,14 +96,6 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 	}
 
 	return tx.TxHash().String(), nil
-}
-
-func getTotalInput(utxos []UTXO) int64 {
-	var total int64
-	for _, utxo := range utxos {
-		total += utxo.Value
-	}
-	return total
 }
 
 func SendSignedTransaction(signedTxHex string) error {
@@ -311,5 +296,107 @@ func ValidateTransaction(tx *wire.MsgTx, unspentTxs []UTXO, fromAddress btcutil.
 			return fmt.Errorf("failed to validate transaction for input %d: %v", i, err)
 		}
 	}
+	return nil
+}
+
+func WaitForConfirmations(txHash string) error {
+	for {
+		url := fmt.Sprintf("https://mempool.space/testnet/api/tx/%s", txHash)
+		resp, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("failed to get transaction info: %v", err)
+		}
+		defer resp.Body.Close()
+
+		type TxStatus struct {
+			Confirmed   bool   `json:"confirmed"`
+			BlockHeight int    `json:"block_height"`
+			BlockHash   string `json:"block_hash"`
+			BlockTime   int    `json:"block_time"`
+		}
+		var TxInfo struct {
+			Status TxStatus `json:"status"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&TxInfo); err != nil {
+			return fmt.Errorf("failed to decode transaction info: %v", err)
+		}
+
+		if TxInfo.Status.Confirmed {
+			return nil
+		}
+
+		time.Sleep(1 * time.Minute) // Wait for 1 minute before checking again
+	}
+}
+func CombineBTCUnsignedTxWithSignature(unsignedTx *wire.MsgTx, signResponse SignResponse) (*wire.MsgTx, error) {
+	// Decode R and S from base64
+	rBytes, err := base64.StdEncoding.DecodeString(signResponse.R)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode R: %v", err)
+	}
+	sBytes, err := base64.StdEncoding.DecodeString(signResponse.S)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode S: %v", err)
+	}
+
+	// Create signature bytes
+	signatureBytes := append(rBytes, sBytes...)
+
+	// Add sighash type
+	signatureBytes = append(signatureBytes, byte(txscript.SigHashAll))
+
+	// Create a new transaction to hold the signed version
+	signedTx := wire.NewMsgTx(unsignedTx.Version)
+
+	// Copy TxOut from unsigned transaction
+	for _, txOut := range unsignedTx.TxOut {
+		signedTx.AddTxOut(txOut)
+	}
+
+	// Sign each input
+	for _, txIn := range unsignedTx.TxIn {
+		signedTxIn := wire.NewTxIn(&txIn.PreviousOutPoint, nil, nil)
+
+		// For P2WPKH, we need to create a witness
+		// But we don't have the public key at this point, so we'll use a placeholder
+		witness := wire.TxWitness{signatureBytes, []byte{}} // Empty byte slice as placeholder for pubkey
+		signedTxIn.Witness = witness
+
+		signedTx.AddTxIn(signedTxIn)
+	}
+
+	return signedTx, nil
+}
+
+func PrintBTCTransactionInfo(rawTxHex string) error {
+	rawTxBytes, err := hex.DecodeString(rawTxHex)
+	if err != nil {
+		return fmt.Errorf("failed to decode raw transaction: %v", err)
+	}
+
+	var tx wire.MsgTx
+	err = tx.Deserialize(bytes.NewReader(rawTxBytes))
+	if err != nil {
+		return fmt.Errorf("failed to deserialize transaction: %v", err)
+	}
+
+	fmt.Printf("Transaction ID: %s\n", tx.TxHash().String())
+	fmt.Printf("Version: %d\n", tx.Version)
+	fmt.Printf("Locktime: %d\n", tx.LockTime)
+
+	fmt.Printf("Inputs (%d):\n", len(tx.TxIn))
+	for i, txIn := range tx.TxIn {
+		fmt.Printf(" Input %d:\n", i)
+		fmt.Printf("  Previous Output: %s\n", txIn.PreviousOutPoint.String())
+		fmt.Printf("  Sequence: %d\n", txIn.Sequence)
+	}
+
+	fmt.Printf("Outputs (%d):\n", len(tx.TxOut))
+	for i, txOut := range tx.TxOut {
+		fmt.Printf(" Output %d:\n", i)
+		fmt.Printf("  Value: %d satoshis\n", txOut.Value)
+		fmt.Printf("  Script: %x\n", txOut.PkScript)
+	}
+
 	return nil
 }
