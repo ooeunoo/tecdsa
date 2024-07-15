@@ -269,6 +269,21 @@ func GetUnspentTxs(address string) ([]UTXO, error) {
 	return utxos, nil
 }
 
+// func combineSignatureWithTransaction(tx *wire.MsgTx, r, s *big.Int, pubKey *btcec.PublicKey) error {
+// 	for i := range tx.TxIn {
+// 		signature := ecdsa.Sign(pubKey, r, s)
+// 		sigScript, err := txscript.NewScriptBuilder().
+// 			AddData(signature.Serialize()).
+// 			AddData(pubKey.SerializeCompressed()).
+// 			Script()
+// 		if err != nil {
+// 			return fmt.Errorf("failed to create signature script: %v", err)
+// 		}
+// 		tx.TxIn[i].SignatureScript = sigScript
+// 	}
+// 	return nil
+// }
+
 func IsValidBitcoinAddress(address string, network Network) bool {
 	var params *chaincfg.Params
 	switch network {

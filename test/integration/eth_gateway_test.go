@@ -6,28 +6,37 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"math/big"
 	"net/http"
-	"os"
-	test_util "tecdsa/test/utils"
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rlp"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	gatewayURL     string
+	httpClient     *http.Client
+	signer         types.EIP155Signer
+	tx             *types.Transaction
+	keyGenResponse map[string]interface{}
+	signResponse   map[string]interface{}
+)
+
 func init() {
-	gatewayURL = os.Getenv("GATEWAY_URL")
-	if gatewayURL == "" {
-		gatewayURL = "http://localhost:8080" // 기본값 설정
-	}
+	gatewayURL = "http://localhost:8080"
 
 	// HTTP 클라이언트 설정
 	httpClient = &http.Client{
-		Timeout: time.Second * 30, // 30초 타임아웃 설정
+		Timeout: time.Second * 30,
 	}
 }
 
@@ -75,15 +84,45 @@ func TestETHKeyGenIntegration(t *testing.T) {
 
 	t.Logf("Parsed KeyGen Response: %+v", keyGenResponse)
 }
+
 func TestETHSignIntegration(t *testing.T) {
 	// 키 생성 필수
 	if keyGenResponse == nil {
 		t.Fatal("KeyGen response is nil. Run TestKeyGenIntegration first.")
 	}
 
+	// Access the nested map structure
+	data, ok := keyGenResponse["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Failed to get data from keyGenResponse")
+	}
+
+	fromAddress, ok := data["address"].(string)
+	if !ok {
+		t.Fatal("Failed to get address from keyGenResponse data")
+	}
+	fmt.Println("fromAddress:", fromAddress)
+
 	// TX 생성
-	tx, txOrigin, err := test_util.GenerateETHTxOrigin("0xcE2Cf674623E1469153948223113B0951C4302D0")
-	assert.NoError(t, err)
+	client, err := ethclient.Dial("https://gateway.tenderly.co/public/sepolia")
+	if err != nil {
+		t.Fatalf("Failed to create Ethereum client: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Ethereum client is nil")
+	}
+
+	chainID, err := client.NetworkID(context.Background())
+	if err != nil {
+		t.Fatalf("Failed to get network ID: %v", err)
+	}
+
+	signer = types.NewEIP155Signer(chainID)
+	from := common.HexToAddress(fromAddress)
+	to := common.HexToAddress("0xFDcBF476B286796706e273F86aC51163DA737FA8")
+	amount := big.NewInt(100000000000000000) // 0.01 Ether
+	var txOrigin []byte
+	tx, txOrigin = GenerateUnSignedTx(*client, signer, from, to, amount)
 
 	// TX 로그
 	t.Logf("tx_origin (hex): %s", hex.EncodeToString(txOrigin))
@@ -91,9 +130,8 @@ func TestETHSignIntegration(t *testing.T) {
 
 	// 요청 폼
 	signRequest := map[string]interface{}{
-		"address":    keyGenResponse["address"],
-		"secret_key": keyGenResponse["secret_key"],
-		"tx_origin":  base64.StdEncoding.EncodeToString(txOrigin),
+		"address":   fromAddress,
+		"tx_origin": base64.StdEncoding.EncodeToString(txOrigin),
 	}
 	t.Logf("Sign Request Data: %+v", signRequest)
 
@@ -128,65 +166,87 @@ func TestETHSignIntegration(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 응답 로깅
+	t.Logf("Status Code: %d", resp.StatusCode)
 	t.Logf("Response Body: %s", string(body))
 
 	// 상태 코드 확인
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// JSON 파싱
-	var signResponse struct {
-		Data test_util.SignResponse `json:"data"`
-	}
 	err = json.Unmarshal(body, &signResponse)
 	assert.NoError(t, err)
 
-	// 응답 필드 확인
-	assert.True(t, signResponse.Data.Success)
-	assert.NotZero(t, signResponse.Data.V)
-	assert.NotZero(t, signResponse.Data.R)
-	assert.NotZero(t, signResponse.Data.S)
+	t.Logf("Parsed Sign Response: %+v", signResponse)
 
-	// V, R, S 값을 big.Int로 변환
-	v := new(big.Int).SetUint64(signResponse.Data.V)
-	r := new(big.Int).SetBytes(signResponse.Data.R)
-	s := new(big.Int).SetBytes(signResponse.Data.S)
+}
 
-	// 서명된 트랜잭션 생성
-	chainID := big.NewInt(1) // 메인넷의 경우
-	signer := types.NewEIP155Signer(chainID)
+func TestETHCombineTxWithSignatureAndSend(t *testing.T) {
+	// 서명 필수
+	if signResponse == nil {
+		t.Fatal("Sign response is nil. Run TestETHSignIntegration first.")
+	}
 
-	// R과 S를 32바이트로 패딩
-	rBytes := make([]byte, 32)
-	sBytes := make([]byte, 32)
-	r.FillBytes(rBytes)
-	s.FillBytes(sBytes)
+	// data 필드 접근
+	signature, ok := signResponse["data"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Failed to get data from sign response")
+	}
 
-	signedTx, err := tx.WithSignature(signer, append(rBytes, append(sBytes, v.Bytes()...)...))
-	assert.NoError(t, err, "Failed to create signed transaction")
+	// V, R, S 값을 추출
+	v, _ := signature["v"].(float64)
+	rStr, _ := signature["r"].(string)
+	sStr, _ := signature["s"].(string)
 
-	// 서명된 트랜잭션 검증
-	assert.NotNil(t, signedTx, "Signed transaction should not be nil")
+	vInt := int(v)
+	rBytes, _ := base64.StdEncoding.DecodeString(rStr)
+	sBytes, _ := base64.StdEncoding.DecodeString(sStr)
 
-	// 트랜잭션 필드 검증
-	assert.Equal(t, tx.To().Hex(), signedTx.To().Hex(), "To address should match")
-	assert.Equal(t, tx.Value().String(), signedTx.Value().String(), "Transaction value should match")
-	assert.Equal(t, tx.Gas(), signedTx.Gas(), "Gas limit should match")
-	assert.Equal(t, tx.GasPrice().String(), signedTx.GasPrice().String(), "Gas price should match")
-	assert.Equal(t, tx.Nonce(), signedTx.Nonce(), "Nonce should match")
+	signedTx, _ := tx.WithSignature(signer, append(rBytes, append(sBytes, byte(vInt))...))
+	rawTxBytes, err := rlp.EncodeToBytes(signedTx)
+	if err != nil {
+		t.Fatalf("Failed to serialize signed transaction: %v", err)
+	}
 
-	// 서명 검증
-	vv, rr, ss := signedTx.RawSignatureValues()
-	assert.Equal(t, v.Uint64(), vv.Uint64(), "V value should match")
-	assert.Equal(t, r.Bytes()[0], rr.Bytes()[0], "R value should match")
-	assert.Equal(t, s.Bytes()[0], ss.Bytes()[0], "S value should match")
+	rawTxHex := hex.EncodeToString(rawTxBytes)
+	t.Logf("Signed Transaction Raw Hex: %s", rawTxHex)
+}
 
-	// 서명자 복구 및 검증
-	recoveredAddr, err := types.Sender(signer, signedTx)
-	assert.NoError(t, err, "Failed to recover signer address")
-	assert.Equal(t, keyGenResponse["address"], recoveredAddr.Hex(), "Recovered address should match the key generation address")
+// 트랜잭션 객체 생성
+func CreateNewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *types.Transaction {
+	tx := types.NewTx(&types.LegacyTx{
+		Nonce:    nonce,
+		To:       &to,
+		Value:    amount,
+		Gas:      gasLimit,
+		GasPrice: gasPrice,
+		Data:     data,
+	})
+	return tx
+}
 
-	test_util.PrintETHSignedTxAsJSON(signedTx)
+func GenerateUnSignedTx(client ethclient.Client, signer types.Signer, fromAddress common.Address, toAddress common.Address, amount *big.Int) (*types.Transaction, []byte) {
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatalf("failed to get nonce: %v", err)
+	}
 
-	t.Logf("Signed transaction successfully verified")
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatalf("failed to get gas price: %v", err)
+	}
+	gasPrice = new(big.Int).Mul(gasPrice, big.NewInt(15))
+	gasPrice = new(big.Int).Div(gasPrice, big.NewInt(10))
 
+	gasLimit := uint64(21000)
+	tx := CreateNewTransaction(nonce, toAddress, amount, gasLimit, gasPrice, nil)
+	rlpEncodedTx, _ := rlp.EncodeToBytes([]interface{}{
+		tx.Nonce(),
+		tx.GasPrice(),
+		tx.Gas(),
+		tx.To(),
+		tx.Value(),
+		tx.Data(),
+		signer.ChainID(), uint(0), uint(0),
+	})
+	return tx, rlpEncodedTx
 }

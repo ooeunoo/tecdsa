@@ -1,28 +1,22 @@
 package integration
 
-import (
-	"net/http"
-	"os"
-	"time"
-)
+// var (
+// 	gatewayURL     string
+// 	keyGenResponse map[string]interface{}
+// 	httpClient     *http.Client
+// )
 
-var (
-	gatewayURL     string
-	keyGenResponse map[string]interface{}
-	httpClient     *http.Client
-)
+// func init() {
+// 	gatewayURL = os.Getenv("GATEWAY_URL")
+// 	if gatewayURL == "" {
+// 		gatewayURL = "http://localhost:8080" // 기본값 설정
+// 	}
 
-func init() {
-	gatewayURL = os.Getenv("GATEWAY_URL")
-	if gatewayURL == "" {
-		gatewayURL = "http://localhost:8080" // 기본값 설정
-	}
-
-	// HTTP 클라이언트 설정
-	httpClient = &http.Client{
-		Timeout: time.Second * 30, // 30초 타임아웃 설정
-	}
-}
+// 	// HTTP 클라이언트 설정
+// 	httpClient = &http.Client{
+// 		Timeout: time.Second * 30, // 30초 타임아웃 설정
+// 	}
+// }
 
 // func TestBTCKeyGenIntegration(t *testing.T) {
 // 	// 컨텍스트 생성
