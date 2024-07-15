@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -23,12 +22,14 @@ import (
 )
 
 var (
-	gatewayURL     string
-	httpClient     *http.Client
-	signer         types.EIP155Signer
-	tx             *types.Transaction
-	keyGenResponse map[string]interface{}
-	signResponse   map[string]interface{}
+	gatewayURL           string
+	httpClient           *http.Client
+	client               *ethclient.Client
+	signer               types.EIP155Signer
+	tx                   *types.Transaction
+	keyGenResponse       map[string]interface{}
+	signResponse         map[string]interface{}
+	signedRawTransaction string
 )
 
 func init() {
@@ -86,36 +87,16 @@ func TestETHKeyGenIntegration(t *testing.T) {
 }
 
 func TestETHSignIntegration(t *testing.T) {
-	// 키 생성 필수
 	if keyGenResponse == nil {
 		t.Fatal("KeyGen response is nil. Run TestKeyGenIntegration first.")
 	}
 
-	// Access the nested map structure
-	data, ok := keyGenResponse["data"].(map[string]interface{})
-	if !ok {
-		t.Fatal("Failed to get data from keyGenResponse")
-	}
-
-	fromAddress, ok := data["address"].(string)
-	if !ok {
-		t.Fatal("Failed to get address from keyGenResponse data")
-	}
-	fmt.Println("fromAddress:", fromAddress)
+	data, _ := keyGenResponse["data"].(map[string]interface{})
+	fromAddress, _ := data["address"].(string)
 
 	// TX 생성
-	client, err := ethclient.Dial("https://gateway.tenderly.co/public/sepolia")
-	if err != nil {
-		t.Fatalf("Failed to create Ethereum client: %v", err)
-	}
-	if client == nil {
-		t.Fatal("Ethereum client is nil")
-	}
-
-	chainID, err := client.NetworkID(context.Background())
-	if err != nil {
-		t.Fatalf("Failed to get network ID: %v", err)
-	}
+	client, _ = ethclient.Dial("https://gateway.tenderly.co/public/sepolia")
+	chainID, _ := client.NetworkID(context.Background())
 
 	signer = types.NewEIP155Signer(chainID)
 	from := common.HexToAddress(fromAddress)
@@ -180,7 +161,7 @@ func TestETHSignIntegration(t *testing.T) {
 
 }
 
-func TestETHCombineTxWithSignatureAndSend(t *testing.T) {
+func TestETHCombineTxWithSignature(t *testing.T) {
 	// 서명 필수
 	if signResponse == nil {
 		t.Fatal("Sign response is nil. Run TestETHSignIntegration first.")
@@ -207,8 +188,23 @@ func TestETHCombineTxWithSignatureAndSend(t *testing.T) {
 		t.Fatalf("Failed to serialize signed transaction: %v", err)
 	}
 
-	rawTxHex := hex.EncodeToString(rawTxBytes)
-	t.Logf("Signed Transaction Raw Hex: %s", rawTxHex)
+	signedRawTransaction = hex.EncodeToString(rawTxBytes)
+	t.Logf("Signed Transaction Raw Hex: %s", signedRawTransaction)
+}
+
+func TestETHSendRawTransaction(t *testing.T) {
+	// 서명 필수
+	if signedRawTransaction == "" {
+		t.Fatal("Sign Raw Transaction is nil. Run TestETHCombineTxWithSignatureAndSend first.")
+	}
+
+	signedRawTransactionBytes, _ := hex.DecodeString(signedRawTransaction)
+
+	var decodedSignedRawTransaction *types.Transaction
+	rlp.DecodeBytes(signedRawTransactionBytes, &decodedSignedRawTransaction)
+
+	client.SendTransaction(context.Background(), decodedSignedRawTransaction)
+
 }
 
 // 트랜잭션 객체 생성
