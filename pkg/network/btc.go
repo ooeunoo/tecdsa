@@ -1,12 +1,48 @@
 package network
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io"
+	"math/big"
+	"net/http"
+	"tecdsa/pkg/transaction"
 
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/coinbase/kryptology/pkg/core/curves"
 )
+
+type BitcoinTxRequest struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Amount string `json:"amount"` // satoshi
+	Fee    *int64 `json:"fee,omitempty"`
+}
+
+type BitcoinOutput struct {
+	Address string `json:"address"`
+	Amount  int64  `json:"amount"`
+}
+
+type UTXOStatus struct {
+	Confirmed   bool   `json:"confirmed"`
+	BlockHeight int64  `json:"block_height"`
+	BlockHash   string `json:"block_hash"`
+	BlockTime   int64  `json:"block_time"`
+}
+
+type UTXO struct {
+	TxID   string     `json:"txid"`
+	Vout   uint32     `json:"vout"`
+	Status UTXOStatus `json:"status"`
+	Value  int64      `json:"value"`
+}
 
 const (
 	/*
@@ -82,4 +118,191 @@ func DeriveBitcoinAddress(point curves.Point, network Network) (string, error) {
 	}
 
 	return address.EncodeAddress(), nil
+}
+
+func CreateUnsignedBitcoinTransaction(req interface{}, network Network) (*transaction.UnsignedTransaction, error) {
+	btcReq, ok := req.(BitcoinTxRequest)
+	if !ok {
+		return nil, fmt.Errorf("invalid request type for Bitcoin transaction")
+	}
+
+	var params *chaincfg.Params
+	switch network {
+	case Bitcoin:
+		params = &chaincfg.MainNetParams
+	case BitcoinTestNet:
+		params = &chaincfg.TestNet3Params
+	default:
+		return nil, fmt.Errorf("unsupported Bitcoin network: %v", network)
+	}
+
+	// Validate addresses
+	if !IsValidBitcoinAddress(btcReq.From, network) {
+		return nil, fmt.Errorf("invalid 'from' address: %s", btcReq.From)
+	}
+	if !IsValidBitcoinAddress(btcReq.To, network) {
+		return nil, fmt.Errorf("invalid 'to' address: %s", btcReq.To)
+	}
+
+	// Amount를 int64로 변환
+	amount, ok := new(big.Int).SetString(btcReq.Amount, 10)
+	if !ok {
+		return nil, fmt.Errorf("invalid amount: %s", btcReq.Amount)
+	}
+
+	// Get UTXOs for the from address
+	utxos, err := GetUnspentTxs(btcReq.From)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get UTXOs: %v", err)
+	}
+
+	fmt.Printf("Found %d UTXOs\n", len(utxos))
+
+	tx := wire.NewMsgTx(wire.TxVersion)
+
+	var totalInput int64
+	for _, utxo := range utxos {
+		if totalInput >= amount.Int64() {
+			break
+		}
+		hash, err := chainhash.NewHashFromStr(utxo.TxID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse txid: %v", err)
+		}
+		outPoint := wire.NewOutPoint(hash, utxo.Vout)
+		txIn := wire.NewTxIn(outPoint, nil, nil)
+		tx.AddTxIn(txIn)
+		totalInput += utxo.Value
+	}
+
+	if totalInput < amount.Int64() {
+		return nil, fmt.Errorf("insufficient funds: total input %d is less than required amount %d", totalInput, amount.Int64())
+	}
+
+	// Add the output
+	toAddress, err := btcutil.DecodeAddress(btcReq.To, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode to address: %v", err)
+	}
+	pkScript, err := txscript.PayToAddrScript(toAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pkScript: %v", err)
+	}
+	tx.AddTxOut(wire.NewTxOut(amount.Int64(), pkScript))
+
+	// Calculate fee
+	estimatedSize := tx.SerializeSize() + 100 // Add some buffer for signatures
+	feeRate := int64(20)                      // 20 satoshis per byte
+	fee := int64(estimatedSize) * feeRate
+	if btcReq.Fee != nil {
+		fee = *btcReq.Fee
+	}
+
+	if totalInput < amount.Int64()+fee {
+		return nil, fmt.Errorf("insufficient funds: have %d satoshis, need %d satoshis", totalInput, amount.Int64()+fee)
+	}
+
+	// Add change output if necessary
+	changeAmount := totalInput - amount.Int64() - fee
+	if changeAmount > 546 { // Dust limit
+		fromAddress, err := btcutil.DecodeAddress(btcReq.From, params)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode from address: %v", err)
+		}
+		changePkScript, err := txscript.PayToAddrScript(fromAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create change pkScript: %v", err)
+		}
+		tx.AddTxOut(wire.NewTxOut(changeAmount, changePkScript))
+	} else {
+		// 잔액이 더스트 한계보다 작으면 수수료에 추가
+		fee += changeAmount
+	}
+
+	// 수수료가 입력 금액의 50%를 초과하지 않도록 합니다.
+	if fee > totalInput/2 {
+		return nil, fmt.Errorf("fee is too high: %d satoshis", fee)
+	}
+
+	var buf bytes.Buffer
+	if err := tx.Serialize(&buf); err != nil {
+		return nil, fmt.Errorf("failed to serialize transaction: %v", err)
+	}
+
+	// Create UnsignedTransaction
+	unsignedTx := &transaction.UnsignedTransaction{
+		NetworkID:               network.ID(),
+		UnSignedTxEncodedBase64: base64.StdEncoding.EncodeToString(buf.Bytes()),
+		Extra: map[string]interface{}{
+			"from":   btcReq.From,
+			"to":     btcReq.To,
+			"amount": btcReq.Amount,
+			"fee":    fee,
+		},
+	}
+
+	return unsignedTx, nil
+}
+
+func GetUnspentTxs(address string) ([]UTXO, error) {
+	url := fmt.Sprintf("https://mempool.space/testnet/api/address/%s/utxo", address)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get UTXOs: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// 디버깅을 위해 응답 내용 출력
+	fmt.Printf("Unspent Txs API Response: %s\n", string(body))
+
+	var utxos []UTXO
+	err = json.Unmarshal(body, &utxos)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal UTXOs: %v", err)
+	}
+
+	return utxos, nil
+}
+
+func IsValidBitcoinAddress(address string, network Network) bool {
+	var params *chaincfg.Params
+	switch network {
+	case Bitcoin:
+		params = &chaincfg.MainNetParams
+	case BitcoinTestNet:
+		params = &chaincfg.TestNet3Params
+	default:
+		return false
+	}
+
+	// 주소 디코딩 시도
+	addr, err := btcutil.DecodeAddress(address, params)
+	if err != nil {
+		return false
+	}
+
+	// 주소가 지정된 네트워크에 대해 유효한지 확인
+	if !addr.IsForNet(params) {
+		return false
+	}
+
+	// 주소 유형에 따른 추가 검증
+	switch addr.(type) {
+	case *btcutil.AddressPubKeyHash:
+		return true
+	case *btcutil.AddressScriptHash:
+		return true
+	case *btcutil.AddressWitnessPubKeyHash:
+		return true
+	case *btcutil.AddressWitnessScriptHash:
+		return true
+	default:
+		// 지원되지 않는 주소 유형
+		return false
+	}
 }
