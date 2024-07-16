@@ -72,6 +72,7 @@ open_explorer() {
         -e BTCEXP_SLOW_DEVICE_MODE=false \
         -e BTCEXP_NO_RATES=true \
         -e BTCEXP_PRIVACY_MODE=true \
+        -e BTCEXP_ADDRESS_API=electrum \
         -e BTCEXP_RPC_ALLOWALL=true \
         btc-rpc-explorer
     echo "btc-rpc-explorer is running. You can access it at http://localhost:3002"
@@ -211,40 +212,40 @@ generate_to_address() {
     fi
 }
 
-get_balance() {
-    local address=$1
-    echo "Checking balance for address $address..."
-    local result=$(execute_rpc "getreceivedbyaddress" "[\"$address\", 0]")
-    local balance=$(echo "$result" | grep -o '"result":[0-9.]*' | cut -d':' -f2)
-    if [ -z "$balance" ]; then
-        echo "Error: Failed to get balance. Response: $result"
-        return 1
-    fi
-    echo "Total balance (including unconfirmed): $balance BTC"
-}
-
-# # 잔액 확인 함수
 # get_balance() {
 #     local address=$1
-#     if [ -z "$address" ]; then
-#         echo "Checking total wallet balance..."
-#         local result=$(execute_rpc "getbalance" "[]")
-#         local balance=$(parse_json "$result" "result")
-#     else
-#         echo "Checking balance for address $address..."
-#         local result=$(execute_rpc "listunspent" "[0, 9999999, [\"$address\"]]")
-#         if [[ $result == *"\"result\":[]"* ]]; then
-#             balance="0"
-#         else
-#             balance=$(echo "$result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
-#         fi
-#     fi
+#     echo "Checking balance for address $address..."
+#     local result=$(execute_rpc "getreceivedbyaddress" "[\"$address\", 0]")
+#     local balance=$(echo "$result" | grep -o '"result":[0-9.]*' | cut -d':' -f2)
 #     if [ -z "$balance" ]; then
 #         echo "Error: Failed to get balance. Response: $result"
 #         return 1
 #     fi
-#     echo "Spendable balance: $balance BTC"
+#     echo "Total balance (including unconfirmed): $balance BTC"
 # }
+
+# 잔액 확인 함수
+get_balance() {
+    local address=$1
+    if [ -z "$address" ]; then
+        echo "Checking total wallet balance..."
+        local result=$(execute_rpc "getbalance" "[]")
+        local balance=$(parse_json "$result" "result")
+    else
+        echo "Checking balance for address $address..."
+        local result=$(execute_rpc "listunspent" "[0, 9999999, [\"$address\"]]")
+        if [[ $result == *"\"result\":[]"* ]]; then
+            balance="0"
+        else
+            balance=$(echo "$result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
+        fi
+    fi
+    if [ -z "$balance" ]; then
+        echo "Error: Failed to get balance. Response: $result"
+        return 1
+    fi
+    echo "Spendable balance: $balance BTC"
+}
 
 # 트랜잭션 조회 함수
 get_transaction() {
