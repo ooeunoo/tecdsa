@@ -41,27 +41,64 @@ stop_bitcoin_node() {
     docker rm bitcoind
     echo "Bitcoin node stopped and container removed."
 }
-
-# 새 주소 생성 함수
+# 새 주소 생성 함수 (기본 타입)
 create_address() {
-    echo "Generating new address..."
-    local result=$(execute_rpc "getnewaddress" "[]")
-    local address=$(parse_json "$result" "result")
+    create_address_with_type "legacy"
+}
+# 특정 타입의 새 주소 생성 함수
+create_address_with_type() {
+    local address_type=$1
+    echo "Generating new $address_type address..."
+    
+    local result
+    case $address_type in
+        "p2pkh")
+            result=$(execute_rpc "getnewaddress" '["", "legacy"]')
+            ;;
+        "p2sh")
+            result=$(execute_rpc "getnewaddress" '["", "p2sh-segwit"]')
+            ;;
+        "p2wpkh")
+            result=$(execute_rpc "getnewaddress" '["", "bech32"]')
+            ;;
+        "p2wsh")
+            result=$(execute_rpc "addmultisigaddress" '[2, ["'$(execute_rpc "getnewaddress" '["", "bech32"]' | jq -r .result)'", "'$(execute_rpc "getnewaddress" '["", "bech32"]' | jq -r .result)'"], "", "bech32"]')
+            ;;
+        "p2tr")
+            result=$(execute_rpc "getnewaddress" '["", "bech32m"]')
+            ;;
+        *)
+            echo "Error: Invalid address type. Use 'p2pkh', 'p2sh', 'p2wpkh', 'p2wsh', or 'p2tr'."
+            return 1
+            ;;
+    esac
+
+    local address=$(echo "$result" | jq -r '.result')
     if [ -z "$address" ]; then
         echo "Error: Failed to generate new address. Response: $result"
         return 1
     fi
 
-    local privkey_result=$(execute_rpc "dumpprivkey" "[\"$address\"]")
-    local privkey=$(parse_json "$privkey_result" "result")
-    if [ -z "$privkey" ]; then
-        echo "Error: Failed to get private key. Response: $privkey_result"
-        return 1
+    local privkey_result
+    if [ "$address_type" != "p2wsh" ]; then
+        privkey_result=$(execute_rpc "dumpprivkey" "[\"$address\"]")
+        local privkey=$(echo "$privkey_result" | jq -r '.result')
+        if [ -z "$privkey" ]; then
+            echo "Error: Failed to get private key. Response: $privkey_result"
+            return 1
+        fi
+        echo "{"
+        echo "  \"address\": \"$address\","
+        echo "  \"privatekey\": \"$privkey\","
+        echo "  \"type\": \"$address_type\""
+        echo "}"
+    else
+        echo "{"
+        echo "  \"address\": \"$address\","
+        echo "  \"type\": \"$address_type\""
+        echo "  \"note\": \"P2WSH is a multisig address, no single private key available\""
+        echo "}"
     fi
-    echo "{"
-    echo "  \"address\": \"$address\","
-    echo "  \"privatekey\": \"$privkey\""
-    echo "}"
 }
 
 # 비트코인 전송 함수
@@ -109,9 +146,6 @@ get_balance() {
         else
             balance=$(echo "$result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
         fi
-        local immature_result=$(execute_rpc "listunspent" "[0, 99, [\"$address\"]]")
-        local immature_balance=$(echo "$immature_result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
-        echo "Immature balance (not yet spendable): $immature_balance BTC"
     fi
     if [ -z "$balance" ]; then
         echo "Error: Failed to get balance. Response: $result"
@@ -140,7 +174,14 @@ case "$1" in
         stop_bitcoin_node
         ;;
     create_address)
-        create_address
+        if [ $# -eq 2 ]; then
+            create_address_with_type "$2"
+        else
+            echo "Error: Address type is required."
+            echo "Usage: $0 create_address <type>"
+            echo "Available types: p2pkh, p2sh, p2wpkh, p2wsh, p2tr"
+            exit 1
+        fi
         ;;
     send)
         if [ $# -ne 3 ]; then
