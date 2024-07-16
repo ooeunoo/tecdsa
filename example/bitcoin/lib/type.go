@@ -1,5 +1,13 @@
 package lib
 
+const (
+	P2PKH   AddressType = "P2PKH"
+	P2SH    AddressType = "P2SH"
+	P2WPKH  AddressType = "P2WPKH"
+	P2WSH   AddressType = "P2WSH"
+	Unknown AddressType = "Unknown"
+)
+
 type KeyGenRequest struct {
 	Network int `json:"network"`
 }
@@ -61,3 +69,5 @@ type RPCResponse struct {
 	Error  interface{} `json:"error"`
 	ID     int         `json:"id"`
 }
+
+type AddressType string
