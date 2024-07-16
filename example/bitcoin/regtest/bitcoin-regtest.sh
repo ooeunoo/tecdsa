@@ -4,7 +4,104 @@
 RPC_USER="myuser"
 RPC_PASSWORD="SomeDecentp4ssw0rd"
 RPC_PORT="18443"
-BITCOIN_DATA_DIR="$HOME/bitcoin_data"
+BITCOIN_DATA_DIR="$(pwd)/bitcoin_data"
+
+
+start_bitcoin_node() {
+    echo "Starting Bitcoin regtest node..."
+    
+    # Create the Docker network if it doesn't exist
+    docker network create bitcoin-network 2>/dev/null
+    
+    # Start the Bitcoin node
+    docker run --name bitcoind -d \
+        --platform linux/amd64 \
+        --network bitcoin-network \
+        --volume $BITCOIN_DATA_DIR:/root/.bitcoin \
+        -p 127.0.0.1:$RPC_PORT:$RPC_PORT \
+        farukter/bitcoind:regtest
+    
+    echo "Bitcoin node started. Please wait a moment for it to fully initialize."
+}
+# Bitcoin regtest 노드 중지 함수
+stop_bitcoin_node() {
+    echo "Stopping Bitcoin regtest node..."
+    docker stop bitcoind
+    docker rm bitcoind
+    echo "Bitcoin node stopped and container removed."
+}
+
+build_explorer() {
+    echo "Building btc-rpc-explorer image..."
+    if [ ! -d "btc-rpc-explorer" ]; then
+        git clone https://github.com/janoside/btc-rpc-explorer.git
+    fi
+    cd btc-rpc-explorer
+    docker build -t btc-rpc-explorer .
+    cd ..
+}
+
+open_explorer() {
+    echo "Starting btc-rpc-explorer..."
+    
+    # Create a Docker network if it doesn't exist
+    docker network create bitcoin-network 2>/dev/null
+
+    # Run Bitcoin Core if it's not already running
+    start_bitcoin_node
+    
+    # Build btc-rpc-explorer image if it doesn't exist
+    if [[ "$(docker images -q btc-rpc-explorer 2> /dev/null)" == "" ]]; then
+        build_explorer
+    fi
+    
+    # Get Bitcoin node's IP address
+    BITCOIN_CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' bitcoind)
+
+    # Run btc-rpc-explorer
+    docker run -d --name btc-explorer \
+        --network bitcoin-network \
+        -p 3002:3002 \
+        -e BTCEXP_HOST=0.0.0.0 \
+        -e BTCEXP_BITCOIND_HOST=bitcoind \
+        -e BTCEXP_BITCOIND_PORT=$RPC_PORT \
+        -e BTCEXP_BITCOIND_USER=$RPC_USER \
+        -e BTCEXP_BITCOIND_PASS=$RPC_PASSWORD \
+        -e BTCEXP_BITCOIND_RPC_TIMEOUT=10000 \
+        -e BTCEXP_ADDRESS_API=none \
+        -e BTCEXP_SLOW_DEVICE_MODE=false \
+        -e BTCEXP_NO_RATES=true \
+        -e BTCEXP_PRIVACY_MODE=true \
+        -e BTCEXP_RPC_ALLOWALL=true \
+        btc-rpc-explorer
+    echo "btc-rpc-explorer is running. You can access it at http://localhost:3002"
+}
+
+stop_explorer() {
+    echo "Stopping btc-rpc-explorer..."
+    if docker ps -q -f name=btc-explorer | grep -q .; then
+        docker stop btc-explorer
+        docker rm btc-explorer
+        echo "btc-rpc-explorer container has been stopped and removed."
+    else
+        echo "btc-rpc-explorer container is not running."
+    fi
+
+    # Remove the btc-rpc-explorer image
+    if docker images -q btc-rpc-explorer | grep -q .; then
+        docker rmi btc-rpc-explorer
+        echo "btc-rpc-explorer image has been removed."
+    else
+        echo "btc-rpc-explorer image not found."
+    fi
+
+    # Remove the Docker network
+    docker network rm bitcoin-network 2>/dev/null
+
+    echo "btc-rpc-explorer has been fully removed."
+}
+
+
 
 # RPC 명령 실행 함수
 execute_rpc() {
@@ -24,23 +121,6 @@ parse_json() {
     echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | sed "s/\"$key\":\"//;s/\"$//"
 }
 
-# Bitcoin regtest 노드 실행 함수
-start_bitcoin_node() {
-    echo "Starting Bitcoin regtest node..."
-    docker run --name bitcoind -d \
-        --volume $BITCOIN_DATA_DIR:/root/.bitcoin \
-        -p 127.0.0.1:$RPC_PORT:$RPC_PORT \
-        farukter/bitcoind:regtest
-    echo "Bitcoin node started. Please wait a moment for it to fully initialize."
-}
-
-# Bitcoin regtest 노드 중지 함수
-stop_bitcoin_node() {
-    echo "Stopping Bitcoin regtest node..."
-    docker stop bitcoind
-    docker rm bitcoind
-    echo "Bitcoin node stopped and container removed."
-}
 # 새 주소 생성 함수 (기본 타입)
 create_address() {
     create_address_with_type "legacy"
@@ -131,38 +211,69 @@ generate_to_address() {
     fi
 }
 
-# 잔액 확인 함수
 get_balance() {
     local address=$1
-    if [ -z "$address" ]; then
-        echo "Checking total wallet balance..."
-        local result=$(execute_rpc "getbalance" "[]")
-        local balance=$(parse_json "$result" "result")
-    else
-        echo "Checking balance for address $address..."
-        local result=$(execute_rpc "listunspent" "[0, 9999999, [\"$address\"]]")
-        if [[ $result == *"\"result\":[]"* ]]; then
-            balance="0"
-        else
-            balance=$(echo "$result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
-        fi
-    fi
+    echo "Checking balance for address $address..."
+    local result=$(execute_rpc "getreceivedbyaddress" "[\"$address\", 0]")
+    local balance=$(echo "$result" | grep -o '"result":[0-9.]*' | cut -d':' -f2)
     if [ -z "$balance" ]; then
         echo "Error: Failed to get balance. Response: $result"
         return 1
     fi
-    echo "Spendable balance: $balance BTC"
+    echo "Total balance (including unconfirmed): $balance BTC"
 }
 
-# 사용법 출력 함수
+# # 잔액 확인 함수
+# get_balance() {
+#     local address=$1
+#     if [ -z "$address" ]; then
+#         echo "Checking total wallet balance..."
+#         local result=$(execute_rpc "getbalance" "[]")
+#         local balance=$(parse_json "$result" "result")
+#     else
+#         echo "Checking balance for address $address..."
+#         local result=$(execute_rpc "listunspent" "[0, 9999999, [\"$address\"]]")
+#         if [[ $result == *"\"result\":[]"* ]]; then
+#             balance="0"
+#         else
+#             balance=$(echo "$result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
+#         fi
+#     fi
+#     if [ -z "$balance" ]; then
+#         echo "Error: Failed to get balance. Response: $result"
+#         return 1
+#     fi
+#     echo "Spendable balance: $balance BTC"
+# }
+
+# 트랜잭션 조회 함수
+get_transaction() {
+    local txid=$1
+    echo "Fetching transaction details for TXID: $txid"
+    local result=$(execute_rpc "gettransaction" "[\"$txid\"]")
+    if [[ $result == *"\"error\""*"null"* ]]; then
+        echo "Transaction details:"
+        echo "$result" | jq '.'
+    else
+        echo "Error: Failed to get transaction details. Response: $result"
+        return 1
+    fi
+}
+
+
+
 print_usage() {
     echo "Usage:"
     echo "  $0 start                     - Start Bitcoin regtest node"
     echo "  $0 stop                      - Stop Bitcoin regtest node"
-    echo "  $0 create_address            - Create a new Bitcoin address"
+    echo "  $0 create_address <type>     - Create a new Bitcoin address"
     echo "  $0 send <address> <amount>   - Send Bitcoin to an address"
     echo "  $0 generate <address> <blocks> - Generate blocks with rewards going to the specified address"
     echo "  $0 balance [address]         - Check balance of an address or total wallet balance"
+    echo "  $0 tx <txid>                 - Get transaction details"
+    echo "  $0 explorer start            - Start bitcoin-abe explorer"
+    echo "  $0 explorer stop             - Stop bitcoin-abe explorer"
+
 }
 
 # 메인 로직
@@ -182,6 +293,29 @@ case "$1" in
             echo "Available types: p2pkh, p2sh, p2wpkh, p2wsh, p2tr"
             exit 1
         fi
+        ;;
+    tx)
+        if [ $# -ne 2 ]; then
+            echo "Error: 'tx' command requires a transaction ID."
+            print_usage
+            exit 1
+        fi
+        get_transaction "$2"
+        ;;
+    explorer)
+        case "$2" in
+            start)
+                open_explorer
+                ;;
+            stop)
+                stop_explorer
+                ;;
+            *)
+                echo "Error: Unknown explorer command '$2'"
+                echo "Usage: $0 explorer (start|stop)"
+                exit 1
+                ;;
+        esac
         ;;
     send)
         if [ $# -ne 3 ]; then

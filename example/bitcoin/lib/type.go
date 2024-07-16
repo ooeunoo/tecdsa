@@ -40,10 +40,12 @@ type UTXOStatus struct {
 }
 
 type UTXO struct {
-	TxID   string     `json:"txid"`
-	Vout   uint32     `json:"vout"`
-	Status UTXOStatus `json:"status"`
-	Value  int64      `json:"value"`
+	TxID    string     `json:"txid"`
+	Vout    uint32     `json:"vout"`
+	Status  UTXOStatus `json:"status"`
+	Value   int64      `json:"value"`
+	Address string     `json:"address"` // Add this line
+
 }
 
 type RPCRequest struct {

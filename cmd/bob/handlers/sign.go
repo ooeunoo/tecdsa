@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"hash"
 	"io"
@@ -112,6 +113,9 @@ func (h *SignHandler) handleRound2(stream pb.SignService_SignServer, ctx *signCo
 		return errors.New("retrieved secret share is not a BobOutput")
 	}
 
+	publicKeyBytes := bobOutput.PublicKey.ToAffineCompressed()
+	publicKeyHex := hex.EncodeToString(publicKeyBytes)
+	fmt.Println("Public Key (hex):", publicKeyHex)
 	ctx.bob = sign.NewBob(h.curve, h.hash, bobOutput)
 
 	round1Payload, err := deserializer.DecodeSignRound1Payload(msg.Payload)

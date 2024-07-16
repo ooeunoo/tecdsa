@@ -47,11 +47,22 @@ func main() {
 	// 키생성 요청
 	fmt.Printf("\n############################\n")
 	fmt.Printf("\n 1. Key Generation: DKG를 사용한 키 생성 단계 \n\n")
-	keyGenResp, err := performKeyGen()
-	if err != nil {
-		log.Fatalf("Key generation failed: %v", err)
+	var keyGenResp *lib.KeyGenResponse
+	keyGenFilePath := "key_gen_response.json"
+
+	if _, err := os.Stat(keyGenFilePath); os.IsNotExist(err) {
+		keyGenResp, err = performKeyGen()
+		if err != nil {
+			log.Fatalf("Key generation failed: %v", err)
+		}
+		saveKeyGenResponse(keyGenResp)
+	} else {
+		keyGenResp, err = loadKeyGenResponse(keyGenFilePath)
+		if err != nil {
+			log.Fatalf("Failed to load existing key: %v", err)
+		}
+		fmt.Println("Loaded existing key from file.")
 	}
-	saveKeyGenResponse(keyGenResp)
 	fmt.Printf("Address: %s\n", keyGenResp.Address)
 	fmt.Printf("ParitalSecretShare Key: %s\n", keyGenResp.SecretKey)
 	fmt.Printf("\n############################\n")
@@ -76,8 +87,8 @@ func main() {
 		common.HexToAddress("0xFDcBF476B286796706e273F86aC51163DA737FA8"),
 		new(big.Int).Div(amount, big.NewInt(3)),
 	)
-	rlpEncodedTxBase64 := base64.StdEncoding.EncodeToString(rlpEncodedTx)
-	fmt.Printf("rlpEncoded Transaction(base64): %s\n", rlpEncodedTxBase64)
+	encodedBase64 := base64.StdEncoding.EncodeToString(rlpEncodedTx)
+	fmt.Printf("encoded Transaction(base64): %s\n", encodedBase64)
 	fmt.Printf("\n############################\n")
 
 	// ********************************
@@ -201,4 +212,19 @@ func saveKeyGenResponse(resp *lib.KeyGenResponse) {
 	}
 
 	filepath.Abs("key_gen_response.json")
+}
+
+func loadKeyGenResponse(filePath string) (*lib.KeyGenResponse, error) {
+	file, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read key file: %v", err)
+	}
+
+	var response lib.KeyGenResponse
+	err = json.Unmarshal(file, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JSON from key file: %v", err)
+	}
+
+	return &response, nil
 }

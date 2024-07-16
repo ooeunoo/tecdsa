@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -38,14 +40,6 @@ func GetUnspentTxs(address string) ([]UTXO, error) {
 	}
 
 	return utxos, nil
-}
-
-func GetPayToAddrScript(address string, network *chaincfg.Params) ([]byte, error) {
-	addr, err := btcutil.DecodeAddress(address, network)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode address: %v", err)
-	}
-	return txscript.PayToAddrScript(addr)
 }
 
 func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string, error) {
@@ -90,7 +84,7 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 		fmt.Printf("Failed to print transaction info: %v\n", err)
 	}
 
-	err = SendSignedTransaction(rawTx)
+	_, err = SendSignedTransaction(rawTx)
 	if err != nil {
 		return "", fmt.Errorf("failed to send transaction: %v", err)
 	}
@@ -98,33 +92,34 @@ func InjectTestBTC(privateKey string, toAddress string, amount *big.Int) (string
 	return tx.TxHash().String(), nil
 }
 
-func SendSignedTransaction(signedTxHex string) error {
+func SendSignedTransaction(signedTxHex string) (string, error) {
 	url := "https://mempool.space/testnet/api/tx"
 	payload := []byte(signedTxHex)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		return fmt.Errorf("failed to create request: %v", err)
+		return "", fmt.Errorf("failed to create request: %v", err)
 	}
 
 	req.Header.Set("Content-Type", "text/plain")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
+		return "", fmt.Errorf("failed to send request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read response: %v", err)
+		return "", fmt.Errorf("failed to read response: %v", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to broadcast transaction: %s", body)
+		return "", fmt.Errorf("failed to broadcast transaction. Status: %d, Body: %s", resp.StatusCode, string(body))
 	}
 
-	fmt.Printf("Transaction broadcast successful. Transaction ID: %s\n", body)
-	return nil
+	txHash := string(body)
+	fmt.Printf("Transaction broadcast successful. Transaction ID: %s\n", txHash)
+	return txHash, nil
 }
 
 func GetBalance(address string) (int64, error) {
@@ -211,10 +206,10 @@ func CreateUnsignedTransaction(fromAddress string, toAddress string, amount *big
 	tx.AddTxOut(wire.NewTxOut(amount.Int64(), pkScript))
 
 	estimatedSize := tx.SerializeSize() + 100
-	feeRate := int64(20) // 수수료율을 20 satoshi/byte로 설정
+	feeRate := int64(20)
 	fee := int64(estimatedSize) * feeRate
 
-	minFee := int64(2202) // 최소 수수료를 2202 satoshi로 설정
+	minFee := int64(2202)
 	if fee < minFee {
 		fee = minFee
 	}
@@ -235,11 +230,9 @@ func CreateUnsignedTransaction(fromAddress string, toAddress string, amount *big
 		}
 		tx.AddTxOut(wire.NewTxOut(changeAmount, changePkScript))
 	} else {
-		// 잔액이 더스트 한계보다 작으면 수수료에 추가
 		fee += changeAmount
 	}
 
-	// 수수료가 입력 금액의 50%를 초과하지 않도록 합니다.
 	if fee > totalInput/2 {
 		return nil, nil, 0, fmt.Errorf("fee is too high: %d satoshis", fee)
 	}
@@ -328,7 +321,10 @@ func WaitForConfirmations(txHash string) error {
 		time.Sleep(1 * time.Minute) // Wait for 1 minute before checking again
 	}
 }
+
 func CombineBTCUnsignedTxWithSignature(unsignedTx *wire.MsgTx, signResponse SignResponse) (*wire.MsgTx, error) {
+	fmt.Println("Combining unsigned transaction with signature...")
+
 	// Decode R and S from base64
 	rBytes, err := base64.StdEncoding.DecodeString(signResponse.R)
 	if err != nil {
@@ -345,29 +341,43 @@ func CombineBTCUnsignedTxWithSignature(unsignedTx *wire.MsgTx, signResponse Sign
 	// Add sighash type
 	signatureBytes = append(signatureBytes, byte(txscript.SigHashAll))
 
-	// Create a new transaction to hold the signed version
+	fmt.Printf("Full signature: %x\n", signatureBytes)
+
+	pubKeyHex := "023f2c607db5f363064f825adb0549d25d3c897a2c68083d2f4abd04e7baa9f969"
+	pubKeyBytes, err := hex.DecodeString(pubKeyHex)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode public key: %v", err)
+	}
+
+	isValid, err := VerifyTransactionSignature(unsignedTx, signResponse, pubKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify signature: %v", err)
+	}
+	if !isValid {
+		return nil, fmt.Errorf("invalid signature")
+	}
+
 	signedTx := wire.NewMsgTx(unsignedTx.Version)
 
-	// Copy TxOut from unsigned transaction
 	for _, txOut := range unsignedTx.TxOut {
 		signedTx.AddTxOut(txOut)
 	}
 
-	// Sign each input
 	for _, txIn := range unsignedTx.TxIn {
 		signedTxIn := wire.NewTxIn(&txIn.PreviousOutPoint, nil, nil)
 
-		// For P2WPKH, we need to create a witness
-		// But we don't have the public key at this point, so we'll use a placeholder
-		witness := wire.TxWitness{signatureBytes, []byte{}} // Empty byte slice as placeholder for pubkey
+		witness := wire.TxWitness{signatureBytes, []byte{}}
 		signedTxIn.Witness = witness
+
+		signedTxIn.SignatureScript = []byte{}
 
 		signedTx.AddTxIn(signedTxIn)
 	}
 
+	fmt.Println("Transaction signing completed")
+
 	return signedTx, nil
 }
-
 func PrintBTCTransactionInfo(rawTxHex string) error {
 	rawTxBytes, err := hex.DecodeString(rawTxHex)
 	if err != nil {
@@ -399,4 +409,43 @@ func PrintBTCTransactionInfo(rawTxHex string) error {
 	}
 
 	return nil
+}
+
+func VerifySignature(pubKeyBytes, messageHash, rBytes, sBytes []byte) (bool, error) {
+	pubKey, err := btcec.ParsePubKey(pubKeyBytes)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse public key: %v", err)
+	}
+
+	r := new(btcec.ModNScalar)
+	r.SetByteSlice(rBytes)
+
+	s := new(btcec.ModNScalar)
+	s.SetByteSlice(sBytes)
+
+	signature := ecdsa.NewSignature(r, s)
+
+	hash := chainhash.DoubleHashB(messageHash)
+
+	return signature.Verify(hash, pubKey), nil
+}
+func VerifyTransactionSignature(tx *wire.MsgTx, signResponse SignResponse, pubKeyBytes []byte) (bool, error) {
+	rBytes, err := base64.StdEncoding.DecodeString(signResponse.R)
+	if err != nil {
+		return false, fmt.Errorf("failed to decode R: %v", err)
+	}
+	sBytes, err := base64.StdEncoding.DecodeString(signResponse.S)
+	if err != nil {
+		return false, fmt.Errorf("failed to decode S: %v", err)
+	}
+
+	txHash := tx.TxHash()
+
+	// Verify the signature
+	isValid, err := VerifySignature(pubKeyBytes, txHash[:], rBytes, sBytes)
+	if err != nil {
+		return false, fmt.Errorf("failed to verify signature: %v", err)
+	}
+
+	return isValid, nil
 }

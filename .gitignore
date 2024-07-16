@@ -9,3 +9,6 @@
 /bob
 /gateway
 /main
+
+/example/bitcoin/regtest/bitcoin-data
+/example/bitcoin/regtest/btc-rpc-explorer

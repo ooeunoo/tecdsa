@@ -129,11 +129,28 @@ func main() {
 	if err := signedTx.Serialize(&signedBuf); err != nil {
 		log.Fatalf("Failed to serialize signed transaction: %v", err)
 	}
-	signedTxHex := hex.EncodeToString(signedBuf.Bytes())
-	fmt.Printf("Signed Transaction Hex: %s\n", signedTxHex)
-	fmt.Printf("\n############################\n")
-	fmt.Printf("\n 5. Signed Transaction Detail: 트랜잭션과 서명 결합 후 완성된 Raw Transaction \n%s\n", signedTxHex)
 
+	signedTxHex := hex.EncodeToString(signedBuf.Bytes())
+	fmt.Println("txHash:", signedTx.TxHash())
+	if err != nil {
+		err = lib.PrintBTCTransactionInfo(signedTxHex)
+		if err != nil {
+			log.Printf("Failed to print transaction info: %v", err)
+		}
+	}
+	fmt.Printf("\n 5. Signed Transaction Detail: 트랜잭션과 서명 결합 후 완성된 Raw Transaction \n%s\n", signedTxHex)
+	fmt.Printf("\n############################\n")
+
+	// ********************************
+	// 네트워크 전파
+	fmt.Printf("\n############################\n")
+	fmt.Printf("\n 6. Send Test BTC Using Sign Signature: 네트워크 전파\n\n")
+	txHash, _ := lib.SendSignedTransaction(signedTxHex)
+	if err != nil {
+		log.Fatalf("Failed to send signed transaction: %v", err)
+	}
+	fmt.Printf("TxHash: %s \n", txHash)
+	fmt.Printf("\n############################\n")
 }
 
 func performKeyGen() (*lib.KeyGenResponse, error) {
@@ -241,3 +258,34 @@ func loadKeyGenResponse(filePath string) (*lib.KeyGenResponse, error) {
 
 	return &response, nil
 }
+
+// func SignBitcoinTransaction(tx *wire.MsgTx, utxos []lib.UTXO, signFunc func([]byte) ([]byte, error)) error {
+// 	for i, txIn := range tx.TxIn {
+// 		utxo := utxos[i]
+// 		prevOutScript, err := txscript.PayToAddrScript(utxo.Address)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to create prevOutScript: %v", err)
+// 		}
+
+// 		hash, err := CreateSignatureHash(tx, i, prevOutScript, txscript.SigHashAll, utxo.Value)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to create signature hash: %v", err)
+// 		}
+
+// 		signature, err := signFunc(hash)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to sign input %d: %v", i, err)
+// 		}
+
+// 		// Append SIGHASH_ALL byte
+// 		signature = append(signature, byte(txscript.SigHashAll))
+
+// 		// Create witness
+// 		txIn.Witness = wire.TxWitness{signature, utxo.Address.ScriptAddress()}
+// 	}
+// 	return nil
+// }
+
+// func CreateSignatureHash(tx *wire.MsgTx, idx int, prevOutScript []byte, hashType txscript.SigHashType, amount int64) ([]byte, error) {
+// 	return txscript.CalcWitnessSigHash(prevOutScript, txscript.NewTxSigHashes(tx), hashType, tx, idx, amount)
+// }

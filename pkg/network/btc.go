@@ -84,13 +84,17 @@ func DeriveBitcoinAddress(point curves.Point, network Network) (string, error) {
 	switch network {
 	case Bitcoin:
 		params = &chaincfg.MainNetParams
-		addrType = AddressTypeP2WPKH // 메인넷
+		addrType = AddressTypeP2PKH // 메인넷
 	case BitcoinTestNet:
 		params = &chaincfg.TestNet3Params
-		addrType = AddressTypeP2WPKH // 테스트넷
+		addrType = AddressTypeP2PKH // 테스트넷
+	case BitcoinRegTest:
+		params = &chaincfg.RegressionNetParams
+		addrType = AddressTypeP2PKH // 로컬
 	default:
 		return "", fmt.Errorf("unsupported Bitcoin network: %v", network)
 	}
+	fmt.Println("params:", params.Name)
 
 	var address btcutil.Address
 	var err error
@@ -291,6 +295,8 @@ func IsValidBitcoinAddress(address string, network Network) bool {
 		params = &chaincfg.MainNetParams
 	case BitcoinTestNet:
 		params = &chaincfg.TestNet3Params
+	case BitcoinRegTest:
+		params = &chaincfg.RegressionNetParams
 	default:
 		return false
 	}

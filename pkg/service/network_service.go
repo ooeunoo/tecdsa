@@ -33,6 +33,10 @@ func NewNetworkService() *NetworkService {
 				AddressDerivation:         network.DeriveBitcoinAddress,
 				CreateUnsignedTransaction: network.CreateUnsignedBitcoinTransaction,
 			},
+			network.BitcoinRegTest: {
+				AddressDerivation:         network.DeriveBitcoinAddress,
+				CreateUnsignedTransaction: network.CreateUnsignedBitcoinTransaction,
+			},
 			network.Ethereum: {
 				AddressDerivation:         network.DeriveEthereumAddress,
 				SignatureVerifier:         network.VerifyEtherumSignature,
@@ -48,18 +52,12 @@ func NewNetworkService() *NetworkService {
 }
 
 func (s *NetworkService) GetNetworkByID(id int32) (network.Network, error) {
-	switch id {
-	case 1:
-		return network.Bitcoin, nil
-	case 2:
-		return network.BitcoinTestNet, nil
-	case 3:
-		return network.Ethereum, nil
-	case 4:
-		return network.Ethereum_Sepolia, nil
-	default:
-		return 0, fmt.Errorf("unsupported network ID: %d", id)
+	for net, metadata := range network.NetworkMetadata {
+		if metadata.ID == id {
+			return net, nil
+		}
 	}
+	return 0, fmt.Errorf("unsupported network ID: %d", id)
 }
 
 func (s *NetworkService) GetAllNetworks() []network.Network {
@@ -68,6 +66,7 @@ func (s *NetworkService) GetAllNetworks() []network.Network {
 
 func (s *NetworkService) DeriveAddress(point curves.Point, network network.Network) (string, error) {
 	handler, exists := s.networkHandlerMap[network]
+
 	if !exists {
 		return "", fmt.Errorf("unsupported network: %s", network)
 	}

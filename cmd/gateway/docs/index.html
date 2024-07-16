@@ -75,6 +75,9 @@
         <a href="#key_gen" class="sidebar-link">Key Generation</a>
         <a href="#sign" class="sidebar-link">Sign</a>
         <a href="#networks" class="sidebar-link">Get All Networks</a>
+
+        <div class="section-title">ERROR CODE</div>
+        <a href="#error_codes" class="sidebar-link">Error</a>
         
         <div class="section-title">GUIDE</div>
         <a href="#bitcoin" class="sidebar-link">Bitcoin</a>
@@ -92,17 +95,12 @@
             <p><strong>Description:</strong> Generate a new ECDSA key pair</p>
             
             <h4>Request</h4>
-            <p>This endpoint doesn't require any parameters.</p>
-
-            <h4>Response</h4>
             <pre>
 {
-    "success": true,
-    "address": "0x...",
-    "secret_key": "...",
-    "duration": 0.123
+    "network": 4, // Example network ID
+    "request_id": "optional-request-id" // Optional
 }
-</pre>
+            </pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -110,22 +108,45 @@
                     <th>Description</th>
                 </tr>
                 <tr>
-                    <td>success</td>
-                    <td>boolean</td>
-                    <td>Indicates if the operation was successful</td>
+                    <td>network</td>
+                    <td>number</td>
+                    <td>The network ID for which the key is being generated</td>
                 </tr>
                 <tr>
-                    <td>address</td>
+                    <td>request_id</td>
+                    <td>string</td>
+                    <td>Optional unique identifier for the request</td>
+                </tr>
+            </table>
+
+            <h4>Response</h4>
+            <pre>
+{
+    "data": {
+        "request_id": "...",
+        "address": "0x...",
+        "duration": 0.123
+    }
+}
+            </pre>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>data.request_id</td>
+                    <td>string</td>
+                    <td>Unique identifier for the request</td>
+                </tr>
+                <tr>
+                    <td>data.address</td>
                     <td>string</td>
                     <td>The generated Ethereum address</td>
                 </tr>
                 <tr>
-                    <td>secret_key</td>
-                    <td>string</td>
-                    <td>The generated secret key (handle with care)</td>
-                </tr>
-                <tr>
-                    <td>duration</td>
+                    <td>data.duration</td>
                     <td>number</td>
                     <td>Time taken to generate the key pair (in seconds)</td>
                 </tr>
@@ -141,10 +162,9 @@
             <pre>
 {
     "address": "0x...",
-    "secret_key": "...",
     "tx_origin": "..."
 }
-</pre>
+            </pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -154,16 +174,11 @@
                 <tr>
                     <td>address</td>
                     <td>string</td>
-                    <td>The Ethereum address associated with the key</td>
-                </tr>
-                <tr>
-                    <td>secret_key</td>
-                    <td>string</td>
-                    <td>The secret key for signing</td>
+                    <td>The address associated with the key</td>
                 </tr>
                 <tr>
                     <td>tx_origin</td>
-                    <td>string</td>
+                    <td>string (encoded base64)</td>
                     <td>The transaction origin data to be signed</td>
                 </tr>
             </table>
@@ -171,10 +186,11 @@
             <h4>Response</h4>
             <pre>
 {
-    "success": true,
-    "v": "...",
-    "r": "...",
-    "s": "..."
+    "data": {
+        "v": "...",
+        "r": "...",
+        "s": "..."
+    }
 }
 </pre>
             <table>
@@ -184,22 +200,17 @@
                     <th>Description</th>
                 </tr>
                 <tr>
-                    <td>success</td>
-                    <td>boolean</td>
-                    <td>Indicates if the signing operation was successful</td>
-                </tr>
-                <tr>
-                    <td>v</td>
+                    <td>data.v</td>
                     <td>string</td>
                     <td>The v component of the ECDSA signature</td>
                 </tr>
                 <tr>
-                    <td>r</td>
+                    <td>data.r</td>
                     <td>string</td>
                     <td>The r component of the ECDSA signature</td>
                 </tr>
                 <tr>
-                    <td>s</td>
+                    <td>data.s</td>
                     <td>string</td>
                     <td>The s component of the ECDSA signature</td>
                 </tr>
@@ -216,14 +227,16 @@
 
             <h4>Response</h4>
             <pre>
-[
-    {
-        "name": "Ethereum",
-        "chain_id": 1
-    },
-    ...
-]
-</pre>
+{
+    "data": [
+        {
+            "name": "Ethereum",
+            "chain_id": 1
+        },
+        ...
+    ]
+}
+            </pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -231,16 +244,79 @@
                     <th>Description</th>
                 </tr>
                 <tr>
-                    <td>name</td>
+                    <td>data[].name</td>
                     <td>string</td>
                     <td>The name of the network</td>
                 </tr>
                 <tr>
-                    <td>chain_id</td>
+                    <td>data[].chain_id</td>
                     <td>number</td>
                     <td>The chain ID of the network</td>
                 </tr>
             </table>
+        </div>
+
+        <h2 id="error_codes">Error Codes</h2>
+        <div class="api-details">
+            <p>TECDSA API uses the following error codes:</p>
+            <table>
+                <tr>
+                    <th>Error Code</th>
+                    <th>HTTP Status</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>BAD_REQUEST</td>
+                    <td>400</td>
+                    <td>잘못된 요청입니다</td>
+                </tr>
+                <tr>
+                    <td>UNAUTHORIZED</td>
+                    <td>401</td>
+                    <td>인증되지 않은 요청입니다</td>
+                </tr>
+                <tr>
+                    <td>FORBIDDEN</td>
+                    <td>403</td>
+                    <td>접근이 금지되었습니다</td>
+                </tr>
+                <tr>
+                    <td>NOT_FOUND</td>
+                    <td>404</td>
+                    <td>요청한 리소스를 찾을 수 없습니다</td>
+                </tr>
+                <tr>
+                    <td>INTERNAL_SERVER_ERROR</td>
+                    <td>500</td>
+                    <td>내부 서버 오류가 발생했습니다</td>
+                </tr>
+                <tr>
+                    <td>KEY_GENERATION_ERROR</td>
+                    <td>500</td>
+                    <td>키 생성 중 알 수 없는 오류가 발생했습니다</td>
+                </tr>
+                <tr>
+                    <td>SIGNING_ERROR</td>
+                    <td>500</td>
+                    <td>서명 중 오류가 발생했습니다</td>
+                </tr>
+            </table>
+
+            <h3>Additional Error Messages</h3>
+            <ul>
+                <li>잘못된 요청 본문입니다</li>
+                <li>지원되지 않는 네트워크입니다</li>
+                <li>중복된 요청 ID입니다</li>
+                <li>클라이언트 보안 정보를 가져오는데 실패했습니다</li>
+                <li>스트림 설정에 실패했습니다</li>
+                <li>키 생성 시작에 실패했습니다</li>
+                <li>키 생성 중 실패했습니다</li>
+                <li>유효하지 않은 요청 ID입니다</li>
+                <li>gRPC 연결에 실패했습니다</li>
+                <li>서명 요청이 유효하지 않습니다</li>
+                <li>서명 프로세스 시작에 실패했습니다</li>
+                <li>서명 프로세스 중 실패했습니다</li>
+            </ul>
         </div>
 
         <h2>Guide</h2>
