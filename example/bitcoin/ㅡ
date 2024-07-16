@@ -1,0 +1,385 @@
+// package main
+
+// import (
+// 	"bytes"
+// 	"encoding/base64"
+// 	"encoding/hex"
+// 	"encoding/json"
+// 	"fmt"
+// 	"io/ioutil"
+// 	"log"
+// 	"math/big"
+// 	"net/http"
+// 	"os"
+// 	"path/filepath"
+
+// 	"btc_example/lib"
+
+// 	"github.com/btcsuite/btcd/btcec/v2"
+// 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+// 	"github.com/btcsuite/btcd/btcutil"
+// 	"github.com/btcsuite/btcd/chaincfg"
+// 	"github.com/btcsuite/btcd/txscript"
+// 	"github.com/btcsuite/btcd/wire"
+// 	"github.com/joho/godotenv"
+// )
+
+// func loadENV() string {
+// 	err := godotenv.Load(".env")
+// 	if err != nil {
+// 		log.Fatalf("Error loading .env file")
+// 	}
+// 	return "cPvQg6Vcs427QMn2cy9g5hcFVqRpuGGnnEwza4tdCdoS1NwuHh2j"
+// }
+
+// // p2pkh
+// func main() {
+// 	network := "regtest"
+// 	PRIVATE_KEY := loadENV()
+// 	wif, err := btcutil.DecodeWIF(PRIVATE_KEY)
+// 	if err != nil {
+// 		log.Fatalf("Failed to decode WIF: %v", err)
+// 	}
+
+// 	pubKeyHash := btcutil.Hash160(wif.PrivKey.PubKey().SerializeCompressed())
+// 	fromAddress, err := btcutil.NewAddressPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
+
+// 	if err != nil {
+// 		log.Fatalf("Failed to get from address: %v", err)
+// 	}
+
+// 	balance, err := lib.GetBalance(fromAddress.EncodeAddress(), network)
+// 	if err != nil {
+// 		log.Fatalf("Failed to get balance: %v", err)
+// 	}
+
+// 	fmt.Printf("Current balance: %s, %d satoshis (%.8f BTC)\n", fromAddress, balance, float64(balance)/100000000)
+
+// 	// ********************************
+// 	// 키생성 요청
+// 	fmt.Printf("\n############################\n")
+// 	fmt.Printf("\n 1. Key Generation: DKG를 사용한 키 생성 단계 \n\n")
+// 	var keyGenResp *lib.KeyGenResponse
+// 	keyGenFilePath := "key_gen_response.json"
+
+// 	if _, err := os.Stat(keyGenFilePath); os.IsNotExist(err) {
+// 		keyGenResp, err = performKeyGen()
+// 		if err != nil {
+// 			log.Fatalf("Key generation failed: %v", err)
+// 		}
+// 		saveKeyGenResponse(keyGenResp)
+// 	} else {
+// 		keyGenResp, err = loadKeyGenResponse(keyGenFilePath)
+// 		if err != nil {
+// 			log.Fatalf("Failed to load existing key: %v", err)
+// 		}
+// 		fmt.Println("Loaded existing key from file.")
+// 	}
+// 	fmt.Printf("Address: %s\n", keyGenResp.Address)
+// 	fmt.Printf("\n############################\n")
+
+// 	// ********************************
+// 	// 테스트 BTC 주입
+// 	fmt.Printf("\n 2. Inject Test BTC: 이후 코인 전송 테스트를 위한 테스트 비트 주입 단계  \n\n")
+// 	toAddress := keyGenResp.Address
+// 	amount := big.NewInt(100000000) // 1 BTC in satoshis
+// 	injectTxHash, err := lib.InjectTestBTC(PRIVATE_KEY, toAddress, amount, network)
+// 	if err != nil {
+// 		log.Fatalf("Failed to inject test BTC: %v", err)
+// 	}
+// 	fmt.Printf("TxHash: %s \n", injectTxHash)
+// 	fmt.Println("Waiting for block confirmations...")
+// 	err = lib.WaitForConfirmations(injectTxHash, network)
+// 	if err != nil {
+// 		log.Fatalf("Failed to wait for confirmations: %v", err)
+// 	}
+// 	fmt.Println("Transaction confirmed")
+// 	fmt.Printf("\n############################\n")
+
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// 1. 미서명 트랜잭션 생성
+// 	// 3. Create Encoded Unsigned Transaction
+// 	fmt.Printf("Public Key: %s\n", keyGenResp.PublicKey)
+
+// 	signedTx, err := CreateAndSignTransaction(keyGenResp.Address, toAddress, amount, network, keyGenResp.PublicKey, func(hash []byte) (*lib.SignResponse, error) {
+// 		return performSign(keyGenResp.Address, hash)
+// 	})
+// 	if err != nil {
+// 		log.Fatalf("Failed to create and sign transaction: %v", err)
+// 	}
+
+// 	// 서명된 트랜잭션 전송
+// 	rawTx, err := signedTxToHex(signedTx)
+// 	if err != nil {
+// 		log.Fatalf("Failed to convert signed transaction to hex: %v", err)
+// 	}
+// 	txHash, err := lib.SendSignedTransaction(rawTx, network)
+// 	if err != nil {
+// 		log.Fatalf("Failed to send signed transaction: %v", err)
+// 	}
+// 	fmt.Printf("Transaction sent. Hash: %s\n", txHash)
+
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+// 	// ********************************
+
+// }
+// func CreateAndSignTransaction(fromAddress, toAddress string, amount *big.Int, network string, pubKey string, signFunc func([]byte) (*lib.SignResponse, error)) (*wire.MsgTx, error) {
+
+// 	// 1. 미서명 트랜잭션 생성
+// 	unsignedTx, _, _, err := lib.CreateUnsignedTransaction(fromAddress, toAddress, amount, network)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to create unsigned transaction: %v", err)
+// 	}
+
+// 	// 네트워크 파라미터 설정
+// 	var params *chaincfg.Params
+// 	switch network {
+// 	case "mainnet":
+// 		params = &chaincfg.MainNetParams
+// 	case "testnet":
+// 		params = &chaincfg.TestNet3Params
+// 	case "regtest":
+// 		params = &chaincfg.RegressionNetParams
+// 	default:
+// 		return nil, fmt.Errorf("unsupported network: %s", network)
+// 	}
+
+// 	// fromAddress 디코딩
+// 	fromAddr, err := btcutil.DecodeAddress(fromAddress, params)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to decode from address: %v", err)
+// 	}
+
+// 	// 2. 서명 해시 계산 및 3. 서명 수행
+// 	for i, txIn := range unsignedTx.TxIn {
+// 		prevOutScript, err := txscript.PayToAddrScript(fromAddr)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to create prevOutScript: %v", err)
+// 		}
+
+// 		sigHash, err := txscript.CalcSignatureHash(prevOutScript, txscript.SigHashAll, unsignedTx, i)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to calculate signature hash: %v", err)
+// 		}
+
+// 		// 외부 서명 함수 호출
+// 		signResponse, err := signFunc(sigHash)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to sign input %d: %v", i, err)
+// 		}
+
+// 		rBytes, _ := base64.StdEncoding.DecodeString(signResponse.R)
+// 		sBytes, _ := base64.StdEncoding.DecodeString(signResponse.S)
+// 		signature := append(rBytes, sBytes...)
+// 		signature = append(signature, byte(txscript.SigHashAll))
+
+// 		// 4. ScriptSig 생성
+// 		pubKeyBytes, _ := hex.DecodeString("04baec30d4ada062e52fb879cc9f9cf39bb4c38316934c952186ab31236550de7893f2445501083bcc98f442456485132288c8684fce0af2db356753af8aa2346e")
+// 		pubKey, _ := btcec.ParsePubKey(pubKeyBytes)
+// 		compressedPubKey := pubKey.SerializeCompressed()
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to decode public key: %v", err)
+// 		}
+// 		scriptSig, err := CreateScriptSig(signature, compressedPubKey)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to create scriptSig: %v", err)
+// 		}
+
+// 		// 5. 서명 검증
+// 		isValid, err := VerifySignature(compressedPubKey, sigHash, signature[:len(signature)-1], signature[len(signature)-1:])
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to verify signature: %v", err)
+// 		}
+// 		if !isValid {
+// 			return nil, fmt.Errorf("invalid signature for input %d", i)
+// 		}
+
+// 		// 6. 서명된 트랜잭션 완성
+// 		txIn.SignatureScript = scriptSig
+// 	}
+
+// 	return unsignedTx, nil
+// }
+
+// func CreateScriptSig(signature []byte, pubKey []byte) ([]byte, error) {
+// 	builder := txscript.NewScriptBuilder()
+// 	builder.AddData(signature)
+// 	builder.AddData(pubKey)
+// 	return builder.Script()
+// }
+
+// func VerifySignature(pubKeyBytes, messageHash, rBytes, sBytes []byte) (bool, error) {
+// 	pubKey, err := btcec.ParsePubKey(pubKeyBytes)
+// 	if err != nil {
+// 		return false, fmt.Errorf("failed to parse public key: %v", err)
+// 	}
+
+// 	r := new(btcec.ModNScalar)
+// 	if overflow := r.SetByteSlice(rBytes); overflow {
+// 		return false, fmt.Errorf("R value is too large")
+// 	}
+
+// 	s := new(btcec.ModNScalar)
+// 	if overflow := s.SetByteSlice(sBytes); overflow {
+// 		return false, fmt.Errorf("S value is too large")
+// 	}
+
+// 	signature := ecdsa.NewSignature(r, s)
+// 	return signature.Verify(messageHash, pubKey), nil
+// }
+// func performKeyGen() (*lib.KeyGenResponse, error) {
+// 	reqData := lib.KeyGenRequest{Network: 3} // bitcoin regtest
+// 	jsonData, err := json.Marshal(reqData)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to marshal request data: %v", err)
+// 	}
+
+// 	resp, err := http.Post("http://localhost:8080/key_gen", "application/json", bytes.NewBuffer(jsonData))
+// 	if err != nil {
+// 		return nil, fmt.Errorf("HTTP POST request failed: %v", err)
+// 	}
+// 	defer resp.Body.Close()
+
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to read response body: %v", err)
+// 	}
+
+// 	var response struct {
+// 		Data lib.KeyGenResponse `json:"data"`
+// 	}
+// 	err = json.Unmarshal(body, &response)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to parse JSON response: %v", err)
+// 	}
+
+// 	return &response.Data, nil
+// }
+
+// func performSign(address string, txOrigin []byte) (*lib.SignResponse, error) {
+// 	signReqData := lib.SignRequest{
+// 		Address:  address,
+// 		TxOrigin: base64.StdEncoding.EncodeToString(txOrigin),
+// 	}
+
+// 	jsonData, err := json.Marshal(signReqData)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to marshal sign request data: %v", err)
+// 	}
+
+// 	req, err := http.NewRequest("POST", "http://localhost:8080/sign", bytes.NewBuffer(jsonData))
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to create request: %v", err)
+// 	}
+// 	req.Header.Set("Content-Type", "application/json")
+
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("HTTP POST request failed: %v", err)
+// 	}
+// 	defer resp.Body.Close()
+
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to read sign response body: %v", err)
+// 	}
+
+// 	var response struct {
+// 		Data lib.SignResponse `json:"data"`
+// 	}
+// 	err = json.Unmarshal(body, &response)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to parse sign JSON response: %v", err)
+// 	}
+
+// 	if resp.StatusCode != http.StatusOK {
+// 		return nil, fmt.Errorf("server returned error: %s", string(body))
+// 	}
+// 	return &response.Data, nil
+
+// }
+// func signedTxToHex(tx *wire.MsgTx) (string, error) {
+// 	var buf bytes.Buffer
+// 	err := tx.Serialize(&buf)
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to serialize transaction: %v", err)
+// 	}
+// 	return hex.EncodeToString(buf.Bytes()), nil
+// }
+// func saveKeyGenResponse(resp *lib.KeyGenResponse) {
+
+// 	file, err := json.MarshalIndent(resp, "", "  ")
+// 	if err != nil {
+// 		log.Printf("Failed to marshal response to JSON: %v", err)
+// 		return
+// 	}
+
+// 	err = ioutil.WriteFile("key_gen_response.json", file, 0644)
+// 	if err != nil {
+// 		log.Printf("Failed to write response to file: %v", err)
+// 		return
+// 	}
+
+// 	filepath.Abs("key_gen_response.json")
+// }
+
+// func loadKeyGenResponse(filePath string) (*lib.KeyGenResponse, error) {
+// 	file, err := ioutil.ReadFile(filePath)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to read key file: %v", err)
+// 	}
+
+// 	var response lib.KeyGenResponse
+// 	err = json.Unmarshal(file, &response)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to parse JSON from key file: %v", err)
+// 	}
+
+// 	return &response, nil
+// }
+
+// // func SignBitcoinTransaction(tx *wire.MsgTx, utxos []lib.UTXO, signFunc func([]byte) ([]byte, error)) error {
+// // 	for i, txIn := range tx.TxIn {
+// // 		utxo := utxos[i]
+// // 		prevOutScript, err := txscript.PayToAddrScript(utxo.Address)
+// // 		if err != nil {
+// // 			return fmt.Errorf("failed to create prevOutScript: %v", err)
+// // 		}
+
+// // 		hash, err := CreateSignatureHash(tx, i, prevOutScript, txscript.SigHashAll, utxo.Value)
+// // 		if err != nil {
+// // 			return fmt.Errorf("failed to create signature hash: %v", err)
+// // 		}
+
+// // 		signature, err := signFunc(hash)
+// // 		if err != nil {
+// // 			return fmt.Errorf("failed to sign input %d: %v", i, err)
+// // 		}
+
+// // 		// Append SIGHASH_ALL byte
+// // 		signature = append(signature, byte(txscript.SigHashAll))
+
+// // 		// Create witness
+// // 		txIn.Witness = wire.TxWitness{signature, utxo.Address.ScriptAddress()}
+// // 	}
+// // 	return nil
+// // }
+
+// // func CreateSignatureHash(tx *wire.MsgTx, idx int, prevOutScript []byte, hashType txscript.SigHashType, amount int64) ([]byte, error) {
+// // 	return txscript.CalcWitnessSigHash(prevOutScript, txscript.NewTxSigHashes(tx), hashType, tx, idx, amount)
+// // }

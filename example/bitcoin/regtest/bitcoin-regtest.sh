@@ -6,23 +6,39 @@ RPC_PASSWORD="SomeDecentp4ssw0rd"
 RPC_PORT="18443"
 BITCOIN_DATA_DIR="$(pwd)/bitcoin_data"
 
+# RPC 명령 실행 함수
+execute_rpc() {
+    local method=$1
+    local params=$2
+    curl -s -u "$RPC_USER:$RPC_PASSWORD" \
+        -d "{\"jsonrpc\":\"1.0\",\"id\":\"curltest\",\"method\":\"$method\",\"params\":$params}" \
+        -H 'content-type: application/json;' \
+        http://127.0.0.1:$RPC_PORT/
+}
 
+# JSON 파싱 함수
+parse_json() {
+    local json="$1"
+    local key="$2"
+    echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | sed "s/\"$key\":\"//;s/\"$//"
+}
+
+# Bitcoin regtest 노드 실행 함수
 start_bitcoin_node() {
     echo "Starting Bitcoin regtest node..."
-    
-    # Create the Docker network if it doesn't exist
-    docker network create bitcoin-network 2>/dev/null
-    
-    # Start the Bitcoin node
+    mkdir -p "$BITCOIN_DATA_DIR"
+    echo "rpcuser=$RPC_USER" > "$BITCOIN_DATA_DIR/bitcoin.conf"
+    echo "rpcpassword=$RPC_PASSWORD" >> "$BITCOIN_DATA_DIR/bitcoin.conf"
+    echo "rpcallowip=0.0.0.0/0" >> "$BITCOIN_DATA_DIR/bitcoin.conf"
+    echo "server=1" >> "$BITCOIN_DATA_DIR/bitcoin.conf"
     docker run --name bitcoind -d \
-        --platform linux/amd64 \
         --network bitcoin-network \
         --volume $BITCOIN_DATA_DIR:/root/.bitcoin \
         -p 127.0.0.1:$RPC_PORT:$RPC_PORT \
         farukter/bitcoind:regtest
-    
     echo "Bitcoin node started. Please wait a moment for it to fully initialize."
 }
+
 # Bitcoin regtest 노드 중지 함수
 stop_bitcoin_node() {
     echo "Stopping Bitcoin regtest node..."
@@ -31,34 +47,9 @@ stop_bitcoin_node() {
     echo "Bitcoin node stopped and container removed."
 }
 
-build_explorer() {
-    echo "Building btc-rpc-explorer image..."
-    if [ ! -d "btc-rpc-explorer" ]; then
-        git clone https://github.com/janoside/btc-rpc-explorer.git
-    fi
-    cd btc-rpc-explorer
-    docker build -t btc-rpc-explorer .
-    cd ..
-}
-
+# Explorer 실행 함수
 open_explorer() {
     echo "Starting btc-rpc-explorer..."
-    
-    # Create a Docker network if it doesn't exist
-    docker network create bitcoin-network 2>/dev/null
-
-    # Run Bitcoin Core if it's not already running
-    start_bitcoin_node
-    
-    # Build btc-rpc-explorer image if it doesn't exist
-    if [[ "$(docker images -q btc-rpc-explorer 2> /dev/null)" == "" ]]; then
-        build_explorer
-    fi
-    
-    # Get Bitcoin node's IP address
-    BITCOIN_CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' bitcoind)
-
-    # Run btc-rpc-explorer
     docker run -d --name btc-explorer \
         --network bitcoin-network \
         -p 3002:3002 \
@@ -72,12 +63,14 @@ open_explorer() {
         -e BTCEXP_SLOW_DEVICE_MODE=false \
         -e BTCEXP_NO_RATES=true \
         -e BTCEXP_PRIVACY_MODE=true \
-        -e BTCEXP_ADDRESS_API=electrum \
         -e BTCEXP_RPC_ALLOWALL=true \
+        -e BTCEXP_BASIC_AUTH_PASSWORD=mypassword \
         btc-rpc-explorer
     echo "btc-rpc-explorer is running. You can access it at http://localhost:3002"
+    echo "Use any username and 'mypassword' as the password to log in."
 }
 
+# Explorer 중지 함수
 stop_explorer() {
     echo "Stopping btc-rpc-explorer..."
     if docker ps -q -f name=btc-explorer | grep -q .; then
@@ -87,44 +80,14 @@ stop_explorer() {
     else
         echo "btc-rpc-explorer container is not running."
     fi
-
-    # Remove the btc-rpc-explorer image
     if docker images -q btc-rpc-explorer | grep -q .; then
         docker rmi btc-rpc-explorer
         echo "btc-rpc-explorer image has been removed."
     else
         echo "btc-rpc-explorer image not found."
     fi
-
-    # Remove the Docker network
     docker network rm bitcoin-network 2>/dev/null
-
     echo "btc-rpc-explorer has been fully removed."
-}
-
-
-
-# RPC 명령 실행 함수
-execute_rpc() {
-    local method=$1
-    local params=$2
-    local response=$(curl -s -u "$RPC_USER:$RPC_PASSWORD" \
-        -d "{\"jsonrpc\":\"1.0\",\"id\":\"curltest\",\"method\":\"$method\",\"params\":$params}" \
-        -H 'content-type: application/json;' \
-        http://127.0.0.1:$RPC_PORT/)
-    echo "$response"
-}
-
-# JSON 파싱 함수
-parse_json() {
-    local json="$1"
-    local key="$2"
-    echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | sed "s/\"$key\":\"//;s/\"$//"
-}
-
-# 새 주소 생성 함수 (기본 타입)
-create_address() {
-    create_address_with_type "legacy"
 }
 # 특정 타입의 새 주소 생성 함수
 create_address_with_type() {
@@ -181,48 +144,30 @@ create_address_with_type() {
         echo "}"
     fi
 }
-
-# 비트코인 전송 함수
-send_bitcoin() {
-    local to_address=$1
-    local amount=$2
-    echo "Sending $amount BTC to $to_address..."
-    local result=$(execute_rpc "sendtoaddress" "[\"$to_address\",$amount]")
-    local txid=$(parse_json "$result" "result")
-    if [ -z "$txid" ]; then
-        echo "Error: Failed to send Bitcoin. Response: $result"
-        return 1
-    fi
-    echo "Transaction ID: $txid"
-}
-
-# 특정 주소로 비트코인 생성 함수
-generate_to_address() {
+# 주소 가져오기 함수
+import_address() {
     local address=$1
-    local blocks=$2
-    echo "Generating $blocks blocks to address $address..."
-    local result=$(execute_rpc "generatetoaddress" "[$blocks,\"$address\"]")
-    if [[ $result == *"\"error\""*"null"* ]]; then
-        echo "Successfully generated $blocks blocks."
-        echo "First and last block hashes:"
-        echo "$result" | grep -o '\[.*\]' | sed 's/\[//;s/\]//;s/,/\n/g' | sed -n '1p;$p'
-    else
-        echo "Error: Failed to generate blocks. Response: $result"
+    echo "Importing address $address to the wallet..."
+    local result=$(execute_rpc "importaddress" "[\"$address\", \"\", false]")
+    local error=$(echo "$result" | jq -r '.error')
+    
+    if [ "$error" != "null" ]; then
+        echo "Error: Failed to import address. Response: $result"
         return 1
+    else
+        echo "Address $address has been imported successfully."
+        
+        # Verify the import by checking if the address is in the wallet
+        local verify_result=$(execute_rpc "getaddressinfo" "[\"$address\"]")
+        local is_mine=$(echo "$verify_result" | jq -r '.result.ismine')
+        
+        if [ "$is_mine" = "true" ]; then
+            echo "Verified: The address is now in the wallet."
+        else
+            echo "Warning: The address import might have failed. Please check manually."
+        fi
     fi
 }
-
-# get_balance() {
-#     local address=$1
-#     echo "Checking balance for address $address..."
-#     local result=$(execute_rpc "getreceivedbyaddress" "[\"$address\", 0]")
-#     local balance=$(echo "$result" | grep -o '"result":[0-9.]*' | cut -d':' -f2)
-#     if [ -z "$balance" ]; then
-#         echo "Error: Failed to get balance. Response: $result"
-#         return 1
-#     fi
-#     echo "Total balance (including unconfirmed): $balance BTC"
-# }
 
 # 잔액 확인 함수
 get_balance() {
@@ -230,14 +175,14 @@ get_balance() {
     if [ -z "$address" ]; then
         echo "Checking total wallet balance..."
         local result=$(execute_rpc "getbalance" "[]")
-        local balance=$(parse_json "$result" "result")
+        local balance=$(echo "$result" | jq -r '.result')
     else
         echo "Checking balance for address $address..."
         local result=$(execute_rpc "listunspent" "[0, 9999999, [\"$address\"]]")
         if [[ $result == *"\"result\":[]"* ]]; then
             balance="0"
         else
-            balance=$(echo "$result" | grep -o '"amount":[0-9.]*' | cut -d':' -f2 | awk '{sum += $1} END {print sum}')
+            balance=$(echo "$result" | jq -r '.result | map(.amount) | add')
         fi
     fi
     if [ -z "$balance" ]; then
@@ -247,22 +192,31 @@ get_balance() {
     echo "Spendable balance: $balance BTC"
 }
 
+# 비트코인 전송 함수
+send_bitcoin() {
+    local to_address=$1
+    local amount=$2
+    echo "Sending $amount BTC to $to_address..."
+    execute_rpc "sendtoaddress" "[\"$to_address\",$amount]" | jq '.'
+}
+
+# 블록 생성 함수
+generate_to_address() {
+    local address=$1
+    local blocks=$2
+    echo "Generating $blocks blocks to address $address..."
+    execute_rpc "generatetoaddress" "[$blocks,\"$address\"]" | jq '.'
+}
+
+
 # 트랜잭션 조회 함수
 get_transaction() {
     local txid=$1
     echo "Fetching transaction details for TXID: $txid"
-    local result=$(execute_rpc "gettransaction" "[\"$txid\"]")
-    if [[ $result == *"\"error\""*"null"* ]]; then
-        echo "Transaction details:"
-        echo "$result" | jq '.'
-    else
-        echo "Error: Failed to get transaction details. Response: $result"
-        return 1
-    fi
+    execute_rpc "gettransaction" "[\"$txid\"]" | jq '.'
 }
 
-
-
+# 사용법 출력 함수
 print_usage() {
     echo "Usage:"
     echo "  $0 start                     - Start Bitcoin regtest node"
@@ -270,21 +224,16 @@ print_usage() {
     echo "  $0 create_address <type>     - Create a new Bitcoin address"
     echo "  $0 send <address> <amount>   - Send Bitcoin to an address"
     echo "  $0 generate <address> <blocks> - Generate blocks with rewards going to the specified address"
-    echo "  $0 balance [address]         - Check balance of an address or total wallet balance"
+    echo "  $0 balance <address>         - Check balance of an address"
     echo "  $0 tx <txid>                 - Get transaction details"
-    echo "  $0 explorer start            - Start bitcoin-abe explorer"
-    echo "  $0 explorer stop             - Stop bitcoin-abe explorer"
-
+    echo "  $0 explorer start            - Start btc-rpc-explorer"
+    echo "  $0 explorer stop             - Stop btc-rpc-explorer"
 }
 
 # 메인 로직
 case "$1" in
-    start)
-        start_bitcoin_node
-        ;;
-    stop)
-        stop_bitcoin_node
-        ;;
+    start) start_bitcoin_node ;;
+    stop) stop_bitcoin_node ;;
     create_address)
         if [ $# -eq 2 ]; then
             create_address_with_type "$2"
@@ -295,47 +244,61 @@ case "$1" in
             exit 1
         fi
         ;;
+    send)
+        if [ $# -eq 3 ]; then
+            send_bitcoin "$2" "$3"
+        else
+            echo "Error: 'send' command requires an address and an amount."
+            print_usage
+            exit 1
+        fi
+        ;;
+    generate)
+        if [ $# -eq 3 ]; then
+            generate_to_address "$2" "$3"
+        else
+            echo "Error: 'generate' command requires an address and number of blocks."
+            print_usage
+            exit 1
+        fi
+        ;;
+    balance)
+        if [ $# -eq 2 ]; then
+            get_balance "$2"
+        else
+            echo "Error: 'balance' command requires an address."
+            print_usage
+            exit 1
+        fi
+        ;;
     tx)
-        if [ $# -ne 2 ]; then
+        if [ $# -eq 2 ]; then
+            get_transaction "$2"
+        else
             echo "Error: 'tx' command requires a transaction ID."
             print_usage
             exit 1
         fi
-        get_transaction "$2"
+        ;;
+    import_address)
+        if [ $# -eq 2 ]; then
+            import_address "$2"
+        else
+            echo "Error: 'import_address' command requires an address."
+            echo "Usage: $0 import_address <address>"
+            exit 1
+        fi
         ;;
     explorer)
         case "$2" in
-            start)
-                open_explorer
-                ;;
-            stop)
-                stop_explorer
-                ;;
+            start) open_explorer ;;
+            stop) stop_explorer ;;
             *)
                 echo "Error: Unknown explorer command '$2'"
                 echo "Usage: $0 explorer (start|stop)"
                 exit 1
                 ;;
         esac
-        ;;
-    send)
-        if [ $# -ne 3 ]; then
-            echo "Error: 'send' command requires an address and an amount."
-            print_usage
-            exit 1
-        fi
-        send_bitcoin "$2" "$3"
-        ;;
-    generate)
-        if [ $# -ne 3 ]; then
-            echo "Error: 'generate' command requires an address and number of blocks."
-            print_usage
-            exit 1
-        fi
-        generate_to_address "$2" "$3"
-        ;;
-    balance)
-        get_balance "$2"
         ;;
     *)
         echo "Error: Unknown command '$1'"

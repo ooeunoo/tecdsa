@@ -1,0 +1,114 @@
+// // ********************************
+// // 서명 데이터 생성
+// fmt.Printf("\n 3. Create Encoded Unsigned Transaction: 서명되지않은 트랜잭션 데이터 생성 단계 \n\n")
+// amount2 := big.NewInt(100000000) // 0.1 BTC in satoshis
+// tx, _, _, err := lib.CreateUnsignedTransaction(keyGenResp.Address, "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5", amount2, network)
+// if err != nil {
+// 	log.Fatalf("Failed to create unsigned transaction: %v", err)
+// }
+// var buf bytes.Buffer
+// if err := tx.Serialize(&buf); err != nil {
+// 	log.Fatalf("Failed to serialize transaction: %v", err)
+// }
+// encodedBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+// fmt.Printf("encoded Transaction(base64): %s\n", encodedBase64)
+// fmt.Printf("\n############################\n")
+
+// // ********************************
+// // 서명 요청
+// fmt.Printf("\n 4. Sign Transaction: 서명 단계 \n\n")
+// signResp, err := performSign(keyGenResp.Address, buf.Bytes())
+// if err != nil {
+// 	log.Fatalf("Failed to sign transaction: %v", err)
+// }
+// fmt.Println("v: ", signResp.V)
+// fmt.Println("r: ", signResp.R)
+// fmt.Println("s: ", signResp.S)
+// fmt.Printf("\n############################\n")
+
+// // ********************************
+// // 트랜잭션, 서명 결합
+// pubKeyBytes, _ := hex.DecodeString(keyGenResp.PublicKey)
+// pubKey, _ := btcec.ParsePubKey(pubKeyBytes)
+// compressedPubKey := pubKey.SerializeCompressed()
+// // pubKeyHex := hex.EncodeToString(compressedPubKey)
+
+// signedTx, err := lib.CombineBTCUnsignedTxWithSignature(tx, *signResp, compressedPubKey)
+// if err != nil {
+// 	log.Fatalf("Failed to combine unsigned transaction with signature: %v", err)
+// }
+// var signedBuf bytes.Buffer
+// if err := signedTx.Serialize(&signedBuf); err != nil {
+// 	log.Fatalf("Failed to serialize signed transaction: %v", err)
+// }
+
+// signedTxHex := hex.EncodeToString(signedBuf.Bytes())
+// fmt.Println("txHash:", signedTx.TxHash())
+// // if err != nil {
+// // 	err = lib.PrintBTCTransactionInfo(signedTxHex)
+// // 	if err != nil {
+// // 		log.Printf("Failed to print transaction info: %v", err)
+// // 	}
+// // }
+// fmt.Printf("\n 5. Signed Transaction Detail: 트랜잭션과 서명 결합 후 완성된 Raw Transaction \n%s\n", signedTxHex)
+// fmt.Printf("\n############################\n")
+// 3. Create Encoded Unsigned Transaction
+// fmt.Printf("\n 3. Create Encoded Unsigned Transaction: 서명되지않은 트랜잭션 데이터 생성 단계 \n\n")
+// amount2 := big.NewInt(100000000) // 0.1 BTC in satoshis
+// tx, utxos, _, err := lib.CreateUnsignedTransaction(keyGenResp.Address, "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5", amount2, network)
+// if err != nil {
+// 	log.Fatalf("Failed to create unsigned transaction: %v", err)
+// }
+
+// // Calculate the transaction hash that needs to be signed
+// txHash, err := lib.CalculateTransactionHash(tx, utxos, &chaincfg.RegressionNetParams)
+// if err != nil {
+// 	log.Fatalf("Failed to calculate transaction hash: %v", err)
+// }
+
+// encodedTxHash := base64.StdEncoding.EncodeToString(txHash)
+// fmt.Printf("Transaction hash to be signed (base64): %s\n", encodedTxHash)
+// fmt.Printf("\n############################\n")
+
+// // 4. Sign Transaction
+// fmt.Printf("\n 4. Sign Transaction: 서명 단계 \n\n")
+// signResp, err := performSign(keyGenResp.Address, txHash)
+// if err != nil {
+// 	log.Fatalf("Failed to sign transaction: %v", err)
+// }
+
+// fmt.Println("v: ", signResp.V)
+// fmt.Println("r: ", signResp.R)
+// fmt.Println("s: ", signResp.S)
+// fmt.Printf("\n############################\n")
+
+// // 5. Combine Transaction with Signature
+// pubKeyBytes, _ := hex.DecodeString(keyGenResp.PublicKey)
+// hashToSign, err := lib.CalculateTransactionHash(tx, utxos, &chaincfg.RegressionNetParams)
+// if err != nil {
+// 	log.Fatalf("Failed to calculate transaction hash: %v", err)
+// }
+
+// signedTx, err := lib.CombineBTCUnsignedTxWithSignature(tx, *signResp, pubKeyBytes, hashToSign)
+// if err != nil {
+// 	log.Fatalf("Failed to combine unsigned transaction with signature: %v", err)
+// }
+
+// var signedBuf bytes.Buffer
+// if err := signedTx.Serialize(&signedBuf); err != nil {
+// 	log.Fatalf("Failed to serialize signed transaction: %v", err)
+// }
+
+// signedTxHex := hex.EncodeToString(signedBuf.Bytes())
+// fmt.Printf("\n 5. Signed Transaction Detail: 트랜잭션과 서명 결합 후 완성된 Raw Transaction \n%s\n", signedTxHex)
+// fmt.Printf("\n############################\n")
+// // ********************************
+// // 네트워크 전파
+// fmt.Printf("\n############################\n")
+// fmt.Printf("\n 6. Send Test BTC Using Sign Signature: 네트워크 전파\n\n")
+// sendSignedTxHash, _ := lib.SendSignedTransaction(signedTxHex, network)
+// if err != nil {
+// 	log.Fatalf("Failed to send signed transaction: %v", err)
+// }
+// fmt.Printf("TxHash: %s \n", sendSignedTxHash)
+// fmt.Printf("\n############################\n")

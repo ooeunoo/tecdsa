@@ -6,7 +6,7 @@ type KeyGenRequest struct {
 
 type KeyGenResponse struct {
 	Address   string `json:"address"`
-	SecretKey string `json:"secret_key"` // encoded base64
+	PublicKey string `json:"public_key"` // encoded base64
 	Duration  int    `json:"duration"`
 }
 
@@ -40,11 +40,12 @@ type UTXOStatus struct {
 }
 
 type UTXO struct {
-	TxID    string     `json:"txid"`
-	Vout    uint32     `json:"vout"`
-	Status  UTXOStatus `json:"status"`
-	Value   int64      `json:"value"`
-	Address string     `json:"address"` // Add this line
+	TxID         string     `json:"txid"`
+	Vout         uint32     `json:"vout"`
+	Status       UTXOStatus `json:"status"`
+	Value        int64      `json:"value"`
+	ScriptPubKey []byte     `json:"scriptPubKey"`
+	Address      string     `json:"address"` // Add this line
 
 }
 
