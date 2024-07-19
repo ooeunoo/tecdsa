@@ -89,18 +89,18 @@
 
         <h2>API Reference</h2>
 
-        <h3 id="key_gen">Key Generation</h3>
+        <h3 id="key_gen">키(주소) 생성하기</h3>
         <div class="api-details">
-            <p><strong>Endpoint:</strong> POST /key_gen</p>
-            <p><strong>Description:</strong> Generate a new ECDSA key pair</p>
+            <p><strong>엔드포인트:</strong> POST /key_gen</p>
+            <p><strong>설명:</strong> 신규 주소 생성</p>
             
-            <h4>Request</h4>
+            <h4>요청</h4>
             <pre>
 {
-    "network": 4, // Example network ID
-    "request_id": "optional-request-id" // Optional
+    "network": 4, 
+    "request_id": "request-id" // Optional
 }
-            </pre>
+</pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -110,16 +110,16 @@
                 <tr>
                     <td>network</td>
                     <td>number</td>
-                    <td>The network ID for which the key is being generated</td>
+                    <td>네트워크 ID - [Get All Networks API의 응답에 대한 ID값] (*체인아이디 아님)</td>
                 </tr>
                 <tr>
                     <td>request_id</td>
-                    <td>string</td>
-                    <td>Optional unique identifier for the request</td>
+                    <td>string(Optional)</td>
+                    <td>유니크한 요청 아이디값</td>
                 </tr>
             </table>
 
-            <h4>Response</h4>
+            <h4>응답</h4>
             <pre>
 {
     "data": {
@@ -128,7 +128,7 @@
         "duration": 0.123
     }
 }
-            </pre>
+</pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -138,33 +138,33 @@
                 <tr>
                     <td>data.request_id</td>
                     <td>string</td>
-                    <td>Unique identifier for the request</td>
+                    <td>유니크한 요청 아이디값</td>
                 </tr>
                 <tr>
                     <td>data.address</td>
                     <td>string</td>
-                    <td>The generated Ethereum address</td>
+                    <td>생성된 신규 주소</td>
                 </tr>
                 <tr>
                     <td>data.duration</td>
                     <td>number</td>
-                    <td>Time taken to generate the key pair (in seconds)</td>
+                    <td>요청 -> 응답까지 걸린 시간</td>
                 </tr>
             </table>
         </div>
 
-        <h3 id="sign">Sign</h3>
+        <h3 id="sign">서명하기</h3>
         <div class="api-details">
-            <p><strong>Endpoint:</strong> POST /sign</p>
-            <p><strong>Description:</strong> Sign a message using the generated key</p>
+            <p><strong>엔드포인트:</strong> POST /sign</p>
+            <p><strong>설명:</strong> 메시지의 ECDSA 서명 결과</p>
             
-            <h4>Request</h4>
+            <h4>요청</h4>
             <pre>
 {
     "address": "0x...",
     "tx_origin": "..."
 }
-            </pre>
+</pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -174,16 +174,16 @@
                 <tr>
                     <td>address</td>
                     <td>string</td>
-                    <td>The address associated with the key</td>
+                    <td>서명을 진행할 주소 (ex, 0xABC...)</td>
                 </tr>
                 <tr>
                     <td>tx_origin</td>
                     <td>string (encoded base64)</td>
-                    <td>The transaction origin data to be signed</td>
+                    <td>서명을 진행할 메시지 (Base64 인코딩해서 요청해야함)</td>
                 </tr>
             </table>
 
-            <h4>Response</h4>
+            <h4>응답</h4>
             <pre>
 {
     "data": {
@@ -202,30 +202,30 @@
                 <tr>
                     <td>data.v</td>
                     <td>string</td>
-                    <td>The v component of the ECDSA signature</td>
+                    <td>ECDSA 서명값의 V</td>
                 </tr>
                 <tr>
                     <td>data.r</td>
                     <td>string</td>
-                    <td>The r component of the ECDSA signature</td>
+                    <td>ECDSA 서명값의 R</td>
                 </tr>
                 <tr>
                     <td>data.s</td>
                     <td>string</td>
-                    <td>The s component of the ECDSA signature</td>
+                    <td>ECDSA 서명값의 S</td>
                 </tr>
             </table>
         </div>
 
-        <h3 id="networks">Get All Networks</h3>
+        <h3 id="networks">지원하는 네트워크 조회하기</h3>
         <div class="api-details">
-            <p><strong>Endpoint:</strong> GET /networks</p>
-            <p><strong>Description:</strong> Retrieve all available networks</p>
+            <p><strong>엔드포인트:</strong> GET /networks</p>
+            <p><strong>설명:</strong> 지원 네트워크 조회</p>
             
-            <h4>Request</h4>
-            <p>This endpoint doesn't require any parameters.</p>
+            <h4>요청</h4>
+            <p></p>
 
-            <h4>Response</h4>
+            <h4>응답</h4>
             <pre>
 {
     "data": [
@@ -236,7 +236,7 @@
         ...
     ]
 }
-            </pre>
+</pre>
             <table>
                 <tr>
                     <th>Field</th>
@@ -246,19 +246,19 @@
                 <tr>
                     <td>data[].name</td>
                     <td>string</td>
-                    <td>The name of the network</td>
+                    <td>네트워크 이름</td>
                 </tr>
                 <tr>
                     <td>data[].chain_id</td>
                     <td>number</td>
-                    <td>The chain ID of the network</td>
+                    <td>네트워크 체인 아이디 (없을경우, nil)</td>
                 </tr>
             </table>
         </div>
 
         <h2 id="error_codes">Error Codes</h2>
         <div class="api-details">
-            <p>TECDSA API uses the following error codes:</p>
+            <p>에러 코드</p>
             <table>
                 <tr>
                     <th>Error Code</th>
@@ -323,12 +323,12 @@
 
         <h3 id="bitcoin">Bitcoin</h3>
         <div class="guide-details">
-            <p>Bitcoin guide content goes here...</p>
+            <!-- <p></p> -->
         </div>
 
         <h3 id="ethereum">Ethereum</h3>
         <div class="guide-details">
-            <p>Ethereum guide content goes here...</p>
+            <!-- <p></p> -->
         </div>
     </div>
 
