@@ -6,15 +6,18 @@ RPC_PASSWORD="SomeDecentp4ssw0rd"
 RPC_PORT="18443"
 BITCOIN_DATA_DIR="$(pwd)/bitcoin_data"
 
+
 # RPC 명령 실행 함수
 execute_rpc() {
     local method=$1
     local params=$2
-    curl -s -u "$RPC_USER:$RPC_PASSWORD" \
+    local response=$(curl -s -u "$RPC_USER:$RPC_PASSWORD" \
         -d "{\"jsonrpc\":\"1.0\",\"id\":\"curltest\",\"method\":\"$method\",\"params\":$params}" \
         -H 'content-type: application/json;' \
-        http://127.0.0.1:$RPC_PORT/
+        http://127.0.0.1:$RPC_PORT/)
+    echo "$response"
 }
+
 
 # JSON 파싱 함수
 parse_json() {
@@ -26,16 +29,18 @@ parse_json() {
 # Bitcoin regtest 노드 실행 함수
 start_bitcoin_node() {
     echo "Starting Bitcoin regtest node..."
-    mkdir -p "$BITCOIN_DATA_DIR"
-    echo "rpcuser=$RPC_USER" > "$BITCOIN_DATA_DIR/bitcoin.conf"
-    echo "rpcpassword=$RPC_PASSWORD" >> "$BITCOIN_DATA_DIR/bitcoin.conf"
-    echo "rpcallowip=0.0.0.0/0" >> "$BITCOIN_DATA_DIR/bitcoin.conf"
-    echo "server=1" >> "$BITCOIN_DATA_DIR/bitcoin.conf"
+    
+    # Create the Docker network if it doesn't exist
+    docker network create bitcoin-network 2>/dev/null
+    
+    # Start the Bitcoin node
     docker run --name bitcoind -d \
+        --platform linux/amd64 \
         --network bitcoin-network \
         --volume $BITCOIN_DATA_DIR:/root/.bitcoin \
         -p 127.0.0.1:$RPC_PORT:$RPC_PORT \
         farukter/bitcoind:regtest
+    
     echo "Bitcoin node started. Please wait a moment for it to fully initialize."
 }
 
@@ -88,6 +93,11 @@ stop_explorer() {
     fi
     docker network rm bitcoin-network 2>/dev/null
     echo "btc-rpc-explorer has been fully removed."
+}
+
+# 새 주소 생성 함수 (기본 타입)
+create_address() {
+    create_address_with_type "legacy"
 }
 # 특정 타입의 새 주소 생성 함수
 create_address_with_type() {
@@ -144,6 +154,7 @@ create_address_with_type() {
         echo "}"
     fi
 }
+
 # 주소 가져오기 함수
 import_address() {
     local address=$1
@@ -207,7 +218,6 @@ generate_to_address() {
     echo "Generating $blocks blocks to address $address..."
     execute_rpc "generatetoaddress" "[$blocks,\"$address\"]" | jq '.'
 }
-
 
 # 트랜잭션 조회 함수
 get_transaction() {

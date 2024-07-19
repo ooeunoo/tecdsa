@@ -11,143 +11,103 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-	"path/filepath"
+	"sync"
 
-	"btc_example/lib"
-
+	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/cryptobyte"
+	"golang.org/x/crypto/cryptobyte/asn1"
 )
 
+type KeyGenResponse struct {
+	Address   string `json:"address"`
+	PublicKey string `json:"public_key"`
+}
+
+type SignResponse struct {
+	V int    `json:"v"`
+	R string `json:"r"`
+	S string `json:"s"`
+}
+
+type UTXO struct {
+	TxID         string `json:"txid"`
+	Vout         uint32 `json:"vout"`
+	Amount       int64  `json:"amount"`
+	ScriptPubKey []byte `json:"scriptPubKey"`
+}
+
+var (
+	utxoCache      map[string][]UTXO
+	utxoCacheMutex sync.RWMutex
+)
+
+func init() {
+	utxoCache = make(map[string][]UTXO)
+}
+
 func main() {
-	// 환경 설정
-	network := "regtest"
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
-	privateKey := os.Getenv("PRIVATE_KEY")
 
-	// ********************************
-	// 키생성 요청
-	fmt.Printf("\n############################\n")
-	fmt.Printf("\n 1. Key Generation: DKG를 사용한 키 생성 단계 \n\n")
-	var keyGenResp *lib.KeyGenResponse
-	keyGenFilePath := "key_gen_response.json"
-
-	if _, err := os.Stat(keyGenFilePath); os.IsNotExist(err) {
-		keyGenResp, err = performKeyGen()
-		if err != nil {
-			log.Fatalf("Key generation failed: %v", err)
-		}
-		saveKeyGenResponse(keyGenResp)
-	} else {
-		keyGenResp, err = loadKeyGenResponse(keyGenFilePath)
-		if err != nil {
-			log.Fatalf("Failed to load existing key: %v", err)
-		}
-		fmt.Println("Loaded existing key from file.")
-	}
-	fmt.Printf("Address: %s\n", keyGenResp.Address)
-	fmt.Printf("\n############################\n")
-
-	// 2. 테스트 BTC 주입
-	amount := big.NewInt(100000000) // 1 BTC
-	injectTxHash, err := injectTestBTC(privateKey, keyGenResp.Address, amount, network)
+	network := "regtest"
+	keyGenResp, err := loadOrGenerateKey()
 	if err != nil {
-		log.Fatalf("Failed to inject test BTC: %v", err)
+		log.Fatalf("Failed to load or generate key: %v", err)
 	}
-	fmt.Printf("Inject Transaction Hash: %s\n", injectTxHash)
 
-	// 3. 미서명 트랜잭션 생성
-	toAddress := "tb1qt2y5mv8zl65h3lpvmpjrqw9l0axskms574zjz5"
-	unsignedTx, utxos, err := createUnsignedTransaction(keyGenResp.Address, toAddress, amount, network)
+	fmt.Printf("Address: %s\n", keyGenResp.Address)
+
+	// 트랜잭션 생성
+	from := keyGenResp.Address
+	to := "mygGWsTEhWRQg8nbwsJ9aPXeDpxdroaTag"
+	amount := int64(100000000) // 1 BTC in satoshis
+	fee := int64(4000)         // 4000 satoshis
+
+	unsignedTx, err := createUnsignedTransaction(from, to, amount, fee, network)
 	if err != nil {
 		log.Fatalf("Failed to create unsigned transaction: %v", err)
 	}
 
-	// 4. 트랜잭션 해시 계산
-	txHash, err := calculateTransactionHash(unsignedTx, utxos, network)
-	if err != nil {
-		log.Fatalf("Failed to calculate transaction hash: %v", err)
-	}
-
-	// 5. 서명 수행
-	signResp, err := performSign(keyGenResp.Address, txHash)
+	// 트랜잭션 서명
+	signedTx, err := signTransaction(unsignedTx, keyGenResp)
 	if err != nil {
 		log.Fatalf("Failed to sign transaction: %v", err)
 	}
 
-	// 6. 서명된 트랜잭션 생성
-	signedTx, err := combineSignature(unsignedTx, signResp, keyGenResp.PublicKey, txHash)
+	// 트랜잭션 검증
+	if err := validateTransaction(signedTx, keyGenResp.Address, network); err != nil {
+		log.Fatalf("Transaction validation failed: %v", err)
+	}
+
+	// 트랜잭션 전파
+	txHash, err := broadcastTransaction(signedTx, network)
 	if err != nil {
-		log.Fatalf("Failed to combine signature with transaction: %v", err)
+		log.Fatalf("Failed to broadcast transaction: %v", err)
 	}
 
-	// 7. 서명된 트랜잭션 전송
-	signedTxHex, err := signedTxToHex(signedTx)
-	if err != nil {
-		log.Fatalf("Failed to convert signed transaction to hex: %v", err)
+	fmt.Printf("Transaction broadcasted. Hash: %s\n", txHash)
+}
+
+func loadOrGenerateKey() (*KeyGenResponse, error) {
+	keyGenFilePath := "key_gen_response.json"
+	if _, err := os.Stat(keyGenFilePath); os.IsNotExist(err) {
+		return performKeyGen()
 	}
+	return loadKeyGenResponse(keyGenFilePath)
+}
 
-	sendSignedTxHash, err := lib.SendSignedTransaction(signedTxHex, network)
-	if err != nil {
-		log.Fatalf("Failed to send signed transaction: %v", err)
+func performKeyGen() (*KeyGenResponse, error) {
+	reqData := struct {
+		Network int `json:"network"`
+	}{
+		Network: 3, // bitcoin regtest
 	}
-
-	fmt.Printf("TxHash: %s \n", sendSignedTxHash)
-}
-
-func signedTxToHex(tx *wire.MsgTx) (string, error) {
-	var buf bytes.Buffer
-	if err := tx.Serialize(&buf); err != nil {
-		return "", fmt.Errorf("failed to serialize transaction: %v", err)
-	}
-	return hex.EncodeToString(buf.Bytes()), nil
-}
-func injectTestBTC(privateKey, toAddress string, amount *big.Int, network string) (string, error) {
-	return lib.InjectTestBTC(privateKey, toAddress, amount, network)
-}
-
-func createUnsignedTransaction(fromAddress, toAddress string, amount *big.Int, network string) (*wire.MsgTx, []lib.UTXO, error) {
-	tx, utxos, _, err := lib.CreateUnsignedTransaction(fromAddress, toAddress, amount, network)
-	return tx, utxos, err
-}
-
-func calculateTransactionHash(tx *wire.MsgTx, utxos []lib.UTXO, network string) ([]byte, error) {
-	var params *chaincfg.Params
-	switch network {
-	case "mainnet":
-		params = &chaincfg.MainNetParams
-	case "testnet":
-		params = &chaincfg.TestNet3Params
-	case "regtest":
-		params = &chaincfg.RegressionNetParams
-	default:
-		return nil, fmt.Errorf("unsupported network: %s", network)
-	}
-	return lib.CalculateTransactionHash(tx, utxos, params)
-}
-
-func combineSignature(tx *wire.MsgTx, signResp *lib.SignResponse, pubKeyHex string, txHash []byte) (*wire.MsgTx, error) {
-	pubKeyBytes, err := hex.DecodeString(pubKeyHex)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode public key: %v", err)
-	}
-	return lib.CombineBTCUnsignedTxWithSignature(tx, *signResp, pubKeyBytes, txHash)
-}
-
-func sendSignedTransaction(tx *wire.MsgTx, network string) (string, error) {
-	var buf bytes.Buffer
-	if err := tx.Serialize(&buf); err != nil {
-		return "", fmt.Errorf("failed to serialize transaction: %v", err)
-	}
-	txHex := hex.EncodeToString(buf.Bytes())
-	return lib.SendSignedTransaction(txHex, network)
-}
-
-func performKeyGen() (*lib.KeyGenResponse, error) {
-	reqData := lib.KeyGenRequest{Network: 3} // bitcoin regtest
 	jsonData, err := json.Marshal(reqData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request data: %v", err)
@@ -165,31 +125,148 @@ func performKeyGen() (*lib.KeyGenResponse, error) {
 	}
 
 	var response struct {
-		Data lib.KeyGenResponse `json:"data"`
+		Data KeyGenResponse `json:"data"`
 	}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %v", err)
 	}
 
+	saveKeyGenResponse(&response.Data)
 	return &response.Data, nil
 }
 
-func performSign(address string, txOrigin []byte) (*lib.SignResponse, error) {
-	signReqData := lib.SignRequest{
+func saveKeyGenResponse(resp *KeyGenResponse) {
+	file, _ := json.MarshalIndent(resp, "", " ")
+	_ = ioutil.WriteFile("key_gen_response.json", file, 0644)
+}
+
+func loadKeyGenResponse(filePath string) (*KeyGenResponse, error) {
+	file, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read key file: %v", err)
+	}
+
+	var response KeyGenResponse
+	err = json.Unmarshal(file, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JSON from key file: %v", err)
+	}
+
+	return &response, nil
+}
+
+func createUnsignedTransaction(from, to string, amount int64, fee int64, network string) (*wire.MsgTx, error) {
+	utxos, err := getUnspentTxs(from, network)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get UTXOs: %v", err)
+	}
+
+	tx := wire.NewMsgTx(wire.TxVersion)
+
+	var totalIn int64
+	for _, utxo := range utxos {
+		if totalIn >= amount+fee {
+			break
+		}
+		hash, _ := chainhash.NewHashFromStr(utxo.TxID)
+		outPoint := wire.NewOutPoint(hash, utxo.Vout)
+		txIn := wire.NewTxIn(outPoint, nil, nil)
+		tx.AddTxIn(txIn)
+		totalIn += utxo.Amount
+	}
+
+	if totalIn < amount+fee {
+		return nil, fmt.Errorf("insufficient funds")
+	}
+
+	toAddr, _ := btcutil.DecodeAddress(to, &chaincfg.RegressionNetParams)
+	pkScript, _ := txscript.PayToAddrScript(toAddr)
+	tx.AddTxOut(wire.NewTxOut(amount, pkScript))
+
+	if totalIn > amount+fee {
+		changeAddr, _ := btcutil.DecodeAddress(from, &chaincfg.RegressionNetParams)
+		changePkScript, _ := txscript.PayToAddrScript(changeAddr)
+		tx.AddTxOut(wire.NewTxOut(totalIn-amount-fee, changePkScript))
+	}
+
+	return tx, nil
+}
+
+func signTransaction(tx *wire.MsgTx, keyGenResp *KeyGenResponse) (*wire.MsgTx, error) {
+	pubKeyBytes, err := hex.DecodeString(keyGenResp.PublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode public key: %v", err)
+	}
+
+	for i, txIn := range tx.TxIn {
+		utxo, err := getUTXO(keyGenResp.Address, txIn.PreviousOutPoint.Hash.String(), txIn.PreviousOutPoint.Index)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get UTXO: %v", err)
+		}
+
+		sigHash, err := txscript.CalcSignatureHash(utxo.ScriptPubKey, txscript.SigHashAll, tx, i)
+		if err != nil {
+			return nil, fmt.Errorf("failed to calculate sig hash: %v", err)
+		}
+
+		signResp, err := performSign(keyGenResp.Address, sigHash)
+		if err != nil {
+			return nil, fmt.Errorf("failed to sign transaction: %v", err)
+		}
+
+		r, _ := base64.StdEncoding.DecodeString(signResp.R)
+		s, _ := base64.StdEncoding.DecodeString(signResp.S)
+
+		// Convert r and s to big.Int
+		rInt := new(big.Int).SetBytes(r)
+		sInt := new(big.Int).SetBytes(s)
+
+		derSignature, err := encodeSignatureToDER(rInt, sInt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encode signature to DER: %v", err)
+		}
+
+		// Add sighash type
+		signature := append(derSignature, byte(txscript.SigHashAll))
+
+		log.Printf("DER-encoded Signature data: %x", signature)
+		log.Printf("Public key: %x", pubKeyBytes)
+
+		builder := txscript.NewScriptBuilder()
+		builder.AddData(signature)
+		builder.AddData(pubKeyBytes)
+		scriptSig, err := builder.Script()
+		if err != nil {
+			return nil, fmt.Errorf("failed to build script: %v", err)
+		}
+
+		txIn.SignatureScript = scriptSig
+	}
+
+	return tx, nil
+}
+
+func encodeSignatureToDER(r, s *big.Int) ([]byte, error) {
+	var b cryptobyte.Builder
+	b.AddASN1(asn1.SEQUENCE, func(b *cryptobyte.Builder) {
+		b.AddASN1BigInt(r)
+		b.AddASN1BigInt(s)
+	})
+	return b.Bytes()
+}
+
+func performSign(address string, sigHash []byte) (*SignResponse, error) {
+	signReqData := struct {
+		Address  string `json:"address"`
+		TxOrigin string `json:"tx_origin"`
+	}{
 		Address:  address,
-		TxOrigin: base64.StdEncoding.EncodeToString(txOrigin),
+		TxOrigin: base64.StdEncoding.EncodeToString(sigHash),
 	}
 
-	jsonData, err := json.Marshal(signReqData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal sign request data: %v", err)
-	}
-
-	req, err := http.NewRequest("POST", "http://localhost:8080/sign", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
-	}
+	jsonData, _ := json.Marshal(signReqData)
+	req, _ := http.NewRequest("POST", "http://localhost:8080/sign", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -199,54 +276,177 @@ func performSign(address string, txOrigin []byte) (*lib.SignResponse, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read sign response body: %v", err)
-	}
+	body, _ := ioutil.ReadAll(resp.Body)
 
 	var response struct {
-		Data lib.SignResponse `json:"data"`
+		Data SignResponse `json:"data"`
 	}
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse sign JSON response: %v", err)
-	}
+	json.Unmarshal(body, &response)
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("server returned error: %s", string(body))
-	}
 	return &response.Data, nil
-
 }
 
-func saveKeyGenResponse(resp *lib.KeyGenResponse) {
+func broadcastTransaction(tx *wire.MsgTx, network string) (string, error) {
+	var buf bytes.Buffer
+	tx.Serialize(&buf)
+	txHex := hex.EncodeToString(buf.Bytes())
 
-	file, err := json.MarshalIndent(resp, "", "  ")
+	rpcURL := "http://localhost:18443"
+	rpcUser := "myuser"
+	rpcPassword := "SomeDecentp4ssw0rd"
+
+	payload := fmt.Sprintf(`{"jsonrpc":"1.0","id":"curltest","method":"sendrawtransaction","params":["%s"]}`, txHex)
+	req, _ := http.NewRequest("POST", rpcURL, bytes.NewBufferString(payload))
+	req.SetBasicAuth(rpcUser, rpcPassword)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Failed to marshal response to JSON: %v", err)
-		return
+		return "", fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var result struct {
+		Result string      `json:"result"`
+		Error  interface{} `json:"error"`
+	}
+	json.Unmarshal(body, &result)
+
+	if result.Error != nil {
+		return "", fmt.Errorf("RPC error: %v", result.Error)
 	}
 
-	err = ioutil.WriteFile("key_gen_response.json", file, 0644)
-	if err != nil {
-		log.Printf("Failed to write response to file: %v", err)
-		return
-	}
-
-	filepath.Abs("key_gen_response.json")
+	return result.Result, nil
 }
 
-func loadKeyGenResponse(filePath string) (*lib.KeyGenResponse, error) {
-	file, err := ioutil.ReadFile(filePath)
+func getUnspentTxs(address string, network string) ([]UTXO, error) {
+	utxos, err := fetchUnspentTxs(address, network)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read key file: %v", err)
+		return nil, err
 	}
 
-	var response lib.KeyGenResponse
-	err = json.Unmarshal(file, &response)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse JSON from key file: %v", err)
+	return utxos, nil
+}
+
+func fetchUnspentTxs(address string, network string) ([]UTXO, error) {
+	var url string
+	switch network {
+	case "mainnet":
+		url = fmt.Sprintf("https://mempool.space/api/address/%s/utxo", address)
+	case "testnet":
+		url = fmt.Sprintf("https://mempool.space/testnet/api/address/%s/utxo", address)
+	case "regtest":
+		return getRegtestUnspentTxs(address)
+	default:
+		return nil, fmt.Errorf("unsupported network: %s", network)
 	}
 
-	return &response, nil
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get UTXOs: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var utxos []UTXO
+	err = json.Unmarshal(body, &utxos)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal UTXOs: %v", err)
+	}
+
+	return utxos, nil
+}
+
+func getRegtestUnspentTxs(address string) ([]UTXO, error) {
+	rpcURL := "http://localhost:18443"
+	rpcUser := "myuser"
+	rpcPassword := "SomeDecentp4ssw0rd"
+
+	payload := []byte(fmt.Sprintf(`{
+        "jsonrpc": "1.0",
+        "id": "curltest",
+        "method": "listunspent",
+        "params": [1, 9999999, ["%s"], true, {"minimumAmount": 0, "maximumCount": 1000}]
+    }`, address))
+	req, err := http.NewRequest("POST", rpcURL, bytes.NewBuffer(payload))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.SetBasicAuth(rpcUser, rpcPassword)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var rpcResponse struct {
+		Result []struct {
+			TxID          string  `json:"txid"`
+			Vout          uint32  `json:"vout"`
+			Address       string  `json:"address"`
+			Amount        float64 `json:"amount"`
+			Confirmations int64   `json:"confirmations"`
+			ScriptPubKey  string  `json:"scriptPubKey"`
+			Spendable     bool    `json:"spendable"`
+			Solvable      bool    `json:"solvable"`
+			Safe          bool    `json:"safe"`
+		} `json:"result"`
+	}
+
+	err = json.Unmarshal(body, &rpcResponse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	var utxos []UTXO
+	for _, unspent := range rpcResponse.Result {
+		scriptPubKey, err := hex.DecodeString(unspent.ScriptPubKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode scriptPubKey: %v", err)
+		}
+		utxos = append(utxos, UTXO{
+			TxID:         unspent.TxID,
+			Vout:         unspent.Vout,
+			Amount:       int64(unspent.Amount * 1e8), // BTC to satoshis
+			ScriptPubKey: scriptPubKey,
+		})
+	}
+
+	return utxos, nil
+}
+
+func validateTransaction(tx *wire.MsgTx, address string, network string) error {
+	for i, txIn := range tx.TxIn {
+		utxo, err := getUTXO(address, txIn.PreviousOutPoint.Hash.String(), txIn.PreviousOutPoint.Index)
+		if err != nil {
+			return fmt.Errorf("failed to get UTXO for input %d: %v", i, err)
+		}
+
+		prevOutputFetcher := txscript.NewCannedPrevOutputFetcher(utxo.ScriptPubKey, utxo.Amount)
+		sigHashes := txscript.NewTxSigHashes(tx, prevOutputFetcher)
+		vm, err := txscript.NewEngine(utxo.ScriptPubKey, tx, i, txscript.StandardVerifyFlags, nil, sigHashes, utxo.Amount, prevOutputFetcher)
+		if err != nil {
+			return fmt.Errorf("failed to create script engine for input %d: %v", i, err)
+		}
+
+		if err := vm.Execute(); err != nil {
+			return fmt.Errorf("script execution failed for input %d: %v", i, err)
+		}
+	}
+	return nil
 }

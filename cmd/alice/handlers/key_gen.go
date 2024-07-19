@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -258,6 +259,10 @@ func (h *KeygenHandler) handleRound10(stream pb.KeygenService_KeyGenServer, ctx 
 		return errors.Wrap(err, "failed to store secret alice share")
 	}
 
+	publicKeyBytes := ctx.alice.Output().PublicKey.ToAffineCompressed()
+	publicKeyHex := hex.EncodeToString(publicKeyBytes)
+
+	fmt.Println("alice Publickey hex: ", publicKeyHex)
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_KeyGenRound10To11Output{
 			KeyGenRound10To11Output: &pb.KeyGenRound10To11Output{},

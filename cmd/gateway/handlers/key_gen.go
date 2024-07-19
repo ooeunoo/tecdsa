@@ -29,6 +29,7 @@ type KeyGenRequest struct {
 type KeyGenResponse struct {
 	RequestID string `json:"request_id"`
 	Address   string `json:"address"`
+	Publickey string `json:"public_key"`
 	Duration  int32  `json:"duration"`
 }
 
@@ -200,6 +201,7 @@ func (h *KeyGenHandler) handleFinalResponse(w http.ResponseWriter, res *pb.Keyge
 	keyGenResponse := KeyGenResponse{
 		RequestID: requestID,
 		Address:   res.KeyGenRound11ToGatewayOutput.Address,
+		Publickey: res.KeyGenRound11ToGatewayOutput.PublicKey,
 		Duration:  int32(duration.Milliseconds()),
 	}
 

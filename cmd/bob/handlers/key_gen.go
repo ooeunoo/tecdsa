@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"strconv"
@@ -257,11 +258,17 @@ func (h *KeygenHandler) handleRound11(stream pb.KeygenService_KeyGenServer, ctx 
 		return errors.Wrap(err, "failed to store secret bob share")
 	}
 
+	publicKeyBytes := ctx.bob.Output().PublicKey.ToAffineCompressed()
+	publicKeyHex := hex.EncodeToString(publicKeyBytes)
+
+	fmt.Println("bob Publickey hex: ", publicKeyHex)
+
 	return stream.Send(&pb.KeygenMessage{
 		Msg: &pb.KeygenMessage_KeyGenRound11ToGatewayOutput{
 			KeyGenRound11ToGatewayOutput: &pb.KeyGenRound11ToGatewayOutput{
 				Address:   address,
 				RequestId: ctx.requestID,
+				PublicKey: publicKeyHex,
 			},
 		},
 	})

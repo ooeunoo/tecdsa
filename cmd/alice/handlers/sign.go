@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"fmt"
 	"hash"
 	"io"
 	"log"
@@ -60,10 +61,10 @@ func (h *SignHandler) HandleSign(stream pb.SignService_SignServer) error {
 		return errors.New("tx_origin not found in metadata")
 	}
 	txOrigin, err := base64.StdEncoding.DecodeString(txOrigins[0])
+	fmt.Println("txOrigin:", txOrigin)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode tx_origin")
 	}
-
 	ctx := &signContext{
 		requestID: requestID,
 		address:   address,

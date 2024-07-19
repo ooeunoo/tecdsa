@@ -80,8 +80,9 @@ message KeyGenRound10To11Output {
 
 // 라운드 11 -> 게이트 웨이
 message KeyGenRound11ToGatewayOutput {
-string request_id = 1;
+  string request_id = 1;
   string address = 2;
+  string public_key = 3;
 }
 
 

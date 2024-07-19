@@ -2,15 +2,29 @@ package lib
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
+)
+
+const (
+	// 최소 수수료율 (satoshi/byte)
+	minFeeRate = 4
+	// 예상 트랜잭션 크기 (바이트)
+	estimatedTxSize = 250
 )
 
 func GetUnspentTxs(address string, network string) ([]UTXO, error) {
@@ -152,26 +166,246 @@ func GetAddressType(address string, params *chaincfg.Params) AddressType {
 	}
 }
 
-func main() {
-	// Example usage
-	testnet := &chaincfg.TestNet3Params
-	mainnet := &chaincfg.MainNetParams
-
-	addresses := []string{
-		"1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",                             // P2PKH
-		"3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",                             // P2SH
-		"bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",                     // P2WPKH
-		"bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3", // P2WSH
-		"tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",                     // P2WPKH (testnet)
+func CreateUnsignedTransaction(from, to string, amount int64, network string, publicKey []byte) (*wire.MsgTx, error) {
+	// 네트워크 파라미터 설정
+	var params *chaincfg.Params
+	switch network {
+	case "mainnet":
+		params = &chaincfg.MainNetParams
+	case "testnet":
+		params = &chaincfg.TestNet3Params
+	case "regtest":
+		params = &chaincfg.RegressionNetParams
+	default:
+		return nil, fmt.Errorf("unsupported network: %s", network)
+	}
+	// 주소 디코딩
+	fromAddr, err := btcutil.DecodeAddress(from, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode from address: %v", err)
+	}
+	toAddr, err := btcutil.DecodeAddress(to, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode to address: %v", err)
 	}
 
-	for _, addr := range addresses {
-		var addrType AddressType
-		if strings.HasPrefix(addr, "bc1") || strings.HasPrefix(addr, "1") || strings.HasPrefix(addr, "3") {
-			addrType = GetAddressType(addr, mainnet)
-		} else {
-			addrType = GetAddressType(addr, testnet)
+	// UTXO 가져오기
+	utxos, err := GetUnspentTxs(from, network)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get UTXOs: %v", err)
+	}
+
+	// 트랜잭션 생성
+	tx := wire.NewMsgTx(wire.TxVersion)
+
+	// 수수료 계산 (예상 크기 * 최소 수수료율)
+	fee := int64(estimatedTxSize * minFeeRate)
+
+	// 입력 추가
+	var totalIn int64
+	for _, utxo := range utxos {
+		if totalIn >= amount+fee {
+			break
 		}
-		println(addr, ":", string(addrType))
+		hash, err := chainhash.NewHashFromStr(utxo.TxID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse txid: %v", err)
+		}
+		outpoint := wire.NewOutPoint(hash, utxo.Vout)
+		txIn := wire.NewTxIn(outpoint, nil, nil)
+		// txIn.SignatureScript = publicKey // 여기에 공개키 추가
+		tx.AddTxIn(txIn)
+		totalIn += utxo.Value
 	}
+
+	if totalIn < amount+fee {
+		return nil, fmt.Errorf("insufficient funds for transaction and fee")
+	}
+
+	// 출력 추가 (수신자)
+	pkScript, err := txscript.PayToAddrScript(toAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pkscript: %v", err)
+	}
+	tx.AddTxOut(wire.NewTxOut(amount, pkScript))
+
+	// 잔액 처리
+	change := totalIn - amount - fee
+	if change > 0 {
+		changePkScript, err := txscript.PayToAddrScript(fromAddr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create change pkscript: %v", err)
+		}
+		tx.AddTxOut(wire.NewTxOut(change, changePkScript))
+	}
+
+	return tx, nil
+}
+
+func SerializeTransaction(tx *wire.MsgTx) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := tx.Serialize(&buf); err != nil {
+		return nil, fmt.Errorf("failed to serialize transaction: %v", err)
+	}
+	return buf.Bytes(), nil
+}
+
+func ApplySignature(tx *wire.MsgTx, signResp *SignResponse, pubKeyBytes []byte) error {
+	// Decode r and s from base64
+	r, err := base64.StdEncoding.DecodeString(signResp.R)
+	if err != nil {
+		return fmt.Errorf("failed to decode R: %v", err)
+	}
+	s, err := base64.StdEncoding.DecodeString(signResp.S)
+	if err != nil {
+		return fmt.Errorf("failed to decode S: %v", err)
+	}
+
+	// Create signature from r and s
+	rScalar := new(btcec.ModNScalar)
+	sScalar := new(btcec.ModNScalar)
+
+	rScalar.SetByteSlice(r)
+	sScalar.SetByteSlice(s)
+
+	signature := ecdsa.NewSignature(rScalar, sScalar)
+
+	// Decode public key
+	pubKey, err := btcec.ParsePubKey(pubKeyBytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse public key: %v", err)
+	}
+
+	// Create DER-encoded signature
+	sigDER := signature.Serialize()
+	sig := append(sigDER, byte(txscript.SigHashAll))
+
+	// Apply signature to each input
+	for i := range tx.TxIn {
+		sigScript, err := txscript.NewScriptBuilder().
+			AddData(sig).
+			AddData(pubKey.SerializeCompressed()).
+			Script()
+		if err != nil {
+			return fmt.Errorf("failed to build signature script: %v", err)
+		}
+		tx.TxIn[i].SignatureScript = sigScript
+	}
+
+	return nil
+}
+
+func BroadcastTransaction(tx *wire.MsgTx, network string) (string, error) {
+	var url string
+	switch network {
+	case "mainnet":
+		url = "https://api.blockcypher.com/v1/btc/main/txs/push"
+	case "testnet":
+		url = "https://api.blockcypher.com/v1/btc/test3/txs/push"
+	case "regtest":
+		return broadcastRegtestTransaction(tx)
+	default:
+		return "", fmt.Errorf("unsupported network: %s", network)
+	}
+
+	var buf bytes.Buffer
+	if err := tx.Serialize(&buf); err != nil {
+		return "", fmt.Errorf("failed to serialize transaction: %v", err)
+	}
+
+	payload := struct {
+		Tx string `json:"tx"`
+	}{
+		Tx: hex.EncodeToString(buf.Bytes()),
+	}
+
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal payload: %v", err)
+	}
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return "", fmt.Errorf("failed to broadcast transaction: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var result struct {
+		Tx struct {
+			Hash string `json:"hash"`
+		} `json:"tx"`
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse JSON response: %v", err)
+	}
+
+	if result.Tx.Hash == "" {
+		return "", fmt.Errorf("transaction hash not found in response: %s", string(body))
+	}
+
+	return result.Tx.Hash, nil
+}
+func broadcastRegtestTransaction(tx *wire.MsgTx) (string, error) {
+	rpcURL := "http://localhost:18443"
+	rpcUser := "myuser"
+	rpcPassword := "SomeDecentp4ssw0rd"
+
+	var buf bytes.Buffer
+	if err := tx.Serialize(&buf); err != nil {
+		return "", fmt.Errorf("failed to serialize transaction: %v", err)
+	}
+
+	hexString := hex.EncodeToString(buf.Bytes())
+
+	payload := []byte(fmt.Sprintf(`{
+        "jsonrpc": "1.0",
+        "id": "curltest",
+        "method": "sendrawtransaction",
+        "params": ["%s", 0.1]
+    }`, hexString))
+
+	req, err := http.NewRequest("POST", rpcURL, bytes.NewBuffer(payload))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.SetBasicAuth(rpcUser, rpcPassword)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	var result struct {
+		Result string      `json:"result"`
+		Error  interface{} `json:"error"`
+		ID     string      `json:"id"`
+	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse JSON response: %v", err)
+	}
+
+	if result.Error != nil {
+		return "", fmt.Errorf("RPC error: %v", result.Error)
+	}
+
+	fmt.Printf("Transaction broadcast successful. Transaction hash: %s\n", result.Result)
+	return result.Result, nil
 }
