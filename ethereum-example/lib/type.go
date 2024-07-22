@@ -5,15 +5,13 @@ type KeyGenRequest struct {
 }
 
 type KeyGenResponse struct {
-	Address   string `json:"address"`
-	SecretKey string `json:"secret_key"` // encoded base64
-	Duration  int    `json:"duration"`
+	Address  string `json:"address"`
+	Duration int    `json:"duration"`
 }
 
 type SignRequest struct {
-	Address   string `json:"address"`
-	SecretKey string `json:"secret_key"` // encoded base64
-	TxOrigin  string `json:"tx_origin"`  // encoded base64
+	Address  string `json:"address"`
+	TxOrigin string `json:"tx_origin"` // encoded base64
 }
 
 type SignResponse struct {

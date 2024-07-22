@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/base64"
-	"encoding/json"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"math/big"
@@ -12,7 +12,6 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -20,7 +19,6 @@ import (
 )
 
 func InjectTestEther(client *ethclient.Client, privateKey string, toAddress string, amount *big.Int) (*types.Receipt, error) {
-
 	pk, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
 		log.Fatalf("failed to load private key: %v", err)
@@ -160,60 +158,22 @@ func GenerateRlpEncodedTx(client ethclient.Client, signer types.Signer, fromAddr
 	return tx, rlpEncodedTx
 }
 
-func CombineETHUnsignedTxWithSignature(tx *types.Transaction, chainId *big.Int, response SignResponse) (*types.Transaction, error) {
+func CombineETHUnsignedTxWithSignature(tx *types.Transaction, chainId *big.Int, response SignResponse) (*types.Transaction, string, error) {
+	v := int(response.V)
 	rBytes, err := base64.StdEncoding.DecodeString(response.R)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode R: %v", err)
+		return nil, "", fmt.Errorf("failed to decode R: %v", err)
 	}
 	sBytes, err := base64.StdEncoding.DecodeString(response.S)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode S: %v", err)
+		return nil, "", fmt.Errorf("failed to decode S: %v", err)
 	}
-
-	signatureBytes := append(rBytes, sBytes...)
-	signatureBytes = append(signatureBytes, byte(response.V))
 
 	signer := types.NewEIP155Signer(chainId)
-	txWithSignature, err := tx.WithSignature(signer, signatureBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to apply signature to transaction: %v", err)
-	}
-	return txWithSignature, nil
-}
+	signedTx, _ := tx.WithSignature(signer, append(rBytes, append(sBytes, byte(v))...))
+	rawTxBytes, _ := rlp.EncodeToBytes(signedTx)
+	signedRawTransaction := hex.EncodeToString(rawTxBytes)
+	fmt.Println("signedRawTransaction: ", signedRawTransaction)
 
-func PrintETHSignedTxAsJSON(signedTx *types.Transaction) ([]byte, error) {
-	signer := types.LatestSignerForChainID(signedTx.ChainId())
-	from, _ := types.Sender(signer, signedTx)
-
-	v, r, s := signedTx.RawSignatureValues()
-
-	txJSON := struct {
-		Nonce    uint64          `json:"nonce"`
-		GasPrice *big.Int        `json:"gasPrice"`
-		GasLimit uint64          `json:"gasLimit"`
-		To       *common.Address `json:"to"`
-		Value    *big.Int        `json:"value"`
-		Data     hexutil.Bytes   `json:"data"`
-		From     common.Address  `json:"from"`
-		V        *big.Int        `json:"v"`
-		R        *big.Int        `json:"r"`
-		S        *big.Int        `json:"s"`
-	}{
-		Nonce:    signedTx.Nonce(),
-		GasPrice: signedTx.GasPrice(),
-		GasLimit: signedTx.Gas(),
-		To:       signedTx.To(),
-		Value:    signedTx.Value(),
-		Data:     signedTx.Data(),
-		From:     from,
-		V:        v,
-		R:        r,
-		S:        s,
-	}
-
-	jsonData, err := json.MarshalIndent(txJSON, "", "  ")
-	if err != nil {
-		log.Fatalf("Failed to marshal transaction to JSON: %v", err)
-	}
-	return jsonData, nil
+	return signedTx, signedRawTransaction, nil
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -12,48 +11,13 @@ import (
 	"net/http"
 	"os"
 
-	"btc_example/lib"
+	"ethereum_example/lib"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
 )
 
-func main() {
-	infuraKey, privateKey := loadENV()
-	client, err := connectToEthereum(infuraKey)
-	if err != nil {
-		log.Fatalf("Failed to connect to Ethereum: %v", err)
-	}
-
-	keyGenResp, err := handleKeyGeneration()
-	if err != nil {
-		log.Fatalf("Key generation failed: %v", err)
-	}
-
-	err = injectTestEther(client, privateKey, keyGenResp.Address)
-	if err != nil {
-		log.Fatalf("Failed to inject test ether: %v", err)
-	}
-
-	tx, rlpEncodedTx := createEncodedRlpTransaction(client, keyGenResp.Address)
-	if err != nil {
-		log.Fatalf("Failed to create encoded RLP transaction: %v", err)
-	}
-
-	signResp, err := signTransaction(keyGenResp.Address, keyGenResp.SecretKey, rlpEncodedTx)
-	if err != nil {
-		log.Fatalf("Failed to sign transaction: %v", err)
-	}
-
-	signedTx, err := combineAndSendTransaction(client, tx, signResp)
-	if err != nil {
-		log.Fatalf("Failed to combine and send transaction: %v", err)
-	}
-
-	fmt.Printf("Transaction sent: %s\n", signedTx.Hash().Hex())
-}
+func main() {}
 
 func loadENV() (string, string) {
 	err := godotenv.Load(".env")
@@ -69,6 +33,34 @@ func connectToEthereum(infuraKey string) (*ethclient.Client, error) {
 }
 
 func handleKeyGeneration() (*lib.KeyGenResponse, error) {
+	keyGenFilePath := "key_gen_response.json"
+	if _, err := os.Stat(keyGenFilePath); os.IsNotExist(err) {
+		return performKeyGen()
+	}
+	return loadKeyGenResponse(keyGenFilePath)
+}
+
+func saveKeyGenResponse(resp *lib.KeyGenResponse) {
+	file, _ := json.MarshalIndent(resp, "", " ")
+	_ = ioutil.WriteFile("key_gen_response.json", file, 0644)
+}
+
+func loadKeyGenResponse(filePath string) (*lib.KeyGenResponse, error) {
+	file, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read key file: %v", err)
+	}
+
+	var response lib.KeyGenResponse
+	err = json.Unmarshal(file, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse JSON from key file: %v", err)
+	}
+
+	return &response, nil
+}
+
+func performKeyGen() (*lib.KeyGenResponse, error) {
 	reqData := lib.KeyGenRequest{Network: 4} // ethereum sepolia
 	jsonData, err := json.Marshal(reqData)
 	if err != nil {
@@ -94,6 +86,7 @@ func handleKeyGeneration() (*lib.KeyGenResponse, error) {
 		return nil, fmt.Errorf("failed to parse JSON response: %v", err)
 	}
 
+	saveKeyGenResponse(&response.Data)
 	return &response.Data, nil
 }
 
@@ -103,28 +96,10 @@ func injectTestEther(client *ethclient.Client, privateKey, address string) error
 	return err
 }
 
-func createEncodedRlpTransaction(client *ethclient.Client, fromAddress string) (*types.Transaction, []byte) {
-	chainID, err := client.NetworkID(context.Background())
-	if err != nil {
-		return nil, nil
-	}
-
-	signer := types.NewEIP155Signer(chainID)
-	amount := big.NewInt(33333333333333333) // 0.033333333333333333 Ether
-	return lib.GenerateRlpEncodedTx(
-		*client,
-		signer,
-		common.HexToAddress(fromAddress),
-		common.HexToAddress("0xFDcBF476B286796706e273F86aC51163DA737FA8"),
-		amount,
-	)
-}
-
-func signTransaction(address, secretKey string, rlpEncodedTx []byte) (*lib.SignResponse, error) {
+func signTransaction(address string, rlpEncodedTx []byte) (*lib.SignResponse, error) {
 	signReqData := lib.SignRequest{
-		Address:   address,
-		SecretKey: secretKey,
-		TxOrigin:  base64.StdEncoding.EncodeToString(rlpEncodedTx),
+		Address:  address,
+		TxOrigin: base64.StdEncoding.EncodeToString(rlpEncodedTx),
 	}
 
 	jsonData, err := json.Marshal(signReqData)
@@ -162,23 +137,4 @@ func signTransaction(address, secretKey string, rlpEncodedTx []byte) (*lib.SignR
 		return nil, fmt.Errorf("server returned error: %s", string(body))
 	}
 	return &response.Data, nil
-}
-
-func combineAndSendTransaction(client *ethclient.Client, tx *types.Transaction, signResp *lib.SignResponse) (*types.Transaction, error) {
-	chainID, err := client.NetworkID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	signedTx, err := lib.CombineETHUnsignedTxWithSignature(tx, chainID, *signResp)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = lib.SendSignedTransaction(client, signedTx, true)
-	if err != nil {
-		return nil, err
-	}
-
-	return signedTx, nil
 }
