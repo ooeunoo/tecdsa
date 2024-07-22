@@ -101,10 +101,6 @@ func main() {
 			log.Fatalf("Error decoding S for input %d: %v", i, err)
 		}
 
-		if err := validateSignatureComponents(r, s, signHash, fromAddressPubKey); err != nil {
-			log.Fatalf("Invalid signature for input %d: %v", i, err)
-		}
-
 		// DER 인코딩 서명 생성
 		signature, err := createDERSignature(r, s)
 		if err != nil {
@@ -113,7 +109,7 @@ func main() {
 
 		pubKeyBytes, _ := hex.DecodeString(fromAddressPubKey)
 		sigScript, _ := txscript.NewScriptBuilder().
-			AddData(signature). // This should already include the hash type
+			AddData(signature).
 			AddData(pubKeyBytes).
 			Script()
 
@@ -255,7 +251,6 @@ func verifyUTXO(txid string, vout uint32) error {
 }
 
 func createTx(fromAddress string, toAddress string, amount int64, selectedUTXOs []UTXO) (*wire.MsgTx, [][]byte, error) {
-
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
 
 	var totalInput int64
@@ -374,6 +369,7 @@ func performSign(address string, sigHash []byte) (*SignResponse, error) {
 
 	return &response.Data, nil
 }
+
 func createDERSignature(r, s []byte) ([]byte, error) {
 	rInt := new(big.Int).SetBytes(r)
 	sInt := new(big.Int).SetBytes(s)
